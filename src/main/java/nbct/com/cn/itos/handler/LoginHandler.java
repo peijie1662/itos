@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
-import nbct.com.cn.itos.Configer;
+import nbct.com.cn.itos.config.Configer;
 
 import static nbct.com.cn.itos.model.CallResult.OK;
 import static nbct.com.cn.itos.model.CallResult.Err;
@@ -44,9 +44,12 @@ public class LoginHandler {
 									//TODO 模拟返回用户信息
 									JsonObject j = new JsonObject();
 									j.put("flag", true);
-									j.put("functionid", "100,200");
-									j.put("username", params.getString("userName"));
-									j.put("deptname", "ITD");
+									j.put("functionId", "100,200");
+									j.put("userName", "裴捷");
+									j.put("userId", "PJ");
+									j.put("workId", "1038");
+									j.put("deptName", "ITD");
+									j.put("role", "admin");
 									res.end(OK(j));
 									//res.end(OK(JSONObject.parseObject(lr.getString("outMsg"))));
 								} else {

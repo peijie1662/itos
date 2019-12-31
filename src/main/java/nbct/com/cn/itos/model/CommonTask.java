@@ -32,7 +32,7 @@ public class CommonTask {
 
 	private String content;
 
-	private List<ItopUser> handler;
+	private List<ItosUser> handler;
 
 	private String customer;
 
@@ -146,11 +146,11 @@ public class CommonTask {
 		this.content = content;
 	}
 
-	public List<ItopUser> getHandler() {
+	public List<ItosUser> getHandler() {
 		return handler;
 	}
 
-	public void setHandler(List<ItopUser> handler) {
+	public void setHandler(List<ItosUser> handler) {
 		this.handler = handler;
 	}
 

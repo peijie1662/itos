@@ -1,4 +1,4 @@
-package nbct.com.cn.itos;
+package nbct.com.cn.itos.config;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,7 +54,7 @@ public class Configer {
 		}
 	}
 
-	public Configer(Vertx vertx, String dsName) {
+	public static void initDbPool(Vertx vertx, String dsName) {
 		JsonObject dbConfig = config.getJsonObject(dsName);
 		if (dbConfig == null) {
 			throw new RuntimeException("没有找到指定的数据源");
@@ -62,12 +62,16 @@ public class Configer {
 		client = JDBCClient.createShared(vertx, dbConfig);
 	}
 
-	public Configer(Vertx vertx) {
-		this(vertx, "db");
+	public static void initDbPool(Vertx vertx) {
+		initDbPool(vertx, "db");
 	}
 
-	public int getItafPort() {
+	public static int getHttpPort() {
 		return provider.getInteger("port");
+	}
+
+	public static int getWebsocketPort() {
+		return provider.getInteger("wsport");
 	}
 
 	public static String getRegisterUrl() {

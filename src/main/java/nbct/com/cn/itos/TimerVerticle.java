@@ -2,6 +2,7 @@ package nbct.com.cn.itos;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import nbct.com.cn.itos.config.CategoryEnum;
+import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.TimerTaskModel;
+import nbct.com.cn.itos.util.Pusher;
 import util.DateUtil;
 
 /**
@@ -134,6 +137,10 @@ public class TimerVerticle extends AbstractVerticle {
 				// 4.保存日志
 				Function<List<CommonTask>, Future<String>> logf = (List<CommonTask> tasks) -> {
 					Future<String> f = Future.future(promise -> {
+						tasks.forEach(task -> {
+							Pusher.sendLog(vertx, "系统按照任务模版'" + task.getAbs() + "'生成任务,执行时间是'"
+									+ task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "'");
+						});
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						tasks.forEach(task -> {
 							params.add(new JsonArray()//

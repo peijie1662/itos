@@ -7,6 +7,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.handler.LoginHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 
@@ -39,11 +40,11 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/modeldelete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
 		// 增加模版
 		router.post("/modeladd").blockingHandler(modelHandler::addTimerTaskModel, false);
-
-		Configer config = new Configer(vertx);
+		Configer.initDbPool(vertx);
 		vertx.deployVerticle(new TimerVerticle());
-		vertx.createHttpServer().requestHandler(router).listen(config.getItafPort());
-
+		vertx.deployVerticle(new WebsocketVerticle());
+		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
+		
 		logger.info("ITOS server start");
 
 	}

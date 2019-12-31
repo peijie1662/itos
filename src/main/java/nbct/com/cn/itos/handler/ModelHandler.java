@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.jdbc.ModelRowMapper;
+import nbct.com.cn.itos.util.Pusher;
 import util.DateUtil;
 
 import static nbct.com.cn.itos.model.CallResult.Err;
@@ -31,6 +32,7 @@ public class ModelHandler {
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
 		params.add(rp.getString("modelId"));
+		Pusher.sendLog(ctx.vertx(), "模版'" + rp.getString("abstract") + "'已被修改。");
 		JdbcHelper.update(ctx, sql, params);
 	}
 
@@ -39,12 +41,12 @@ public class ModelHandler {
 		String sql = "update itos_taskmodel set invalid='Y' where modelId = ? ";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
+		Pusher.sendLog(ctx.vertx(), "模版'" + rp.getString("abstract") + "'已被刪除。");
 		JdbcHelper.update(ctx, sql, params);
 	}
 
 	public void addTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		// 检查
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
 		if (rp.getString("category") == null) {
@@ -63,7 +65,6 @@ public class ModelHandler {
 			res.end(Err("任务时间不能为空。"));
 			return;
 		}
-		// 保存
 		String sql = "insert into itos_taskmodel(modelId,category,comments,planDates,oper,opdate,invalid,abstract) "
 				+ " values(?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
@@ -75,6 +76,7 @@ public class ModelHandler {
 		params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 		params.add("N");
 		params.add(rp.getString("abs"));
+		Pusher.sendLog(ctx.vertx(), "新增模版'" + rp.getString("abstract") + "'");
 		JdbcHelper.update(ctx, sql, params);
 	}
 

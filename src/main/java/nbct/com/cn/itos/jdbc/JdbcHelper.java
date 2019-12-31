@@ -12,7 +12,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.Configer;
+import nbct.com.cn.itos.config.Configer;
 
 /**
  * @author PJ
