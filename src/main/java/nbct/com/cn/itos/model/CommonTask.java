@@ -13,7 +13,9 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.TaskStatusEnum;
+import util.ConvertUtil;
 import util.DateUtil;
 
 /**
@@ -31,14 +33,36 @@ public class CommonTask {
 	private String abs;
 
 	private String content;
+	
+	private List<String> keys;
 
-	private List<ItosUser> handler;
+	private List<String> handler;
+	
+	private String phone;
+	
+	private String location;
 
 	private String customer;
 
 	private String modelId;
 
 	private LocalDateTime planDt;
+	
+	private String apiKey;
+	
+	public static CommonTask from(JsonObject j){
+		CommonTask task = new CommonTask();
+		task.setTaskId(j.getString("TASKID"));
+		task.setAbs(j.getString("ABSTRACT"));
+		task.setStatus(TaskStatusEnum.from(j.getString("STATUS")).get());
+		task.setContent(j.getString("CONTENT"));
+		task.setHandler(ConvertUtil.strToList(j.getString("HANDLER")));
+		task.setKeys(ConvertUtil.strToList(j.getString("KEYS")));
+		task.setPhone(j.getString("PHONE"));
+		task.setLocation(j.getString("LOCATION"));
+		task.setCustomer(j.getString("CUSTOMER"));
+		return task;
+	}
 
 	/**
 	 * 生成新任务
@@ -56,6 +80,7 @@ public class CommonTask {
 			task.setContent(model.getComments());
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
+			task.setApiKey(model.getApiKey());
 			return task;
 		};
 		// 2.创建
@@ -64,7 +89,7 @@ public class CommonTask {
 			throw new RuntimeException("未发现计划时间，无法生成计划任务。");
 		}
 		String[] dts = model.getPlanDates().split(",");
-		switch (model.getCategory()) {
+		switch (model.getCycle()) {
 		case PERDAY:
 			Arrays.asList(model.getPlanDates().split(",")).forEach(dt -> {
 				CommonTask task = createTask.get();
@@ -146,14 +171,6 @@ public class CommonTask {
 		this.content = content;
 	}
 
-	public List<ItosUser> getHandler() {
-		return handler;
-	}
-
-	public void setHandler(List<ItosUser> handler) {
-		this.handler = handler;
-	}
-
 	public String getCustomer() {
 		return customer;
 	}
@@ -184,6 +201,46 @@ public class CommonTask {
 
 	public void setAbs(String abs) {
 		this.abs = abs;
+	}
+
+	public List<String> getHandler() {
+		return handler;
+	}
+
+	public void setHandler(List<String> handler) {
+		this.handler = handler;
+	}
+
+	public List<String> getKeys() {
+		return keys;
+	}
+
+	public void setKeys(List<String> keys) {
+		this.keys = keys;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
 	}
 
 }

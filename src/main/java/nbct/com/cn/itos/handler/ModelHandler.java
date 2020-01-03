@@ -1,5 +1,7 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.model.CallResult.Err;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -7,12 +9,10 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.jdbc.ModelRowMapper;
-import nbct.com.cn.itos.util.Pusher;
 import util.DateUtil;
-
-import static nbct.com.cn.itos.model.CallResult.Err;
 
 /**
  * @author PJ
@@ -32,8 +32,10 @@ public class ModelHandler {
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
 		params.add(rp.getString("modelId"));
-		Pusher.sendLog(ctx.vertx(), "模版'" + rp.getString("abstract") + "'已被修改。");
 		JdbcHelper.update(ctx, sql, params);
+		// 日志
+		String log = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
+		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 	}
 
 	public void deleteTimerTaskModel(RoutingContext ctx) {
@@ -41,8 +43,10 @@ public class ModelHandler {
 		String sql = "update itos_taskmodel set invalid='Y' where modelId = ? ";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
-		Pusher.sendLog(ctx.vertx(), "模版'" + rp.getString("abstract") + "'已被刪除。");
 		JdbcHelper.update(ctx, sql, params);
+		// 日志
+		String log = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被刪除。";
+		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 	}
 
 	public void addTimerTaskModel(RoutingContext ctx) {
@@ -76,8 +80,10 @@ public class ModelHandler {
 		params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 		params.add("N");
 		params.add(rp.getString("abs"));
-		Pusher.sendLog(ctx.vertx(), "新增模版'" + rp.getString("abstract") + "'");
 		JdbcHelper.update(ctx, sql, params);
+		// 日志
+		String log = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
+		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 	}
 
 }

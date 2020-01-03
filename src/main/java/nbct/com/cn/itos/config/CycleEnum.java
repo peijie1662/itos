@@ -7,17 +7,17 @@ import java.util.Optional;
  * @author PJ
  * @version 创建时间：2019年12月24日 下午4:40:57
  */
-public enum CategoryEnum {
+public enum CycleEnum {
 
-	COMMON("COMMON", "普通任务"), //
-	CMD("CMD","命令行任务"), //
-	PROCEDURE("PROCEDURE","调用存储过程任务"); //
+	PERDAY("PERDAY", "每日任务"), //
+	PERWEEK("PERWEEK","每周任务"), //
+	PERMONTH("PERMONTH","每月任务"); //
 
 	private String value;
 
 	private String desc;
 
-	private CategoryEnum(String value, String desc) {
+	private CycleEnum(String value, String desc) {
 		this.value = value;
 		this.desc = desc;
 	}
@@ -34,8 +34,8 @@ public enum CategoryEnum {
 		return s.equals(this.getValue());
 	}
 
-	public static Optional<CategoryEnum> from(String s) {
-		return Arrays.asList(CategoryEnum.values()).stream().filter(item -> {
+	public static Optional<CycleEnum> from(String s) {
+		return Arrays.asList(CycleEnum.values()).stream().filter(item -> {
 			return item.eq(s);
 		}).findAny();
 	}

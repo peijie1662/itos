@@ -46,6 +46,13 @@ public class DateUtil {
 	}
 	
 	/**
+	 * 当前时间字符串
+	 */
+	public static String curDtStr(){
+		return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	}
+	
+	/**
 	 * 根据周几返回日期 
 	 */
 	public static LocalDate getDateByYearAndWeekNumAndDayOfWeek(Integer year, Integer num, int dayOfWeek) {

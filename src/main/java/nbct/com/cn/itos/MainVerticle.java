@@ -10,6 +10,7 @@ import io.vertx.ext.web.handler.CorsHandler;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.handler.LoginHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
+import nbct.com.cn.itos.handler.TaskHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -29,6 +30,7 @@ public class MainVerticle extends AbstractVerticle {
 
 		LoginHandler loginHandler = new LoginHandler();
 		ModelHandler modelHandler = new ModelHandler();
+		TaskHandler taskHandler = new TaskHandler();
 
 		// 登录
 		router.post("/login").blockingHandler(loginHandler::handleLogin, false);
@@ -40,6 +42,11 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/modeldelete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
 		// 增加模版
 		router.post("/modeladd").blockingHandler(modelHandler::addTimerTaskModel, false);
+		//任务列表
+		router.post("/tasklist").blockingHandler(taskHandler::getTaskList, false);
+		//可执行任务列表
+		router.post("/executetasklist").blockingHandler(taskHandler::getExecuteTaskList, false);
+		
 		Configer.initDbPool(vertx);
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());

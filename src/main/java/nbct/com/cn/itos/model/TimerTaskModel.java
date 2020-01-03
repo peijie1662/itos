@@ -2,10 +2,10 @@ package nbct.com.cn.itos.model;
 
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.util.Optional;
 
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
+import nbct.com.cn.itos.config.CycleEnum;
 import util.DateUtil;
 
 /**
@@ -17,8 +17,10 @@ import util.DateUtil;
 public class TimerTaskModel {
 
 	private String modelId;
-
+	
 	private CategoryEnum category;
+
+	private CycleEnum cycle;
 	
 	private String abs;
 
@@ -29,6 +31,8 @@ public class TimerTaskModel {
 	private boolean invalid;
 
 	private LocalDate scanDate;
+	
+	private String apiKey;
 	
 	public String getModelId() {
 		return modelId;
@@ -54,14 +58,6 @@ public class TimerTaskModel {
 		this.invalid = invalid;
 	}
 
-	public CategoryEnum getCategory() {
-		return category;
-	}
-
-	public void setCategory(CategoryEnum category) {
-		this.category = category;
-	}
-
 	public LocalDate getScanDate() {
 		return scanDate;
 	}
@@ -85,29 +81,43 @@ public class TimerTaskModel {
 	public void setAbs(String abs) {
 		this.abs = abs;
 	}
+	
+	public CycleEnum getCycle() {
+		return cycle;
+	}
+
+	public void setCycle(CycleEnum cycle) {
+		this.cycle = cycle;
+	}
+	
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}
+	
+	public CategoryEnum getCategory() {
+		return category;
+	}
+
+	public void setCategory(CategoryEnum category) {
+		this.category = category;
+	}
 
 	public static TimerTaskModel from(JsonObject j) throws ParseException {
 		TimerTaskModel t = new TimerTaskModel();
 		t.setModelId(j.getString("MODELID"));
-		Optional<CategoryEnum> warpCategory = CategoryEnum.from(j.getString("CATEGORY"));
-		if (warpCategory.isPresent()) {
-			t.setCategory(warpCategory.get());
-		} else {
-			throw new RuntimeException("读取任务模版失败，未定义的模板类型。");
-		}
+		t.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
+		t.setCycle(CycleEnum.from(j.getString("CYCLE")).get());
 		t.setAbs(j.getString("ABSTRACT"));
 		t.setComments(j.getString("COMMENTS"));
 		t.setInvalid("Y".equals(j.getString("INVAILD")));
 		t.setPlanDates(j.getString("PLANDATES"));
 		t.setScanDate(DateUtil.utcToLocal(j.getString("SCANDATE")));
+		t.setApiKey(j.getString("APIKEY"));
 		return t;
 	}
-
-	@Override
-	public String toString() {
-		return "TimerTaskModel [modelId=" + modelId + ", category=" + category + ", comments=" + comments
-				+ ", planDates=" + planDates + ", invalid=" + invalid + ", scanDate=" + scanDate + "]";
-	}
-
 
 }

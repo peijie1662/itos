@@ -7,17 +7,15 @@ import java.util.Optional;
  * @author PJ
  * @version 创建时间：2019年12月24日 下午4:40:57
  */
-public enum CategoryEnum {
+public enum ApiKeyEnum {
 
-	COMMON("COMMON", "普通任务"), //
-	CMD("CMD","命令行任务"), //
-	PROCEDURE("PROCEDURE","调用存储过程任务"); //
+	EHRTASK("EHRTASK", "Ehr任务客户端"); //
 
 	private String value;
 
 	private String desc;
 
-	private CategoryEnum(String value, String desc) {
+	private ApiKeyEnum(String value, String desc) {
 		this.value = value;
 		this.desc = desc;
 	}
@@ -34,8 +32,8 @@ public enum CategoryEnum {
 		return s.equals(this.getValue());
 	}
 
-	public static Optional<CategoryEnum> from(String s) {
-		return Arrays.asList(CategoryEnum.values()).stream().filter(item -> {
+	public static Optional<ApiKeyEnum> from(String s) {
+		return Arrays.asList(ApiKeyEnum.values()).stream().filter(item -> {
 			return item.eq(s);
 		}).findAny();
 	}

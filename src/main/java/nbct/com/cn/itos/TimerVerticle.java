@@ -18,12 +18,12 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
-import nbct.com.cn.itos.config.CategoryEnum;
+import nbct.com.cn.itos.config.AddressEnum;
+import nbct.com.cn.itos.config.CycleEnum;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.TimerTaskModel;
-import nbct.com.cn.itos.util.Pusher;
 import util.DateUtil;
 
 /**
@@ -58,17 +58,17 @@ public class TimerVerticle extends AbstractVerticle {
 									boolean valid = model.getScanDate() == null;
 									if (model.getScanDate() != null) {
 										// 扫描每日任务，当前日期>标记时间的日期，就需要生成新任务。
-										valid = valid || (model.getCategory() == CategoryEnum.PERDAY
+										valid = valid || (model.getCycle() == CycleEnum.PERDAY
 												&& model.getScanDate().isBefore(cur));
 										// 扫描每周任务，当前日期的年+第几周>标记时间的年+第几周，就需要生成新任务。
 										int cw = cur.getYear() + cur.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
 										int rw = model.getScanDate().getYear()
 												+ model.getScanDate().get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-										valid = valid || (model.getCategory() == CategoryEnum.PERWEEK && cw > rw);
+										valid = valid || (model.getCycle() == CycleEnum.PERWEEK && cw > rw);
 										// 扫描每月任务，当前日期的年+第几月>标记时间的年+第几月，就需要生成新任务。
 										int cm = cur.getYear() + cur.getMonthValue();
 										int rm = model.getScanDate().getYear() + model.getScanDate().getMonthValue();
-										valid = valid || (model.getCategory() == CategoryEnum.PERMONTH && cm > rm);
+										valid = valid || (model.getCycle() == CycleEnum.PERMONTH && cm > rm);
 									}
 									return valid;
 								}).collect(Collectors.toList());
@@ -138,8 +138,9 @@ public class TimerVerticle extends AbstractVerticle {
 				Function<List<CommonTask>, Future<String>> logf = (List<CommonTask> tasks) -> {
 					Future<String> f = Future.future(promise -> {
 						tasks.forEach(task -> {
-							Pusher.sendLog(vertx, "系统按照任务模版'" + task.getAbs() + "'生成任务,执行时间是'"
-									+ task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "'");
+							String log = DateUtil.curDtStr() + " " + "系统按照任务模版'" + task.getAbs() + "'生成任务,执行时间是'"
+									+ task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "'";
+							vertx.eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 						});
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						tasks.forEach(task -> {
