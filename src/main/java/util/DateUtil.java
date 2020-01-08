@@ -16,6 +16,19 @@ import java.util.TimeZone;
  * @version 创建时间：2019年12月24日 下午4:05:31 类说明
  */
 public class DateUtil {
+	
+	/**
+	 * UTC时间字符串转成LocalDate (DB -> OBJ)
+	 */
+	public static LocalDateTime utcToLocalDT(String utcTime) throws ParseException {
+		if (utcTime == null) {
+			return null;
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date dt = sdf.parse(utcTime);
+		return dt.toInstant().atZone(ZoneOffset.ofHours(8)).toLocalDateTime();
+	}
 
 	/**
 	 * UTC时间字符串转成LocalDate (DB -> OBJ)

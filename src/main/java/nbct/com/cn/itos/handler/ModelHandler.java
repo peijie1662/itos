@@ -57,6 +57,10 @@ public class ModelHandler {
 			res.end(Err("任务类别不能为空。"));
 			return;
 		}
+		if (rp.getString("cycle") == null) {
+			res.end(Err("执行周期不能为空。"));
+			return;
+		}
 		if (rp.getString("abs") == null) {
 			res.end(Err("任务简介不能为空。"));
 			return;
@@ -69,11 +73,12 @@ public class ModelHandler {
 			res.end(Err("任务时间不能为空。"));
 			return;
 		}
-		String sql = "insert into itos_taskmodel(modelId,category,comments,planDates,oper,opdate,invalid,abstract) "
-				+ " values(?,?,?,?,?,?,?,?)";
+		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate,invalid,abstract) "
+				+ " values(?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
 		params.add(UUID.randomUUID().toString());
 		params.add(rp.getString("category"));
+		params.add(rp.getString("cycle"));
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
 		params.add("SYS");

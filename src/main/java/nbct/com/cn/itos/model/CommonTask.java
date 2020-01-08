@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import util.ConvertUtil;
 import util.DateUtil;
@@ -27,6 +28,8 @@ import util.DateUtil;
 public class CommonTask {
 
 	private String taskId;
+	
+	private CategoryEnum category;
 
 	private TaskStatusEnum status;
 	
@@ -50,10 +53,13 @@ public class CommonTask {
 	
 	private String apiKey;
 	
+	private String taskIcon;
+	
 	public static CommonTask from(JsonObject j){
 		CommonTask task = new CommonTask();
 		task.setTaskId(j.getString("TASKID"));
 		task.setAbs(j.getString("ABSTRACT"));
+		task.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
 		task.setStatus(TaskStatusEnum.from(j.getString("STATUS")).get());
 		task.setContent(j.getString("CONTENT"));
 		task.setHandler(ConvertUtil.strToList(j.getString("HANDLER")));
@@ -61,6 +67,8 @@ public class CommonTask {
 		task.setPhone(j.getString("PHONE"));
 		task.setLocation(j.getString("LOCATION"));
 		task.setCustomer(j.getString("CUSTOMER"));
+		task.setApiKey(j.getString("APIKEY"));
+		task.setTaskIcon(j.getString("TASKICON"));
 		return task;
 	}
 
@@ -75,12 +83,14 @@ public class CommonTask {
 		Supplier<CommonTask> createTask = () -> {
 			CommonTask task = new CommonTask();
 			task.setTaskId(UUID.randomUUID().toString());
+			task.setCategory(model.getCategory());
 			task.setStatus(TaskStatusEnum.CHECKIN);
 			task.setAbs(model.getAbs());
 			task.setContent(model.getComments());
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setApiKey(model.getApiKey());
+			task.setTaskIcon("AUTO");//机器人，代表系统生成任务
 			return task;
 		};
 		// 2.创建
@@ -241,6 +251,22 @@ public class CommonTask {
 
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
+	}
+
+	public CategoryEnum getCategory() {
+		return category;
+	}
+
+	public void setCategory(CategoryEnum category) {
+		this.category = category;
+	}
+
+	public String getTaskIcon() {
+		return taskIcon;
+	}
+
+	public void setTaskIcon(String taskIcon) {
+		this.taskIcon = taskIcon;
 	}
 
 }

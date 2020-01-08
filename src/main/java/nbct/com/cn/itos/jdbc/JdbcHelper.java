@@ -76,7 +76,6 @@ public class JdbcHelper {
 							} else {
 								res.end(OK(qr.result().getRows()));
 							}
-
 						} else {
 							res.end(Err(qr.cause().getMessage()));
 						}

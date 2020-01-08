@@ -29,7 +29,6 @@ public class TaskRowMapper implements RowMapper<CommonTask> {
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new RuntimeException("DB模版转换错误。");
-				
 			}
 		}).collect(Collectors.toList());
 		return result;

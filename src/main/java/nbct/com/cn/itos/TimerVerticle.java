@@ -1,5 +1,7 @@
 package nbct.com.cn.itos;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,8 +18,11 @@ import org.apache.log4j.Logger;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.config.CycleEnum;
 import nbct.com.cn.itos.config.Configer;
@@ -112,17 +117,18 @@ public class TimerVerticle extends AbstractVerticle {
 						tasks.forEach(task -> {
 							params.add(new JsonArray()//
 									.add(task.getTaskId())//
-									.add(task.getStatus())//
+									.add(task.getCategory()).add(task.getStatus())//
 									.add(task.getAbs())//
 									.add(task.getContent())//
 									.add(DateUtil.localToUtcStr(task.getPlanDt()))//
 									.add(task.getModelId())//
 									.add("N")//
+									.add(task.getTaskIcon())//
 									.add("SYS")//
 									.add(DateUtil.localToUtcStr(LocalDateTime.now())));//
 						});
-						String sql = "insert into itos_task(taskId,status,abstract,content,plandt,modelId,"//
-								+ "invalid,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_task(taskId,category,status,abstract,content,plandt,modelId,"//
+								+ "invalid,taskicon,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(tasks);
@@ -153,10 +159,13 @@ public class TimerVerticle extends AbstractVerticle {
 									.add("")// 原内容
 									.add("")// 新内容
 									.add(task.getModelId())//
-									.add(task.getAbs()));//
+									.add(task.getAbs())//
+									.add("SYS")//
+									.add(DateUtil.localToUtcStr(LocalDateTime.now())));//
 						});
 						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,oldcontent,newcontent,modelId,abstract) values(?,?,?,?,?,?,?,?,?)";
+								+ "handler,oldcontent,newcontent,modelId,abstract,oper,opdate) "//
+								+ " values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete("扫描任务模版完毕。");
@@ -187,10 +196,29 @@ public class TimerVerticle extends AbstractVerticle {
 		});
 	}
 
+	private void registe() {
+		JsonObject provider = Configer.provider;
+		JsonObject registerUrl = Configer.registerUrl;
+		WebClient wc = WebClient.create(vertx,
+				new WebClientOptions().setIdleTimeout(2).setConnectTimeout(2000).setMaxWaitQueueSize(5));
+		try {
+			provider.put("ip", InetAddress.getLocalHost().getHostAddress());
+			wc.post(registerUrl.getInteger("port"), registerUrl.getString("ip"), registerUrl.getString("url"))
+					.timeout(1000).sendJsonObject(provider, ar -> {
+						if (!ar.succeeded()) {
+							ar.cause().printStackTrace();
+						}
+					});
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void start() throws Exception {
-		vertx.setPeriodic(15000, timerId -> {
+		vertx.setPeriodic(5000, timerId -> {
 			task();
+			registe();
 		});
 	}
 

@@ -67,7 +67,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 					user.setRole(j.getString("role"));
 					break;
 				default:
-					System.out.println("OTHERS");
+					System.out.println("OTHERS WEBSOCKET HEADER.");
 				}
 			});
 			webSocket.closeHandler(handler -> onlineUsers.remove(id));

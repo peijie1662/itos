@@ -10,11 +10,12 @@ import java.util.Optional;
 public enum TaskStatusEnum {
 	
 	CHECKIN("CHECKIN", "登记任务"), //
-	GOING("PERWEEK","处理任务"), //
+	GOING("GOING","处理任务"), //
 	MODIFY("MODIFY","修改任务内容"), //
 	SWAP("SWAP","任务处理人更换"),//
 	CANCEL("CANCEL","取消任务"),//
-	ACCOMPLISH("ACCOMPLISH","完成任务"); //
+	SUCCESS("SUCCESS","任务成功"),//
+	FAIL("FAIL","任务失败"); //
 
 	private String value;
 

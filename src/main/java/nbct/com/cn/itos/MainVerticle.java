@@ -42,10 +42,16 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/modeldelete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
 		// 增加模版
 		router.post("/modeladd").blockingHandler(modelHandler::addTimerTaskModel, false);
-		//任务列表
-		router.post("/tasklist").blockingHandler(taskHandler::getTaskList, false);
-		//可执行任务列表
-		router.post("/executetasklist").blockingHandler(taskHandler::getExecuteTaskList, false);
+		//人工任务列表
+		router.post("/manualtasklist").blockingHandler(taskHandler::getManualTaskList, false);
+		//系统任务列表
+		router.post("/dispatchtasklist").blockingHandler(taskHandler::getDispatchTaskList, false);
+		//任务日志
+		router.post("/tasklog").blockingHandler(taskHandler::getTaskLog, false);
+		//保存任务
+		router.post("/addManualtask").blockingHandler(taskHandler::saveManualTask, false);
+		//更新系统任务状态
+		router.post("/dispatchtaskupdate").blockingHandler(taskHandler::updateDispatchTask, false);
 		
 		Configer.initDbPool(vertx);
 		vertx.deployVerticle(new TimerVerticle());
