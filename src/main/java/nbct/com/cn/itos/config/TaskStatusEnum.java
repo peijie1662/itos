@@ -10,7 +10,7 @@ import java.util.Optional;
 public enum TaskStatusEnum {
 	
 	CHECKIN("CHECKIN", "登记任务"), //
-	GOING("GOING","处理任务"), //
+	PROGRESSING("PROGRESSING","处理任务"), //
 	MODIFY("MODIFY","修改任务内容"), //
 	SWAP("SWAP","任务处理人更换"),//
 	CANCEL("CANCEL","取消任务"),//

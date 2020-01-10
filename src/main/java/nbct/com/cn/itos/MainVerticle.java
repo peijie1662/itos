@@ -10,6 +10,7 @@ import io.vertx.ext.web.handler.CorsHandler;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.handler.LoginHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
+import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.TaskHandler;
 
 public class MainVerticle extends AbstractVerticle {
@@ -31,9 +32,11 @@ public class MainVerticle extends AbstractVerticle {
 		LoginHandler loginHandler = new LoginHandler();
 		ModelHandler modelHandler = new ModelHandler();
 		TaskHandler taskHandler = new TaskHandler();
+		SettingsHandler settingsHandler = new SettingsHandler();
 
 		// 登录
 		router.post("/login").blockingHandler(loginHandler::handleLogin, false);
+		
 		// 模版列表
 		router.post("/modellist").blockingHandler(modelHandler::getTimerTaskModelList, false);
 		// 修改模版
@@ -42,6 +45,7 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/modeldelete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
 		// 增加模版
 		router.post("/modeladd").blockingHandler(modelHandler::addTimerTaskModel, false);
+		
 		//人工任务列表
 		router.post("/manualtasklist").blockingHandler(taskHandler::getManualTaskList, false);
 		//系统任务列表
@@ -51,7 +55,16 @@ public class MainVerticle extends AbstractVerticle {
 		//保存任务
 		router.post("/addManualtask").blockingHandler(taskHandler::saveManualTask, false);
 		//更新系统任务状态
-		router.post("/dispatchtaskupdate").blockingHandler(taskHandler::updateDispatchTask, false);
+		router.post("/dispatchtaskupdate").blockingHandler(taskHandler::updateDispatchTask, false);	
+		
+		//智能提示列表
+		router.post("/smarttipslist").blockingHandler(settingsHandler::getSmartTipsList, false);
+		//添加智能提示
+		router.post("/addSmarttips").blockingHandler(settingsHandler::addSmartTips, false);
+		//修改智能提示
+		router.post("/updateSmarttips").blockingHandler(settingsHandler::updateSmartTips, false);
+		//删除智能提示
+		router.post("/deleteSmarttips").blockingHandler(settingsHandler::deleteSmartTips, false);
 		
 		Configer.initDbPool(vertx);
 		vertx.deployVerticle(new TimerVerticle());
