@@ -3,7 +3,6 @@ package nbct.com.cn.itos.handler;
 import static nbct.com.cn.itos.model.CallResult.Err;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -76,7 +75,7 @@ public class ModelHandler {
 		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate,invalid,abstract) "
 				+ " values(?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
-		params.add(UUID.randomUUID().toString());
+		params.add(rp.getString("modelId"));
 		params.add(rp.getString("category"));
 		params.add(rp.getString("cycle"));
 		params.add(rp.getString("comments"));

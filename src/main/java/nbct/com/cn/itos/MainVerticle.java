@@ -7,11 +7,13 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.handler.LoginHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.TaskHandler;
+import nbct.com.cn.itos.handler.UploadHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -33,44 +35,56 @@ public class MainVerticle extends AbstractVerticle {
 		ModelHandler modelHandler = new ModelHandler();
 		TaskHandler taskHandler = new TaskHandler();
 		SettingsHandler settingsHandler = new SettingsHandler();
+		UploadHandler uploadHandler = new UploadHandler();
+
+		// 静态文件
+		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
 
 		// 登录
 		router.post("/login").blockingHandler(loginHandler::handleLogin, false);
-		
+
 		// 模版列表
-		router.post("/modellist").blockingHandler(modelHandler::getTimerTaskModelList, false);
+		router.post("/model/list").blockingHandler(modelHandler::getTimerTaskModelList, false);
 		// 修改模版
-		router.post("/modelupdate").blockingHandler(modelHandler::updateTimerTaskModel, false);
+		router.post("/model/update").blockingHandler(modelHandler::updateTimerTaskModel, false);
 		// 删除模版
-		router.post("/modeldelete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
+		router.post("/model/delete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
 		// 增加模版
-		router.post("/modeladd").blockingHandler(modelHandler::addTimerTaskModel, false);
-		
-		//人工任务列表
-		router.post("/manualtasklist").blockingHandler(taskHandler::getManualTaskList, false);
-		//系统任务列表
-		router.post("/dispatchtasklist").blockingHandler(taskHandler::getDispatchTaskList, false);
-		//任务日志
-		router.post("/tasklog").blockingHandler(taskHandler::getTaskLog, false);
-		//保存任务
-		router.post("/addManualtask").blockingHandler(taskHandler::saveManualTask, false);
-		//更新系统任务状态
-		router.post("/dispatchtaskupdate").blockingHandler(taskHandler::updateDispatchTask, false);	
-		
-		//智能提示列表
-		router.post("/smarttipslist").blockingHandler(settingsHandler::getSmartTipsList, false);
-		//添加智能提示
-		router.post("/addSmarttips").blockingHandler(settingsHandler::addSmartTips, false);
-		//修改智能提示
-		router.post("/updateSmarttips").blockingHandler(settingsHandler::updateSmartTips, false);
-		//删除智能提示
-		router.post("/deleteSmarttips").blockingHandler(settingsHandler::deleteSmartTips, false);
-		
+		router.post("/model/add").blockingHandler(modelHandler::addTimerTaskModel, false);
+		//模版文件上传
+		router.post("/model/uploadfile").blockingHandler(uploadHandler::uploadModelFile, false);
+
+		// 人工任务列表
+		router.post("/manualtask/list").blockingHandler(taskHandler::getManualTaskList, false);
+		// 保存任务
+		router.post("/manualtask/add").blockingHandler(taskHandler::saveManualTask, false);
+		// 任务状态-SWAP
+		router.post("/manualtask/swap").blockingHandler(taskHandler::swapTask, false);
+		// 系统任务列表
+		router.post("/dispatchtask/list").blockingHandler(taskHandler::getDispatchTaskList, false);
+		// 任务日志
+		router.post("/task/log").blockingHandler(taskHandler::getTaskLog, false);
+		// 任务状态-PROCESSING,DONE,CANCEL
+		router.post("/task/updatestatus").blockingHandler(taskHandler::updateTaskStatus, false);
+		// 任务状态-MODIFY
+		router.post("/task/modify").blockingHandler(taskHandler::modifyTask, false);
+		// 任务图片上传
+		router.post("/task/uploadfile").blockingHandler(uploadHandler::uploadTaskFile, false);
+
+		// 智能提示列表
+		router.post("/smarttips/list").blockingHandler(settingsHandler::getSmartTipsList, false);
+		// 添加智能提示
+		router.post("/smarttips/add").blockingHandler(settingsHandler::addSmartTips, false);
+		// 修改智能提示
+		router.post("/smarttips/update").blockingHandler(settingsHandler::updateSmartTips, false);
+		// 删除智能提示
+		router.post("/smarttips/delete").blockingHandler(settingsHandler::deleteSmartTips, false);
+
 		Configer.initDbPool(vertx);
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
-		
+
 		logger.info("ITOS server start");
 
 	}

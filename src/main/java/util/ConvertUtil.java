@@ -21,5 +21,13 @@ public class ConvertUtil {
 		}
 		return list;
 	}
+	
+	public static String listToStr(List<String> list){
+		if(list == null){
+			return "";
+		}else{
+			return String.join(",", list);
+		}
+	}
 
 }

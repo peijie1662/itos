@@ -32,6 +32,8 @@ public class CommonTaskLog {
 	
 	private String abs;
 	
+	private String remark;
+	
 	private String oper;
 	
 	private LocalDateTime opDate;
@@ -46,6 +48,7 @@ public class CommonTaskLog {
 		log.setNewContent(j.getString("NEWCONTENT"));
 		log.setOldContent(j.getString("OLDCONTENT"));
 		log.setHandler(ConvertUtil.strToList(j.getString("HANDLER")));
+		log.setRemark(j.getString("REMARK"));
 		log.setOper(j.getString("OPER"));
 		log.setOpDate(DateUtil.utcToLocalDT(j.getString("OPDATE")));
 		return log;
@@ -137,6 +140,14 @@ public class CommonTaskLog {
 
 	public void setOpDate(LocalDateTime opDate) {
 		this.opDate = opDate;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
 	}
 	
 }

@@ -49,6 +49,7 @@ public class Configer {
 			registerUrl = config.getJsonObject("registerUrl");
 			loginServer = config.getString("loginServer");
 			provider = config.getJsonObject("provider");
+			uploadDir = config.getString("uploadDir");
 		} catch (Exception e) {
 			System.out.println("读取配置文件失败");
 		}

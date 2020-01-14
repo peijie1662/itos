@@ -23,6 +23,8 @@ import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.jdbc.TaskLogRowMapper;
 import nbct.com.cn.itos.jdbc.TaskRowMapper;
+import nbct.com.cn.itos.model.CommonTask;
+import util.ConvertUtil;
 import util.DateUtil;
 
 /**
@@ -61,7 +63,7 @@ public class TaskHandler {
 	 */
 	public void getTaskLog(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "select * from itos_tasklog where taskId = ?";
+		String sql = "select * from itos_tasklog where taskId = ? order by opdate";
 		JsonArray params = new JsonArray().add(rp.getString("taskId"));
 		JdbcHelper.rows(ctx, sql, params, new TaskLogRowMapper());
 	}
@@ -88,7 +90,8 @@ public class TaskHandler {
 								"status,content,handler,invalid,taskicon,oper,opdate) " + //
 								"values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray();
-						String taskId = UUID.randomUUID().toString();
+						//String taskId = UUID.randomUUID().toString();
+						String taskId = rp.getString("taskId");
 						String oper = rp.getString("oper");
 						String handler = rp.getString("handler");
 						String abs = rp.getString("abstract");
@@ -159,9 +162,9 @@ public class TaskHandler {
 	}
 
 	/**
-	 * 更新系统任务状态
+	 * 任务操作(MODIFY)
 	 */
-	public void updateDispatchTask(RoutingContext ctx) {
+	public void modifyTask(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
@@ -170,8 +173,8 @@ public class TaskHandler {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.找到对应Task
-				Supplier<Future<JsonObject>> getf = () -> {
-					Future<JsonObject> f = Future.future(promise -> {
+				Supplier<Future<CommonTask>> getf = () -> {
+					Future<CommonTask> f = Future.future(promise -> {
 						JsonArray params = new JsonArray()//
 								.add(rp.getString("taskId"));
 						String sql = "select * from itos_task where taskId = ?";
@@ -179,7 +182,12 @@ public class TaskHandler {
 							if (r.succeeded()) {
 								List<JsonObject> rs = r.result().getRows();
 								if (rs.size() > 0) {
-									promise.complete(rs.get(0));
+									CommonTask task = CommonTask.from(rs.get(0));
+									if (task.getContent().equals(rp.getString("content"))) {
+										promise.fail("任务内容没有变化，不需要保存。");
+									} else {
+										promise.complete(task);
+									}
 								} else {
 									promise.fail("任务表中找不到这个TaskId");
 								}
@@ -190,38 +198,41 @@ public class TaskHandler {
 					});
 					return f;
 				};
-				// 2.更新状态
-				Function<JsonObject, Future<JsonObject>> savef = (task) -> {
-					Future<JsonObject> f = Future.future(promise -> {
+				// 2.更新内容
+				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
+					Future<CommonTask> f = Future.future(promise -> {
 						JsonArray params = new JsonArray()//
-								.add(rp.getString("status"))//
+								.add(rp.getString("content"))//
 								.add(rp.getString("taskId"));
-						String sql = "update itos_task set status = ? where taskId = ?";
+						String sql = "update itos_task set content = ? where taskId = ?";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
-								task.put("status", rp.getString("taskId"));
+								// 这里不更新内容，保留原内容作为日志。
 								promise.complete(task);
 							} else {
-								promise.fail("更新任务状态失败");
+								promise.fail("修改任务内容失败");
 							}
 						});
 					});
 					return f;
 				};
 				// 3.保存日志
-				Function<JsonObject, Future<JsonObject>> logf = (task) -> {
-					Future<JsonObject> f = Future.future(promise -> {
+				Function<CommonTask, Future<CommonTask>> logf = (task) -> {
+					Future<CommonTask> f = Future.future(promise -> {
 						JsonArray params = new JsonArray()//
 								.add(UUID.randomUUID().toString())//
-								.add(task.getString("taskId"))//
-								.add(task.getString("status"))//
-								.add("用户" + rp.getString("oper") + "将任务状态置为" + rp.getString("status"))//
-								.add(task.getString("handler"))//
-								.add(task.getString("abstract"))//
+								.add(task.getTaskId())//
+								.add(task.getStatus().getValue())//
+								.add("用户" + rp.getString("oper") + "修改了任务内容。")//
+								.add(ConvertUtil.listToStr(task.getHandler()))//
+								.add(task.getContent())//
+								.add(rp.getString("content"))//
+								.add(task.getAbs())//
+								.add(rp.getString("remark"))//
 								.add(rp.getString("oper"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?)";
+								+ "handler,oldcontent,newcontent,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);
@@ -240,10 +251,208 @@ public class TaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						String log = DateUtil.curDtStr() + " " + "更新任务'" + rp.getString("abs") + "'的状态为"
+						String log = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的内容";
+						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+						res.end(OK());
+					} else {
+						res.end(Err(r.cause().getMessage()));
+					}
+					conn.close();
+				});
+			}
+		});
+	}
+
+	/**
+	 * 任务操作(SWAP)
+	 */
+	public void swapTask(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.找到对应Task
+				Supplier<Future<CommonTask>> getf = () -> {
+					Future<CommonTask> f = Future.future(promise -> {
+						JsonArray params = new JsonArray()//
+								.add(rp.getString("taskId"));
+						String sql = "select * from itos_task where taskId = ?";
+						conn.queryWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								List<JsonObject> rs = r.result().getRows();
+								if (rs.size() > 0) {
+									CommonTask task = CommonTask.from(rs.get(0));
+									if (ConvertUtil.listToStr(task.getHandler()).equals(rp.getString("handler"))) {
+										promise.fail("处理人员没有变化，不需要保存。");
+									} else {
+										promise.complete(task);
+									}
+								} else {
+									promise.fail("任务表中找不到这个TaskId");
+								}
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.更新handler
+				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
+					Future<CommonTask> f = Future.future(promise -> {
+						JsonArray params = new JsonArray()//
+								.add(rp.getString("handler"))//
+								.add(rp.getString("taskId"));
+						String sql = "update itos_task set handler = ? where taskId = ?";
+						conn.updateWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								// 这里不更新handler，保留原handler作为日志。
+								promise.complete(task);
+							} else {
+								promise.fail("修改任务处理人失败");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.保存日志
+				Function<CommonTask, Future<CommonTask>> logf = (task) -> {
+					Future<CommonTask> f = Future.future(promise -> {
+						JsonArray params = new JsonArray()//
+								.add(UUID.randomUUID().toString())//
+								.add(task.getTaskId())//
+								.add(task.getStatus().getValue())//
+								.add("用户" + rp.getString("oper") + "修改了任务处理人员。")//
+								.add(rp.getString("handler"))//
+								.add(ConvertUtil.listToStr(task.getHandler()))// 修改前处理人员
+								.add(rp.getString("handler"))// 修改后处理人员
+								.add(task.getAbs())//
+								.add(rp.getString("remark"))//
+								.add(rp.getString("oper"))//
+								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
+								+ "handler,oldcontent,newcontent,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
+						conn.updateWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete(task);
+							} else {
+								r.cause().printStackTrace();
+								promise.fail("保存更新任务的日志出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 4.EXECUTE
+				getf.get().compose(r -> {
+					return savef.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
+				}).setHandler(r -> {
+					if (r.succeeded()) {
+						String log = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
+						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+						res.end(OK());
+					} else {
+						res.end(Err(r.cause().getMessage()));
+					}
+					conn.close();
+				});
+			}
+		});
+	}
+
+	/**
+	 * 任务操作(PROCESSING,DONE,CANCEL)
+	 */
+	public void updateTaskStatus(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		SQLClient client = Configer.client;
+		
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.找到对应Task
+				Supplier<Future<CommonTask>> getf = () -> {
+					Future<CommonTask> f = Future.future(promise -> {
+						JsonArray params = new JsonArray()//
+								.add(rp.getString("taskId"));
+						String sql = "select * from itos_task where taskId = ?";
+						conn.queryWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								List<JsonObject> rs = r.result().getRows();
+								if (rs.size() > 0) {
+									promise.complete(CommonTask.from(rs.get(0)));
+								} else {
+									promise.fail("任务表中找不到这个TaskId");
+								}
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.更新状态
+				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
+					Future<CommonTask> f = Future.future(promise -> {
+						JsonArray params = new JsonArray()//
+								.add(rp.getString("status"))//
+								.add(rp.getString("taskId"));
+						String sql = "update itos_task set status = ? where taskId = ?";
+						conn.updateWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								task.setStatus(TaskStatusEnum.from(rp.getString("status")).get());
+								promise.complete(task);
+							} else {
+								promise.fail("更新任务状态失败");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.保存日志
+				Function<CommonTask, Future<CommonTask>> logf = (task) -> {
+					Future<CommonTask> f = Future.future(promise -> {
+						JsonArray params = new JsonArray()//
+								.add(UUID.randomUUID().toString())//
+								.add(task.getTaskId())//
+								.add(task.getStatus().getValue())//
+								.add("用户" + rp.getString("oper") + "将任务状态置为" + rp.getString("status"))//
+								.add(ConvertUtil.listToStr(task.getHandler()))//
+								.add(task.getAbs())//
+								.add(rp.getString("remark"))//
+								.add(rp.getString("oper"))//
+								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
+								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
+						conn.updateWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete(task);
+							} else {
+								r.cause().printStackTrace();
+								promise.fail("保存更新任务的日志出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 4.EXECUTE
+				getf.get().compose(r -> {
+					return savef.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
+				}).setHandler(r -> {
+					if (r.succeeded()) {
+						String log = DateUtil.curDtStr() + " " + "更新任务'" + r.result().getAbs() + "'的状态为"
 								+ rp.getString("status");
 						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
-						res.end(OK(r.result()));
+						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));
 					}
