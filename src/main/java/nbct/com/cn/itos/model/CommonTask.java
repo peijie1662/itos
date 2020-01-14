@@ -150,6 +150,14 @@ public class CommonTask {
 				tasks.add(task);
 			});
 			break;
+		case CIRCULAR:
+			if (dts.length > 1) {
+				throw new RuntimeException("循环计划的计划时间格式出错，无法生成计划任务。");
+			}
+			CommonTask task = createTask.get();
+			task.setPlanDt(LocalDateTime.now());
+			tasks.add(task);
+			break;
 		default:
 			System.out.println("default");
 			break;

@@ -1,7 +1,7 @@
 package nbct.com.cn.itos.model;
 
 import java.text.ParseException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
@@ -30,7 +30,7 @@ public class TimerTaskModel {
 
 	private boolean invalid;
 
-	private LocalDate scanDate;
+	private LocalDateTime scanDate;
 	
 	private String apiKey;
 	
@@ -56,14 +56,6 @@ public class TimerTaskModel {
 
 	public void setInvalid(boolean invalid) {
 		this.invalid = invalid;
-	}
-
-	public LocalDate getScanDate() {
-		return scanDate;
-	}
-
-	public void setScanDate(LocalDate scanDate) {
-		this.scanDate = scanDate;
 	}
 	
 	public String getPlanDates() {
@@ -105,6 +97,14 @@ public class TimerTaskModel {
 	public void setCategory(CategoryEnum category) {
 		this.category = category;
 	}
+	
+	public LocalDateTime getScanDate() {
+		return scanDate;
+	}
+
+	public void setScanDate(LocalDateTime scanDate) {
+		this.scanDate = scanDate;
+	}
 
 	public static TimerTaskModel from(JsonObject j) throws ParseException {
 		TimerTaskModel t = new TimerTaskModel();
@@ -115,7 +115,7 @@ public class TimerTaskModel {
 		t.setComments(j.getString("COMMENTS"));
 		t.setInvalid("Y".equals(j.getString("INVAILD")));
 		t.setPlanDates(j.getString("PLANDATES"));
-		t.setScanDate(DateUtil.utcToLocal(j.getString("SCANDATE")));
+		t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
 		t.setApiKey(j.getString("APIKEY"));
 		return t;
 	}

@@ -22,5 +22,8 @@
     "user": "itos",
     "password": "itos"
   },
-  "uploadDir": "d:/itos/"
+  "uploadDir": "d:/itos/",
+  "dispatchClient":{
+      "heartbeatThreshold":45
+  }
 }

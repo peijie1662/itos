@@ -9,6 +9,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.handler.DispatchClientHandler;
 import nbct.com.cn.itos.handler.LoginHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
@@ -36,6 +37,7 @@ public class MainVerticle extends AbstractVerticle {
 		TaskHandler taskHandler = new TaskHandler();
 		SettingsHandler settingsHandler = new SettingsHandler();
 		UploadHandler uploadHandler = new UploadHandler();
+		DispatchClientHandler dispatchClientHandler = new DispatchClientHandler();
 
 		// 静态文件
 		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -79,8 +81,16 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/smarttips/update").blockingHandler(settingsHandler::updateSmartTips, false);
 		// 删除智能提示
 		router.post("/smarttips/delete").blockingHandler(settingsHandler::deleteSmartTips, false);
-
+		
+		//下发终端列表
+		router.post("/dispatchclient/list").blockingHandler(dispatchClientHandler::getClientList, false);
+		//下发终端注册
+		router.post("/dispatchclient/registe").blockingHandler(dispatchClientHandler::registe, false);
+		//重载终端数据
+		router.post("/dispatchclient/reload").blockingHandler(dispatchClientHandler::loadData, false);
+		
 		Configer.initDbPool(vertx);
+		dispatchClientHandler.loadData();//初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());

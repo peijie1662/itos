@@ -11,7 +11,8 @@ public enum CycleEnum {
 
 	PERDAY("PERDAY", "每日任务"), //
 	PERWEEK("PERWEEK","每周任务"), //
-	PERMONTH("PERMONTH","每月任务"); //
+	PERMONTH("PERMONTH","每月任务"), //
+	CIRCULAR("CIRCULAR","循环任务");
 
 	private String value;
 

@@ -18,7 +18,7 @@ import java.util.TimeZone;
 public class DateUtil {
 	
 	/**
-	 * UTC时间字符串转成LocalDate (DB -> OBJ)
+	 * UTC时间字符串转成LocalDateTime (DB -> OBJ)
 	 */
 	public static LocalDateTime utcToLocalDT(String utcTime) throws ParseException {
 		if (utcTime == null) {

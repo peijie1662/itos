@@ -40,6 +40,11 @@ public class Configer {
 	 * 数据库链接
 	 */
 	public static SQLClient client;
+	
+	/**
+	 * dispatch client 心跳阈值
+	 */
+	public static int heartbeatThreshold;
 
 	static {
 		byte[] buff = new byte[102400];
@@ -50,6 +55,7 @@ public class Configer {
 			loginServer = config.getString("loginServer");
 			provider = config.getJsonObject("provider");
 			uploadDir = config.getString("uploadDir");
+			heartbeatThreshold = config.getJsonObject("dispatchClient").getInteger("heartbeatThreshold");
 		} catch (Exception e) {
 			System.out.println("读取配置文件失败");
 		}
