@@ -59,7 +59,6 @@ public class TimerVerticle extends AbstractVerticle {
 										throw new RuntimeException(e.getMessage());
 									}
 								}).filter(model -> {
-
 									boolean valid = model.getScanDate() == null;
 									if (model.getScanDate() != null) {
 										LocalDateTime ct = LocalDateTime.now();
@@ -160,7 +159,7 @@ public class TimerVerticle extends AbstractVerticle {
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
 									.add(TaskStatusEnum.CHECKIN.getValue())//
-									.add("系统按照任务模版生成任务。")//
+									.add("系统按照任务模版'" + task.getAbs() + "'生成任务。")//
 									.add("")// 待认领
 									.add("")// 原内容
 									.add("")// 新内容

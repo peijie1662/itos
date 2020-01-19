@@ -28,21 +28,21 @@ import util.DateUtil;
 public class CommonTask {
 
 	private String taskId;
-	
+
 	private CategoryEnum category;
 
 	private TaskStatusEnum status;
-	
+
 	private String abs;
 
 	private String content;
-	
+
 	private List<String> keys;
 
 	private List<String> handler;
-	
+
 	private String phone;
-	
+
 	private String location;
 
 	private String customer;
@@ -50,12 +50,12 @@ public class CommonTask {
 	private String modelId;
 
 	private LocalDateTime planDt;
-	
+
 	private String apiKey;
-	
+
 	private String taskIcon;
-	
-	public static CommonTask from(JsonObject j){
+
+	public static CommonTask from(JsonObject j) {
 		CommonTask task = new CommonTask();
 		task.setTaskId(j.getString("TASKID"));
 		task.setAbs(j.getString("ABSTRACT"));
@@ -73,12 +73,34 @@ public class CommonTask {
 	}
 
 	/**
+	 * 临时生成新任务
+	 */
+	public static CommonTask from(TimerTaskModel model, LocalDateTime planDt) {
+		if (model.isInvalid())
+			throw new RuntimeException("模版处于无效状态，不能生成任务。");
+		CommonTask task = new CommonTask();
+		task.setTaskId(UUID.randomUUID().toString());
+		task.setCategory(model.getCategory());
+		task.setStatus(TaskStatusEnum.CHECKIN);
+		task.setAbs(model.getAbs());
+		task.setContent(model.getComments());
+		task.setCustomer("SYS");
+		task.setModelId(model.getModelId());
+		task.setApiKey(model.getApiKey());
+		task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
+		task.setPlanDt(planDt);
+		return task;
+	}
+
+	/**
 	 * 生成新任务
 	 * 
 	 * @param content
 	 * @return
 	 */
 	public static List<CommonTask> from(TimerTaskModel model) {
+		if (model.isInvalid())
+			throw new RuntimeException("模版处于无效状态，不能生成任务。");
 		// 1.初始化
 		Supplier<CommonTask> createTask = () -> {
 			CommonTask task = new CommonTask();
@@ -90,7 +112,7 @@ public class CommonTask {
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setApiKey(model.getApiKey());
-			task.setTaskIcon("AUTO");//机器人，代表系统生成任务
+			task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
 			return task;
 		};
 		// 2.创建
@@ -137,7 +159,7 @@ public class CommonTask {
 			IntStream.range(0, dts.length / 3).forEach(i -> {
 				// 日期
 				int week = Integer.parseInt(dts[i * 3]);// 每月第几周
-				int day = Integer.parseInt(dts[i*3 + 1]);//周几
+				int day = Integer.parseInt(dts[i * 3 + 1]);// 周几
 				LocalDate curDt = LocalDate.now();
 				LocalDate pd = curDt.with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
 				// 时间

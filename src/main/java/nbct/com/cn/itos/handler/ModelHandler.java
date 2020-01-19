@@ -20,7 +20,7 @@ import util.DateUtil;
 public class ModelHandler {
 
 	public void getTimerTaskModelList(RoutingContext ctx) {
-		String sql = "select * from itos_taskmodel where invalid = 'N' order by category,opdate";
+		String sql = "select * from itos_taskmodel order by category,opdate";
 		JdbcHelper.rows(ctx, sql, new ModelRowMapper());
 	}
 
@@ -39,7 +39,7 @@ public class ModelHandler {
 
 	public void deleteTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "update itos_taskmodel set invalid='Y' where modelId = ? ";
+		String sql = "delete itos_taskmodel where modelId = ? ";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
@@ -88,6 +88,16 @@ public class ModelHandler {
 		// 日志
 		String log = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
 		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+	}
+	
+	/**
+	 * 改变模版有效状态
+	 */
+	public void chgModelStatus(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_taskmodel set invalid = ? where modelId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("invalid")).add(rp.getString("modelId"));
+		JdbcHelper.update(ctx, sql, params);
 	}
 
 }

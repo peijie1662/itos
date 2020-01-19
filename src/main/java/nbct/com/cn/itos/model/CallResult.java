@@ -13,7 +13,7 @@ public class CallResult<T> {
 	private T data;
 
 	private String errMsg;
-	
+
 	public CallResult() {
 
 	}

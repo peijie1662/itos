@@ -10,10 +10,12 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
+import nbct.com.cn.itos.handler.DispatchTaskHandler;
 import nbct.com.cn.itos.handler.LoginHandler;
+import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
-import nbct.com.cn.itos.handler.TaskHandler;
+import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 
 public class MainVerticle extends AbstractVerticle {
@@ -31,10 +33,11 @@ public class MainVerticle extends AbstractVerticle {
 						.allowedHeader("X-PINGARUNER")//
 						.allowedHeader("Content-Type"));
 		router.route().handler(BodyHandler.create());
-
 		LoginHandler loginHandler = new LoginHandler();
 		ModelHandler modelHandler = new ModelHandler();
-		TaskHandler taskHandler = new TaskHandler();
+		CommonTaskHandler commonTaskHandler = new CommonTaskHandler();
+		ManualTaskHandler manualTaskHandler = new ManualTaskHandler();
+		DispatchTaskHandler dispatchTaskHandler = new DispatchTaskHandler();
 		SettingsHandler settingsHandler = new SettingsHandler();
 		UploadHandler uploadHandler = new UploadHandler();
 		DispatchClientHandler dispatchClientHandler = new DispatchClientHandler();
@@ -53,23 +56,31 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/model/delete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
 		// 增加模版
 		router.post("/model/add").blockingHandler(modelHandler::addTimerTaskModel, false);
-		//模版文件上传
+		// 模版文件上传
 		router.post("/model/uploadfile").blockingHandler(uploadHandler::uploadModelFile, false);
+		// 模版状态改变
+		router.post("/model/status").blockingHandler(modelHandler::chgModelStatus, false);
 
 		// 人工任务列表
-		router.post("/manualtask/list").blockingHandler(taskHandler::getManualTaskList, false);
+		router.post("/manualtask/list").blockingHandler(manualTaskHandler::getManualTaskList, false);
 		// 保存任务
-		router.post("/manualtask/add").blockingHandler(taskHandler::saveManualTask, false);
+		router.post("/manualtask/add").blockingHandler(manualTaskHandler::saveManualTask, false);
 		// 任务状态-SWAP
-		router.post("/manualtask/swap").blockingHandler(taskHandler::swapTask, false);
+		router.post("/manualtask/swap").blockingHandler(manualTaskHandler::swapTask, false);
 		// 系统任务列表
-		router.post("/dispatchtask/list").blockingHandler(taskHandler::getDispatchTaskList, false);
+		router.post("/dispatchtask/list").blockingHandler(dispatchTaskHandler::getDispatchTaskList, false);
+		// 系统任务列表
+		router.post("/dispatchtask/all").blockingHandler(dispatchTaskHandler::getDispatchAllTask, false);
+		// 保存系统任务
+		router.post("/dispatchtask/add").blockingHandler(dispatchTaskHandler::saveDispatchTask, false);
+		// 生成临时任务
+		router.post("/task/once").blockingHandler(commonTaskHandler::saveOnceTask, false);
 		// 任务日志
-		router.post("/task/log").blockingHandler(taskHandler::getTaskLog, false);
+		router.post("/task/log").blockingHandler(commonTaskHandler::getTaskLog, false);
 		// 任务状态-PROCESSING,DONE,CANCEL
-		router.post("/task/updatestatus").blockingHandler(taskHandler::updateTaskStatus, false);
+		router.post("/task/updatestatus").blockingHandler(commonTaskHandler::updateTaskStatus, false);
 		// 任务状态-MODIFY
-		router.post("/task/modify").blockingHandler(taskHandler::modifyTask, false);
+		router.post("/task/modify").blockingHandler(commonTaskHandler::modifyTask, false);
 		// 任务图片上传
 		router.post("/task/uploadfile").blockingHandler(uploadHandler::uploadTaskFile, false);
 
@@ -81,16 +92,16 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/smarttips/update").blockingHandler(settingsHandler::updateSmartTips, false);
 		// 删除智能提示
 		router.post("/smarttips/delete").blockingHandler(settingsHandler::deleteSmartTips, false);
-		
-		//下发终端列表
+
+		// 下发终端列表
 		router.post("/dispatchclient/list").blockingHandler(dispatchClientHandler::getClientList, false);
-		//下发终端注册
+		// 下发终端注册
 		router.post("/dispatchclient/registe").blockingHandler(dispatchClientHandler::registe, false);
-		//重载终端数据
+		// 重载终端数据
 		router.post("/dispatchclient/reload").blockingHandler(dispatchClientHandler::loadData, false);
-		
+
 		Configer.initDbPool(vertx);
-		dispatchClientHandler.loadData();//初始化DispatchClient数据
+		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());

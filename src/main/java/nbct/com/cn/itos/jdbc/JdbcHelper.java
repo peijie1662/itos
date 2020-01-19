@@ -70,14 +70,18 @@ public class JdbcHelper {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
 					connection.queryWithParams(sql, params, qr -> {
-						if (qr.succeeded()) {
-							if (mapper != null) {
-								res.end(OK(mapper.from(qr.result().getRows())));
+						try {
+							if (qr.succeeded()) {
+								if (mapper != null) {
+									res.end(OK(mapper.from(qr.result().getRows())));
+								} else {
+									res.end(OK(qr.result().getRows()));
+								}
 							} else {
-								res.end(OK(qr.result().getRows()));
+								res.end(Err(qr.cause().getMessage()));
 							}
-						} else {
-							res.end(Err(qr.cause().getMessage()));
+						} catch (Exception e) {
+							res.end(Err(e.getMessage()));
 						}
 						connection.close();
 					});
@@ -154,7 +158,7 @@ public class JdbcHelper {
 			}
 		});
 	}
-	
+
 	/**
 	 * 批量修改记录
 	 * 
@@ -172,6 +176,39 @@ public class JdbcHelper {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
 					connection.batch(sqls, qr -> {
+						if (qr.succeeded()) {
+							res.end(OK());
+						} else {
+							res.end(Err(qr.cause().getMessage()));
+						}
+						connection.close();
+					});
+				} else {
+					res.end(Err("the DB connect is null."));
+				}
+			} else {
+				res.end(Err("get DB connect err."));
+			}
+		});
+	}
+
+	/**
+	 * 调用存储过程
+	 * 
+	 * @param ctx
+	 * @param func
+	 * @param params in参数
+	 * @param output out参数 
+	 */
+	public static void call(RoutingContext ctx, String func, JsonArray params, JsonArray outputs) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection connection = cr.result();
+				if (connection != null) {
+					connection.callWithParams(func, params, outputs, qr -> {
 						if (qr.succeeded()) {
 							res.end(OK());
 						} else {

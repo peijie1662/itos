@@ -113,7 +113,7 @@ public class TimerTaskModel {
 		t.setCycle(CycleEnum.from(j.getString("CYCLE")).get());
 		t.setAbs(j.getString("ABSTRACT"));
 		t.setComments(j.getString("COMMENTS"));
-		t.setInvalid("Y".equals(j.getString("INVAILD")));
+		t.setInvalid("Y".equals(j.getString("INVALID")));
 		t.setPlanDates(j.getString("PLANDATES"));
 		t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
 		t.setApiKey(j.getString("APIKEY"));
