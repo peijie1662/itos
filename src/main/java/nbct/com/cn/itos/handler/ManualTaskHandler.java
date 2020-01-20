@@ -33,13 +33,6 @@ import util.DateUtil;
 public class ManualTaskHandler {
 	
 	/**
-	 * 电话关联数据
-	 */
-	public void phoneAssociate(RoutingContext ctx) {
-
-	}
-	
-	/**
 	 * 人工执行任务列表
 	 */
 	public void getManualTaskList(RoutingContext ctx) {

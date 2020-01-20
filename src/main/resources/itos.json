@@ -5,6 +5,7 @@
       "url": "/register"
   },
   "loginServer": "hr_service_prd",
+  "itopServer": "Itop_Service",
   "provider":{
     "serverId":"ITOS",
     "serverName": "ITOS",

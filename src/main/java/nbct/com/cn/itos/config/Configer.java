@@ -14,12 +14,18 @@ import io.vertx.ext.sql.SQLClient;
  */
 @SuppressWarnings("resource")
 public class Configer {
+	
 	private static JsonObject config;
 
 	/**
 	 * 登录服务URL
 	 */
 	public static String loginServer;
+	
+	/**
+	 * ITOP服务URL
+	 */
+	public static String itopServer;
 
 	/**
 	 * 注册服务URL
@@ -53,6 +59,7 @@ public class Configer {
 			config = new JsonObject(new String(buff, "utf-8"));
 			registerUrl = config.getJsonObject("registerUrl");
 			loginServer = config.getString("loginServer");
+			itopServer = config.getString("itopServer");
 			provider = config.getJsonObject("provider");
 			uploadDir = config.getString("uploadDir");
 			heartbeatThreshold = config.getJsonObject("dispatchClient").getInteger("heartbeatThreshold");

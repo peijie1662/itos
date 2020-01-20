@@ -49,7 +49,8 @@ public class TimerVerticle extends AbstractVerticle {
 				// 1.读数据
 				Supplier<Future<List<TimerTaskModel>>> loadf = () -> {
 					Future<List<TimerTaskModel>> f = Future.future(promise -> {
-						String sql = "select * from itos_taskmodel where invalid = 'N' order by category,opdate";
+						String sql = "select * from itos_taskmodel where invalid = 'N' and category <> 'COMPOSE' "//
+								+ "order by category,opdate";
 						conn.query(sql, r -> {
 							if (r.succeeded()) {
 								List<TimerTaskModel> models = r.result().getRows().stream().map(row -> {

@@ -15,6 +15,7 @@ import nbct.com.cn.itos.handler.LoginHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
+import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 
@@ -41,6 +42,7 @@ public class MainVerticle extends AbstractVerticle {
 		SettingsHandler settingsHandler = new SettingsHandler();
 		UploadHandler uploadHandler = new UploadHandler();
 		DispatchClientHandler dispatchClientHandler = new DispatchClientHandler();
+		AssociateItopHandler associateItopHandler = new AssociateItopHandler();
 
 		// 静态文件
 		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -60,7 +62,11 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/model/uploadfile").blockingHandler(uploadHandler::uploadModelFile, false);
 		// 模版状态改变
 		router.post("/model/status").blockingHandler(modelHandler::chgModelStatus, false);
-
+		// 组合任务模版
+		router.post("/model/composelist").blockingHandler(modelHandler::getComposeModelList, false);
+		// 组合任务模版详细信息
+		router.post("/model/composedetail").blockingHandler(modelHandler::saveComposeModelDetail, false);		
+		
 		// 人工任务列表
 		router.post("/manualtask/list").blockingHandler(manualTaskHandler::getManualTaskList, false);
 		// 保存任务
@@ -100,6 +106,9 @@ public class MainVerticle extends AbstractVerticle {
 		// 重载终端数据
 		router.post("/dispatchclient/reload").blockingHandler(dispatchClientHandler::loadData, false);
 
+		//ITOS设备号关联信息
+		router.post("/associate/machinename").blockingHandler(associateItopHandler::machineNameAssociate, false);
+		
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());
