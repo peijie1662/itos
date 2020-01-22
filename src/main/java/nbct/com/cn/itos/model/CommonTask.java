@@ -51,9 +51,9 @@ public class CommonTask {
 
 	private LocalDateTime planDt;
 
-	private String apiKey;
-
 	private String taskIcon;
+	
+	private String composeId;
 
 	public static CommonTask from(JsonObject j) {
 		CommonTask task = new CommonTask();
@@ -67,8 +67,8 @@ public class CommonTask {
 		task.setPhone(j.getString("PHONE"));
 		task.setLocation(j.getString("LOCATION"));
 		task.setCustomer(j.getString("CUSTOMER"));
-		task.setApiKey(j.getString("APIKEY"));
 		task.setTaskIcon(j.getString("TASKICON"));
+		task.setComposeId(j.getString("COMPOSEID"));
 		return task;
 	}
 
@@ -86,7 +86,6 @@ public class CommonTask {
 		task.setContent(model.getComments());
 		task.setCustomer("SYS");
 		task.setModelId(model.getModelId());
-		task.setApiKey(model.getApiKey());
 		task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
 		task.setPlanDt(planDt);
 		return task;
@@ -111,7 +110,6 @@ public class CommonTask {
 			task.setContent(model.getComments());
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
-			task.setApiKey(model.getApiKey());
 			task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
 			return task;
 		};
@@ -275,14 +273,6 @@ public class CommonTask {
 		this.location = location;
 	}
 
-	public String getApiKey() {
-		return apiKey;
-	}
-
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
-
 	public CategoryEnum getCategory() {
 		return category;
 	}
@@ -297,6 +287,14 @@ public class CommonTask {
 
 	public void setTaskIcon(String taskIcon) {
 		this.taskIcon = taskIcon;
+	}
+
+	public String getComposeId() {
+		return composeId;
+	}
+
+	public void setComposeId(String composeId) {
+		this.composeId = composeId;
 	}
 
 }

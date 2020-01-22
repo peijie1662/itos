@@ -313,7 +313,7 @@ public class CommonTaskHandler {
 				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
 					Future<CommonTask> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,modelId," + //
-								" status,content,planDt,invalid,compose,taskicon,oper,opdate) " + //
+								" status,content,planDt,invalid,taskicon,oper,opdate) " + //
 								" values(?,?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray()//
 								.add(task.getTaskId())//
@@ -323,7 +323,6 @@ public class CommonTaskHandler {
 								.add("CHECKIN")//
 								.add(task.getContent())//
 								.add(DateUtil.localToUtcStr(task.getPlanDt()))//
-								.add("N")//
 								.add("N")//
 								.add(task.getTaskIcon())//
 								.add(rp.getString("userId"))//

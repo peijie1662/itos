@@ -36,7 +36,7 @@ public class ManualTaskHandler {
 	 * 人工执行任务列表
 	 */
 	public void getManualTaskList(RoutingContext ctx) {
-		String sql = "select * from itos_task where category in (?) and invalid = 'N' and compose = 'N' order by opdate desc";
+		String sql = "select * from itos_task where category in (?) and invalid = 'N' and composeId is null order by opdate desc";
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.COMMON.getValue());
 		JdbcHelper.rows(ctx, sql, params, new TaskRowMapper());

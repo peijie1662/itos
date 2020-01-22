@@ -31,30 +31,13 @@ public class ModelHandler {
 	}
 	
 	/**
-	 * 保存组合模版详细信息
+	 * 非组合任务模版列表
 	 * @param ctx
 	 */
-	public void saveComposeModelDetail(RoutingContext ctx){
-		JsonObject rp = ctx.getBodyAsJson();
-		
-		JsonArray details = rp.getJsonArray("details");
-		details.stream().forEach(item -> {
-			
-			JsonObject j = JsonObject.mapFrom(item);
-			
-			System.out.println(j.encodePrettily());
-		});
-		
-		HttpServerResponse res = ctx.response();
-		res.end("{flag:true}");
-	}
-	
-	/**
-	 * 组合详细信息
-	 * @param ctx
-	 */
-	public void getComposeDetail(RoutingContext ctx){
-		
+	public void getNotComposeModelList(RoutingContext ctx) {
+		String sql = "select * from itos_taskmodel where invalid = 'N' "//
+				+ " and category <> 'COMPOSE' order by opdate";
+		JdbcHelper.rows(ctx, sql, new ModelRowMapper());
 	}
 
 	public void getTimerTaskModelList(RoutingContext ctx) {

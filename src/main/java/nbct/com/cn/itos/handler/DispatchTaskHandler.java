@@ -33,7 +33,7 @@ public class DispatchTaskHandler {
 	 * 所有下发终端任务列表(页面访问)
 	 */
 	public void getDispatchAllTask(RoutingContext ctx) {
-		String sql = "select * from itos_task where category in (?,?) and invalid = 'N' and compose = 'N'";
+		String sql = "select * from itos_task where category in (?,?) and invalid = 'N' and composeId is null";
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.CMD.getValue());
 		params.add(CategoryEnum.PROCEDURE.getValue());
@@ -70,7 +70,7 @@ public class DispatchTaskHandler {
 				Supplier<Future<JsonObject>> savef = () -> {
 					Future<JsonObject> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,modelId," + //
-								"status,content,invalid,compose,taskicon,oper,opdate) values(?,?,?,?,?,?,?,?,?,?,?)";
+								"status,content,invalid,taskicon,oper,opdate) values(?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray();
 						String taskId = rp.getString("taskId");
 						String oper = rp.getString("oper");
@@ -82,7 +82,6 @@ public class DispatchTaskHandler {
 						params.add(rp.getString("modelId"));// 通过modelId关联到dispatchClient
 						params.add("CHECKIN");
 						params.add(rp.getString("content"));
-						params.add("N");
 						params.add("N");
 						params.add(rp.getString("taskIcon"));
 						params.add(oper);

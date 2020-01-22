@@ -17,6 +17,7 @@ import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
+import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 
 public class MainVerticle extends AbstractVerticle {
@@ -43,6 +44,7 @@ public class MainVerticle extends AbstractVerticle {
 		UploadHandler uploadHandler = new UploadHandler();
 		DispatchClientHandler dispatchClientHandler = new DispatchClientHandler();
 		AssociateItopHandler associateItopHandler = new AssociateItopHandler();
+		ComposeHandler composeHandler = new ComposeHandler();
 
 		// 静态文件
 		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -61,11 +63,16 @@ public class MainVerticle extends AbstractVerticle {
 		// 模版文件上传
 		router.post("/model/uploadfile").blockingHandler(uploadHandler::uploadModelFile, false);
 		// 模版状态改变
-		router.post("/model/status").blockingHandler(modelHandler::chgModelStatus, false);
+		router.post("/model/status").blockingHandler(modelHandler::chgModelStatus, false);		
 		// 组合任务模版
 		router.post("/model/composelist").blockingHandler(modelHandler::getComposeModelList, false);
+		// 非组合任务模版
+		router.post("/model/notcomposelist").blockingHandler(modelHandler::getNotComposeModelList, false);		
+		
+		// 保存组合任务模版详细信息
+		router.post("/composetask/savecomposedetail").blockingHandler(composeHandler::saveComposeModelDetail, false);		
 		// 组合任务模版详细信息
-		router.post("/model/composedetail").blockingHandler(modelHandler::saveComposeModelDetail, false);		
+		router.post("/composetask/getcomposedetail").blockingHandler(composeHandler::getComposeDetail, false);			
 		
 		// 人工任务列表
 		router.post("/manualtask/list").blockingHandler(manualTaskHandler::getManualTaskList, false);
