@@ -17,7 +17,9 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.ComposeDetailRowMapper;
+import nbct.com.cn.itos.jdbc.ComposeTaskRowMapper;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.jdbc.TaskRowMapper;
 
 /**
  * @author PJ
@@ -96,7 +98,7 @@ public class ComposeHandler {
 	/**
 	 * 组合详细信息
 	 * 
-	 * @param ctx
+	 * @param ctx(composeId)
 	 */
 	public void getComposeDetail(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -104,12 +106,49 @@ public class ComposeHandler {
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
 		JdbcHelper.rows(ctx, sql, params, new ComposeDetailRowMapper());
 	}
-	
+
 	/**
-	 * 读取该组合模版
-	 * @param ctx
+	 * 读取该组合任务的子任务
+	 * 
+	 * @param ctx(composeId)
 	 */
-	public void getComposeTasksByModels(RoutingContext ctx) {
-		
+	public void getTaskInCompose(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_task where composeId = ? order by opdate desc";
+		JsonArray params = new JsonArray().add(rp.getString("composeId"));
+		JdbcHelper.rows(ctx, sql, params, new TaskRowMapper());
 	}
+
+	/**
+	 * 读取该组合模版的组合任务
+	 * 
+	 * @param ctx(modelId)
+	 */
+	public void getComposeTaskByModel(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from " + //
+				" (select * from itos_task where modelId = ?) aa, " + //
+				" (select a.taskId,a.opdate as bgDt,b.opdate as edDt from " + //
+				" (select * from itos_tasklog where modelid = ? and status = 'PROCESSING') a, " + //
+				" (select * from itos_tasklog where modelid = ? and status = 'DONE') b " + //
+				" where a.taskid = b.taskid(+)) bb " + //
+				" where aa.taskid = bb.taskid(+) order by aa.opdate desc";
+		JsonArray params = new JsonArray().add(rp.getString("modelId")).add(rp.getString("modelId"))
+				.add(rp.getString("modelId"));
+		JdbcHelper.rows(ctx, sql, params, new ComposeTaskRowMapper());
+	}
+
+	/**
+	 * 启动组合任务
+	 * 
+	 * @param ctx(taskId,userId)
+	 */
+	public void startComposeTask(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String func = "{call itos.p_compose_task_start(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.getString("taskId") + "," + rp.getString("userId"));
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}
+
 }

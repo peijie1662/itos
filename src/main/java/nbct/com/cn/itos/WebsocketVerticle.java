@@ -30,14 +30,13 @@ public class WebsocketVerticle extends AbstractVerticle {
 		});
 		websocketMethod(server);
 		server.requestHandler(router).listen(Configer.getWebsocketPort());
-
 		EventBus es = vertx.eventBus();
 		es.consumer(AddressEnum.SYSLOG.getValue(), this::pushSysLog);
+		es.consumer(AddressEnum.CONTROLCENTER.getValue(), this::pushControlCenter);
 	}
 
 	/**
 	 * 自动任务生成日志推送给管理员
-	 * 
 	 * @param msg
 	 */
 	private void pushSysLog(Message<String> msg) {
@@ -45,6 +44,16 @@ public class WebsocketVerticle extends AbstractVerticle {
 			if ("admin".equals(user.getRole())) {
 				user.getWs().writeFinalTextFrame(msg.body());
 			}
+		});
+	}
+
+	/**
+	 * 控制中心消息推送给所有用户
+	 * @param msg
+	 */
+	private void pushControlCenter(Message<String> msg) {
+		onlineUsers.forEach((id, user) -> {
+			user.getWs().writeFinalTextFrame(msg.body());
 		});
 	}
 

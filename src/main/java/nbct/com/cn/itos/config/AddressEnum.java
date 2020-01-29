@@ -9,7 +9,8 @@ import java.util.Optional;
 */
 public enum AddressEnum {
 	
-	SYSLOG("itos.sys.log", "系统日志");
+	SYSLOG("itos.sys.log", "系统日志"),
+	CONTROLCENTER("itos.controlcenter.notify","控制中心通知");
 
 	private String value;
 

@@ -63,17 +63,23 @@ public class MainVerticle extends AbstractVerticle {
 		// 模版文件上传
 		router.post("/model/uploadfile").blockingHandler(uploadHandler::uploadModelFile, false);
 		// 模版状态改变
-		router.post("/model/status").blockingHandler(modelHandler::chgModelStatus, false);		
+		router.post("/model/status").blockingHandler(modelHandler::chgModelStatus, false);
 		// 组合任务模版
 		router.post("/model/composelist").blockingHandler(modelHandler::getComposeModelList, false);
 		// 非组合任务模版
-		router.post("/model/notcomposelist").blockingHandler(modelHandler::getNotComposeModelList, false);		
-		
+		router.post("/model/notcomposelist").blockingHandler(modelHandler::getNotComposeModelList, false);
+
 		// 保存组合任务模版详细信息
-		router.post("/composetask/savecomposedetail").blockingHandler(composeHandler::saveComposeModelDetail, false);		
+		router.post("/composetask/savecomposedetail").blockingHandler(composeHandler::saveComposeModelDetail, false);
 		// 组合任务模版详细信息
-		router.post("/composetask/getcomposedetail").blockingHandler(composeHandler::getComposeDetail, false);			
-		
+		router.post("/composetask/getcomposedetail").blockingHandler(composeHandler::getComposeDetail, false);
+		// 读取该组合模版的组合任务
+		router.post("/composetask/getcomposetaskbymodel").blockingHandler(composeHandler::getComposeTaskByModel, false);
+		// 启动组合任务
+		router.post("/composetask/startcomposetask").blockingHandler(composeHandler::startComposeTask, false);
+		// 读取组合任务的子任务
+		router.post("/composetask/gettaskincompose").blockingHandler(composeHandler::getTaskInCompose, false);
+
 		// 人工任务列表
 		router.post("/manualtask/list").blockingHandler(manualTaskHandler::getManualTaskList, false);
 		// 保存任务
@@ -113,9 +119,9 @@ public class MainVerticle extends AbstractVerticle {
 		// 重载终端数据
 		router.post("/dispatchclient/reload").blockingHandler(dispatchClientHandler::loadData, false);
 
-		//ITOS设备号关联信息
+		// ITOS设备号关联信息
 		router.post("/associate/machinename").blockingHandler(associateItopHandler::machineNameAssociate, false);
-		
+
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());

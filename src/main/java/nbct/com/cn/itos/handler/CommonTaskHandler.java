@@ -200,6 +200,7 @@ public class CommonTaskHandler {
 						JsonArray params = new JsonArray()//
 								.add(UUID.randomUUID().toString())//
 								.add(task.getTaskId())//
+								.add(task.getModelId())//
 								.add(task.getStatus().getValue())//
 								.add("用户" + rp.getString("oper") + "将任务状态置为" + rp.getString("status"))//
 								.add(ConvertUtil.listToStr(task.getHandler()))//
@@ -207,8 +208,8 @@ public class CommonTaskHandler {
 								.add(rp.getString("remark"))//
 								.add(rp.getString("oper"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
+								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);
@@ -223,17 +224,19 @@ public class CommonTaskHandler {
 				// 4.组合任务
 				Function<CommonTask, Future<CommonTask>> composef = (task) -> {
 					Future<CommonTask> f = Future.future(promise -> {
-						JsonArray params = new JsonArray().add(task.getTaskId());// 传入参数
+						JsonArray params = new JsonArray().add(task.getTaskId() + "," + "SYS");// 传入参数
 						JsonArray outputs = new JsonArray()//
 								.addNull()// 传入
 								.add("VARCHAR")// flag
 								.add("VARCHAR")// errMsg
 								.add("VARCHAR");// outMsg
-						conn.callWithParams("{call itos.p_compose_task(?,?,?,?)}", params, outputs, r -> {
+						conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
 							if (r.succeeded()) {
 								JsonArray j = r.result().getOutput();
 								Boolean flag = "0".equals(j.getString(1));// flag
-								//int newTask = j.getInteger(3);// 新建下阶段任务数量
+								String newTask = j.getString(3);// 新建下阶段任务数量
+								String notify = "NEWTASK@" + newTask;
+								ctx.vertx().eventBus().send(AddressEnum.CONTROLCENTER.getValue(), notify);
 								if (flag) {
 									promise.complete(task);
 								} else {
@@ -314,7 +317,7 @@ public class CommonTaskHandler {
 					Future<CommonTask> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,modelId," + //
 								" status,content,planDt,invalid,taskicon,oper,opdate) " + //
-								" values(?,?,?,?,?,?,?,?,?,?,?,?)";
+								" values(?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray()//
 								.add(task.getTaskId())//
 								.add(task.getCategory().getValue())//
@@ -344,14 +347,15 @@ public class CommonTaskHandler {
 						JsonArray params = new JsonArray()//
 								.add(UUID.randomUUID().toString())//
 								.add(task.getTaskId())//
+								.add(task.getModelId())//
 								.add(task.getStatus().getValue())//
 								.add("用户" + rp.getString("userId") + "临时从模版生成新任务'" + task.getAbs() + "'")//
 								.add(ConvertUtil.listToStr(task.getHandler()))//
 								.add(task.getAbs())//
 								.add(rp.getString("userId"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
+								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);
@@ -370,7 +374,7 @@ public class CommonTaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						String log = DateUtil.curDtStr() + "用户" + rp.getString("oper") + "临时从模版生成新任务'"
+						String log = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
 								+ r.result().getAbs() + "'";
 						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 						res.end(OK());

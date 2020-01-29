@@ -68,6 +68,7 @@ public class CommonTask {
 		task.setLocation(j.getString("LOCATION"));
 		task.setCustomer(j.getString("CUSTOMER"));
 		task.setTaskIcon(j.getString("TASKICON"));
+		task.setModelId(j.getString("MODELID"));
 		task.setComposeId(j.getString("COMPOSEID"));
 		return task;
 	}

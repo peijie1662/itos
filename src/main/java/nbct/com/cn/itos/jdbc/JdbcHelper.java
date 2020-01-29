@@ -197,8 +197,10 @@ public class JdbcHelper {
 	 * 
 	 * @param ctx
 	 * @param func
-	 * @param params in参数
-	 * @param output out参数 
+	 * @param params
+	 *            in参数
+	 * @param output
+	 *            out参数
 	 */
 	public static void call(RoutingContext ctx, String func, JsonArray params, JsonArray outputs) {
 		HttpServerResponse res = ctx.response();
@@ -210,7 +212,15 @@ public class JdbcHelper {
 				if (connection != null) {
 					connection.callWithParams(func, params, outputs, qr -> {
 						if (qr.succeeded()) {
-							res.end(OK());
+							JsonArray j = qr.result().getOutput();
+							Boolean flag = "0".equals(j.getString(1));
+							String errMsg = j.getString(2);
+							String outMsg = j.getString(3);
+							if (flag) {
+								res.end(OK(outMsg));
+							} else {
+								res.end(Err(errMsg));
+							}
 						} else {
 							res.end(Err(qr.cause().getMessage()));
 						}
