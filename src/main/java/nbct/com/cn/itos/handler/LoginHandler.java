@@ -16,7 +16,9 @@ import static nbct.com.cn.itos.model.CallResult.Err;
  * 登录
  * 
  * @author PJ
- * @version 创建时间：2019年12月23日 上午8:52:01
+ * @version 创建时间：2019年12月23日 上午8:52:01<br>
+ * 
+ * 暂时不用，用户登录先在ITOS数据库校验，以后再统一集成。
  */
 public class LoginHandler {
 	

@@ -9,16 +9,16 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import nbct.com.cn.itos.config.Configer;
-import nbct.com.cn.itos.handler.DispatchClientHandler;
-import nbct.com.cn.itos.handler.DispatchTaskHandler;
-import nbct.com.cn.itos.handler.LoginHandler;
-import nbct.com.cn.itos.handler.ManualTaskHandler;
-import nbct.com.cn.itos.handler.ModelHandler;
-import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
+import nbct.com.cn.itos.handler.DispatchClientHandler;
+import nbct.com.cn.itos.handler.DispatchTaskHandler;
+import nbct.com.cn.itos.handler.ManualTaskHandler;
+import nbct.com.cn.itos.handler.ModelHandler;
+import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
+import nbct.com.cn.itos.handler.UserHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -35,7 +35,7 @@ public class MainVerticle extends AbstractVerticle {
 						.allowedHeader("X-PINGARUNER")//
 						.allowedHeader("Content-Type"));
 		router.route().handler(BodyHandler.create());
-		LoginHandler loginHandler = new LoginHandler();
+		//LoginHandler loginHandler = new LoginHandler();
 		ModelHandler modelHandler = new ModelHandler();
 		CommonTaskHandler commonTaskHandler = new CommonTaskHandler();
 		ManualTaskHandler manualTaskHandler = new ManualTaskHandler();
@@ -45,12 +45,13 @@ public class MainVerticle extends AbstractVerticle {
 		DispatchClientHandler dispatchClientHandler = new DispatchClientHandler();
 		AssociateItopHandler associateItopHandler = new AssociateItopHandler();
 		ComposeHandler composeHandler = new ComposeHandler();
+		UserHandler userHandler = new UserHandler();
 
 		// 静态文件
 		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
 
 		// 登录
-		router.post("/login").blockingHandler(loginHandler::handleLogin, false);
+		router.post("/login").blockingHandler(userHandler::handleLogin, false);
 
 		// 模版列表
 		router.post("/model/list").blockingHandler(modelHandler::getTimerTaskModelList, false);
@@ -121,6 +122,9 @@ public class MainVerticle extends AbstractVerticle {
 
 		// ITOS设备号关联信息
 		router.post("/associate/machinename").blockingHandler(associateItopHandler::machineNameAssociate, false);
+
+		// 用户列表
+		router.post("/user/list").blockingHandler(userHandler::getUserList, false);
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据

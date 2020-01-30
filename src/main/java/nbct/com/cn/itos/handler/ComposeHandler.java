@@ -19,7 +19,6 @@ import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.ComposeDetailRowMapper;
 import nbct.com.cn.itos.jdbc.ComposeTaskRowMapper;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.TaskRowMapper;
 
 /**
  * @author PJ
@@ -42,7 +41,7 @@ public class ComposeHandler {
 		SQLClient client = Configer.client;
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
-				SQLConnection conn = cr.result();
+				SQLConnection conn = cr.result();				
 				// 1.删除原数据
 				Supplier<Future<Void>> delf = () -> {
 					Future<Void> f = Future.future(promise -> {
@@ -114,9 +113,15 @@ public class ComposeHandler {
 	 */
 	public void getTaskInCompose(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "select * from itos_task where composeId = ? order by opdate desc";
+		String sql = "select aa.*,bb.bgDt,bb.edDt from " + //
+				" (select * from itos_task where composeId = ?) aa, " + //
+				" (select a.taskId,a.opdate as bgDt,b.opdate as edDt from " + //
+				" (select * from itos_tasklog where status = 'CHECKIN') a, " + //
+				" (select * from itos_tasklog where status in ('DONE','CANCEL')) b " + //
+				" where a.taskid = b.taskid(+)) bb " + //
+				" where aa.taskid = bb.taskid(+) ";
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
-		JdbcHelper.rows(ctx, sql, params, new TaskRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new ComposeTaskRowMapper());
 	}
 
 	/**
@@ -126,7 +131,7 @@ public class ComposeHandler {
 	 */
 	public void getComposeTaskByModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "select * from " + //
+		String sql = "select aa.*,bb.bgDt,bb.edDt from " + //
 				" (select * from itos_task where modelId = ?) aa, " + //
 				" (select a.taskId,a.opdate as bgDt,b.opdate as edDt from " + //
 				" (select * from itos_tasklog where modelid = ? and status = 'PROCESSING') a, " + //

@@ -1,6 +1,7 @@
 package nbct.com.cn.itos.model;
 
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.core.json.JsonObject;
 
 /**
 * @author PJ 
@@ -12,15 +13,34 @@ public class ItosUser {
 	
 	private String userId;
 	
+	private String password;
+	
 	private String workId;
 	
 	private String role;
 	
-	private String deptName;
+	private String department;
 	
-	private String functionId;
+	private String phone;
+	
+	private String shortPhone;
+	
+	private String authority;
 	
 	private ServerWebSocket ws;
+	
+	public static ItosUser from(JsonObject j) {
+		ItosUser user = new ItosUser();
+		user.setUserId(j.getString("USERID"));
+		user.setUserName(j.getString("USERNAME"));
+		user.setWorkId(j.getString("WORKID"));
+		user.setDepartment(j.getString("DEPARTMENT"));
+		user.setAuthority(j.getString("AUTHORITY"));
+		user.setPhone(j.getString("PHONE"));
+		user.setShortPhone(j.getString("SHORTPHONE"));
+		user.setRole(j.getString("ROLE"));
+		return user;
+	}
 
 	public String getUserName() {
 		return userName;
@@ -38,12 +58,52 @@ public class ItosUser {
 		this.userId = userId;
 	}
 
-	public String getRole() {
-		return role;
+	public String getPassword() {
+		return password;
 	}
 
-	public void setRole(String role) {
-		this.role = role;
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getWorkId() {
+		return workId;
+	}
+
+	public void setWorkId(String workId) {
+		this.workId = workId;
+	}
+
+	public String getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(String department) {
+		this.department = department;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public String getShortPhone() {
+		return shortPhone;
+	}
+
+	public void setShortPhone(String shortPhone) {
+		this.shortPhone = shortPhone;
+	}
+
+	public String getAuthority() {
+		return authority;
+	}
+
+	public void setAuthority(String authority) {
+		this.authority = authority;
 	}
 
 	public ServerWebSocket getWs() {
@@ -55,34 +115,12 @@ public class ItosUser {
 		return this;
 	}
 
-	public String getWorkId() {
-		return workId;
+	public String getRole() {
+		return role;
 	}
 
-	public void setWorkId(String workId) {
-		this.workId = workId;
-	}
-
-	public String getDeptName() {
-		return deptName;
-	}
-
-	public void setDeptName(String deptName) {
-		this.deptName = deptName;
-	}
-
-	public String getFunctionId() {
-		return functionId;
-	}
-
-	public void setFunctionId(String functionId) {
-		this.functionId = functionId;
-	}
-
-	@Override
-	public String toString() {
-		return "ItosUser [userName=" + userName + ", userId=" + userId + ", workId=" + workId + ", role=" + role
-				+ ", deptName=" + deptName + ", functionId=" + functionId + ", ws=" + ws + "]";
+	public void setRole(String role) {
+		this.role = role;
 	}
 
 }

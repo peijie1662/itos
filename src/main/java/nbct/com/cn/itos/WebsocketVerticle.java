@@ -41,7 +41,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 	 */
 	private void pushSysLog(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {
-			if ("admin".equals(user.getRole())) {
+			if ("ADMIN".equals(user.getRole())) {
 				user.getWs().writeFinalTextFrame(msg.body());
 			}
 		});
