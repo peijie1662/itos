@@ -30,6 +30,16 @@ public class UserHandler {
 	}
 
 	/**
+	 * 修改权限
+	 */
+	public void updateAuthority(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_user set authority = ? where userId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("authority")).add(rp.getString("userId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
 	 * 用户登录
 	 */
 	public void handleLogin(RoutingContext ctx) {

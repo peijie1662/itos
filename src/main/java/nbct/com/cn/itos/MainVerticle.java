@@ -125,6 +125,8 @@ public class MainVerticle extends AbstractVerticle {
 
 		// 用户列表
 		router.post("/user/list").blockingHandler(userHandler::getUserList, false);
+		//用户权限
+		router.post("/user/authority").blockingHandler(userHandler::updateAuthority, false);
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
