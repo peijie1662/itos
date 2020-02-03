@@ -20,6 +20,36 @@ import nbct.com.cn.itos.jdbc.UserRowMapper;
  * @version 创建时间：2020年1月30日 下午6:24:24
  */
 public class UserHandler {
+	
+	/**
+	 * 保存用户
+	 */
+	public void saveUser(RoutingContext ctx){
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "insert into itos_user(userId,userName,workId,password,authority,department,"+//
+		"phone,shortPhone,role) values(?,?,?,?,?,?,?,?,?)";
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("userId"))//
+				.add(rp.getString("userName"))//
+				.add(rp.getString("workId"))//
+				.add(rp.getString("userId"))//password默认为userId
+				.add(rp.getString("authority"))//
+				.add(rp.getString("department"))//
+				.add(rp.getString("phone"))//
+				.add(rp.getString("shortPhone"))//
+				.add(rp.getString("role"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+	
+	/**
+	 * 删除用户
+	 */
+	public void delUser(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "delete from itos_user where userId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("userId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
 
 	/**
 	 * 用户信息列表
@@ -36,6 +66,24 @@ public class UserHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "update itos_user set authority = ? where userId = ?";
 		JsonArray params = new JsonArray().add(rp.getString("authority")).add(rp.getString("userId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 修改内容
+	 */
+	public void updateContent(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_user set userName = ?,workId = ?," + //
+				"department = ?,phone = ?,shortPhone = ?,role = ? where userId = ?";
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("userName"))//
+				.add(rp.getString("workId"))//
+				.add(rp.getString("department"))//
+				.add(rp.getString("phone"))//
+				.add(rp.getString("shortPhone"))//
+				.add(rp.getString("role"))//
+				.add(rp.getString("userId"));
 		JdbcHelper.update(ctx, sql, params);
 	}
 

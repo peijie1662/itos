@@ -224,29 +224,33 @@ public class CommonTaskHandler {
 				// 4.组合任务
 				Function<CommonTask, Future<CommonTask>> composef = (task) -> {
 					Future<CommonTask> f = Future.future(promise -> {
-						JsonArray params = new JsonArray().add(task.getTaskId() + "," + "SYS");// 传入参数
-						JsonArray outputs = new JsonArray()//
-								.addNull()// 传入
-								.add("VARCHAR")// flag
-								.add("VARCHAR")// errMsg
-								.add("VARCHAR");// outMsg
-						conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
-							if (r.succeeded()) {
-								JsonArray j = r.result().getOutput();
-								Boolean flag = "0".equals(j.getString(1));// flag
-								String newTask = j.getString(3);// 新建下阶段任务数量
-								String notify = "NEWTASK@" + newTask;
-								ctx.vertx().eventBus().send(AddressEnum.CONTROLCENTER.getValue(), notify);
-								if (flag) {
-									promise.complete(task);
+						if (task.getComposeId() == null) {
+							promise.complete(task);// 非组合任务路过
+						} else {
+							JsonArray params = new JsonArray().add(task.getTaskId() + "," + "SYS");// 传入参数
+							JsonArray outputs = new JsonArray()//
+									.addNull()// 传入
+									.add("VARCHAR")// flag
+									.add("VARCHAR")// errMsg
+									.add("VARCHAR");// outMsg
+							conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
+								if (r.succeeded()) {
+									JsonArray j = r.result().getOutput();
+									Boolean flag = "0".equals(j.getString(1));// flag
+									String newTask = j.getString(3);// 新建下阶段任务数量
+									String notify = "NEWTASK@" + newTask;
+									ctx.vertx().eventBus().send(AddressEnum.CONTROLCENTER.getValue(), notify);
+									if (flag) {
+										promise.complete(task);
+									} else {
+										promise.fail("组合任务过程内部出错:" + j.getString(2));
+									}
 								} else {
-									promise.fail("组合任务过程内部出错。");
+									r.cause().printStackTrace();
+									promise.fail("调用组合任务的出错。");
 								}
-							} else {
-								r.cause().printStackTrace();
-								promise.fail("调用组合任务的出错。");
-							}
-						});
+							});
+						}
 					});
 					return f;
 				};

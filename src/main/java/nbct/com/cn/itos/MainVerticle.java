@@ -35,7 +35,7 @@ public class MainVerticle extends AbstractVerticle {
 						.allowedHeader("X-PINGARUNER")//
 						.allowedHeader("Content-Type"));
 		router.route().handler(BodyHandler.create());
-		//LoginHandler loginHandler = new LoginHandler();
+		// LoginHandler loginHandler = new LoginHandler();
 		ModelHandler modelHandler = new ModelHandler();
 		CommonTaskHandler commonTaskHandler = new CommonTaskHandler();
 		ManualTaskHandler manualTaskHandler = new ManualTaskHandler();
@@ -125,8 +125,14 @@ public class MainVerticle extends AbstractVerticle {
 
 		// 用户列表
 		router.post("/user/list").blockingHandler(userHandler::getUserList, false);
-		//用户权限
+		// 用户权限
 		router.post("/user/authority").blockingHandler(userHandler::updateAuthority, false);
+		// 用户信息
+		router.post("/user/content").blockingHandler(userHandler::updateContent, false);
+		// 删除用户
+		router.post("/user/delete").blockingHandler(userHandler::delUser, false);
+		// 新用户
+		router.post("/user/add").blockingHandler(userHandler::saveUser, false);		
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
