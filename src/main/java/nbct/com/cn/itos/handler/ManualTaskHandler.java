@@ -57,7 +57,7 @@ public class ManualTaskHandler {
 				Supplier<Future<JsonObject>> savef = () -> {
 					Future<JsonObject> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,phone,location,customer," + //
-								"status,content,handler,invalid,compose,taskicon,oper,opdate) " + //
+								"status,content,handler,invalid,taskicon,plandt,oper,opdate) " + //
 								"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray();
 						String taskId = rp.getString("taskId");
@@ -74,8 +74,8 @@ public class ManualTaskHandler {
 						params.add(rp.getString("content"));
 						params.add(handler);
 						params.add("N");
-						params.add("N");
 						params.add(rp.getString("taskIcon"));
+						params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 						params.add(oper);
 						params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 						conn.updateWithParams(sql, params, r -> {
@@ -85,6 +85,7 @@ public class ManualTaskHandler {
 										.put("oper", oper).put("handler", handler).put("abstract", abs));
 							} else {
 								promise.fail("保存任务出错。");
+								r.cause().printStackTrace();
 							}
 						});
 					});
@@ -119,7 +120,7 @@ public class ManualTaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						String log = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abs") + "'";
+						String log = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
 						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 						res.end(OK(r.result()));
 					} else {

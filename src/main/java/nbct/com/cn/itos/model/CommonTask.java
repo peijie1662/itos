@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.model;
 
+import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -70,6 +71,11 @@ public class CommonTask {
 		task.setTaskIcon(j.getString("TASKICON"));
 		task.setModelId(j.getString("MODELID"));
 		task.setComposeId(j.getString("COMPOSEID"));
+		try {
+			task.setPlanDt(DateUtil.utcToLocalDT(j.getString("PLANDT")));
+		} catch (ParseException e) {
+			throw new RuntimeException(e.getMessage());
+		}
 		return task;
 	}
 

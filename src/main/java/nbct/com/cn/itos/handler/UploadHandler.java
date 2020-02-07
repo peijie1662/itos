@@ -79,5 +79,35 @@ public class UploadHandler {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * 用户头像上传
+	 */
+	public void uploadUserFace(RoutingContext ctx) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		try {
+			FileSystem fs = ctx.vertx().fileSystem();
+			String userId = ctx.request().getFormAttribute("userId");
+			String savePath = Configer.uploadDir +"user_file/"+ userId;
+			if (!fs.existsBlocking(savePath)) {
+				fs.mkdirsBlocking(savePath);
+			}
+			Set<FileUpload> uploads = ctx.fileUploads();
+			CallResult<String> result = new CallResult<String>().ok();
+			uploads.forEach(fileUpload -> {
+				String path = savePath + "/" + fileUpload.fileName();
+				fs.move(fileUpload.uploadedFileName(), path, new CopyOptions().setReplaceExisting(true), ar -> {
+					if (!ar.succeeded()) {
+						// fs.move is asynchronously,so not work...
+						result.err(ar.cause().getMessage());
+					}
+				});
+			});
+			res.end(result.toString());
+		} catch (Exception e) {
+			res.end(Err(e.getMessage()));
+			e.printStackTrace();
+		}
+	}
 }
