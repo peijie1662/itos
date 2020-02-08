@@ -27,6 +27,8 @@ public class ItosUser {
 	
 	private String authority;
 	
+	private String firstPage;
+	
 	private ServerWebSocket ws;
 	
 	public static ItosUser from(JsonObject j) {
@@ -39,6 +41,7 @@ public class ItosUser {
 		user.setPhone(j.getString("PHONE"));
 		user.setShortPhone(j.getString("SHORTPHONE"));
 		user.setRole(j.getString("ROLE"));
+		user.setFirstPage(j.getString("FIRSTPAGE"));
 		return user;
 	}
 
@@ -121,6 +124,14 @@ public class ItosUser {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public String getFirstPage() {
+		return firstPage;
+	}
+
+	public void setFirstPage(String firstPage) {
+		this.firstPage = firstPage;
 	}
 
 }

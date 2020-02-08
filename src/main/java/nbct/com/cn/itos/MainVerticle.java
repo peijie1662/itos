@@ -132,7 +132,13 @@ public class MainVerticle extends AbstractVerticle {
 		// 删除用户
 		router.post("/user/delete").blockingHandler(userHandler::delUser, false);
 		// 新用户
-		router.post("/user/add").blockingHandler(userHandler::saveUser, false);		
+		router.post("/user/add").blockingHandler(userHandler::saveUser, false);
+		// 用户头像
+		router.post("/user/face").blockingHandler(uploadHandler::uploadUserFace, false);
+		// 用户首页
+		router.post("/usertpage").blockingHandler(userHandler::updateFirstPage, false);
+		// 修改密码
+		router.post("/user/password").blockingHandler(userHandler::updatePassword, false);
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据

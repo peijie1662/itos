@@ -19,7 +19,7 @@ import nbct.com.cn.itos.model.CallResult;
 public class UploadHandler {
 
 	/**
-	 * 任务文件上传 
+	 * 任务文件上传
 	 */
 	public void uploadTaskFile(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
@@ -27,7 +27,7 @@ public class UploadHandler {
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
 			String taskId = ctx.request().getFormAttribute("taskId");
-			String savePath = Configer.uploadDir +"task_file/"+ taskId;
+			String savePath = Configer.uploadDir + "task_file/" + taskId;
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}
@@ -48,9 +48,9 @@ public class UploadHandler {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
-	 * 模版文件上传 
+	 * 模版文件上传
 	 */
 	public void uploadModelFile(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
@@ -58,7 +58,7 @@ public class UploadHandler {
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
 			String modelId = ctx.request().getFormAttribute("modelId");
-			String savePath = Configer.uploadDir +"model_file/"+ modelId;
+			String savePath = Configer.uploadDir + "model_file/" + modelId;
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}
@@ -79,7 +79,7 @@ public class UploadHandler {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * 用户头像上传
 	 */
@@ -89,18 +89,17 @@ public class UploadHandler {
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
 			String userId = ctx.request().getFormAttribute("userId");
-			String savePath = Configer.uploadDir +"user_file/"+ userId;
+			String savePath = Configer.uploadDir + "user_face";
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}
 			Set<FileUpload> uploads = ctx.fileUploads();
 			CallResult<String> result = new CallResult<String>().ok();
 			uploads.forEach(fileUpload -> {
-				String path = savePath + "/" + fileUpload.fileName();
+				String path = savePath + "/" + userId + ".jpg";//约定头像必须是JPG文件
 				fs.move(fileUpload.uploadedFileName(), path, new CopyOptions().setReplaceExisting(true), ar -> {
-					if (!ar.succeeded()) {
-						// fs.move is asynchronously,so not work...
-						result.err(ar.cause().getMessage());
+					if (ar.failed()) {
+						ar.cause().printStackTrace();
 					}
 				});
 			});

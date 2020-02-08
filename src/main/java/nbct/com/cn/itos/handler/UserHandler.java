@@ -4,7 +4,10 @@ import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
+import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -20,19 +23,19 @@ import nbct.com.cn.itos.jdbc.UserRowMapper;
  * @version 创建时间：2020年1月30日 下午6:24:24
  */
 public class UserHandler {
-	
+
 	/**
 	 * 保存用户
 	 */
-	public void saveUser(RoutingContext ctx){
+	public void saveUser(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "insert into itos_user(userId,userName,workId,password,authority,department,"+//
-		"phone,shortPhone,role) values(?,?,?,?,?,?,?,?,?)";
+		String sql = "insert into itos_user(userId,userName,workId,password,authority,department," + //
+				"phone,shortPhone,role) values(?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray()//
 				.add(rp.getString("userId"))//
 				.add(rp.getString("userName"))//
 				.add(rp.getString("workId"))//
-				.add(rp.getString("userId"))//password默认为userId
+				.add(rp.getString("userId"))// password默认为userId
 				.add(rp.getString("authority"))//
 				.add(rp.getString("department"))//
 				.add(rp.getString("phone"))//
@@ -40,7 +43,7 @@ public class UserHandler {
 				.add(rp.getString("role"));
 		JdbcHelper.update(ctx, sql, params);
 	}
-	
+
 	/**
 	 * 删除用户
 	 */
@@ -66,6 +69,16 @@ public class UserHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "update itos_user set authority = ? where userId = ?";
 		JsonArray params = new JsonArray().add(rp.getString("authority")).add(rp.getString("userId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 修改首页
+	 */
+	public void updateFirstPage(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_user set firstPage = ? where userId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("firstPage")).add(rp.getString("userId"));
 		JdbcHelper.update(ctx, sql, params);
 	}
 
@@ -121,6 +134,69 @@ public class UserHandler {
 				});
 			} else {
 				res.end(Err("get DB connect err."));
+			}
+		});
+	}
+
+	/**
+	 * 修改密码
+	 */
+	public void updatePassword(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String userId = rp.getString("userId");
+		String oldPass = rp.getString("oldPass").toUpperCase();
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.检查旧密码
+				Supplier<Future<Void>> getf = () -> {
+					Future<Void> f = Future.future(promise -> {
+						String sql = "select * from itos_user where upper(userId) = ?";
+						JsonArray params = new JsonArray().add(userId);
+						conn.queryWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								JsonObject j = r.result().getRows().get(0);
+								if (oldPass.equals(j.getString("PASSWORD").toUpperCase())) {
+									promise.complete();
+								} else {
+									promise.fail("旧密码错误。");
+								}
+							} else {
+								promise.fail("读用户信息出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.保存新密码
+				Function<Void, Future<Void>> uf = (Void) -> {
+					Future<Void> f = Future.future(promise -> {
+						String sql = "update itos_user set password = ? where userId = ?";
+						JsonArray params = new JsonArray().add(rp.getString("newPass")).add(rp.getString("userId"));
+						conn.updateWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete();
+							} else {
+								promise.fail("修改密码错误。");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.执行
+				getf.get().compose(r -> {
+					return uf.apply(r);
+				}).setHandler(r -> {
+					if (r.succeeded()) {
+						res.end(OK());
+					} else {
+						res.end(Err(r.cause().getMessage()));
+					}
+					conn.close();
+				});
 			}
 		});
 	}
