@@ -4,12 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.jdbc.RowMapper;
 
 /**
 * @author PJ 
 * @version 创建时间：2020年1月14日 下午2:21:00
 */
-public class DispatchClient {
+public class DispatchClient implements RowMapper<DispatchClient>{
 	
 	private String serviceName;
 	
@@ -23,7 +24,7 @@ public class DispatchClient {
 	
 	private boolean online;
 	
-	public static DispatchClient from(JsonObject j){
+	public DispatchClient from(JsonObject j){
 		DispatchClient client = new DispatchClient();
 		client.setServiceName(j.getString("SERVICENAME"));
 		client.setIp(j.getString("ip"));

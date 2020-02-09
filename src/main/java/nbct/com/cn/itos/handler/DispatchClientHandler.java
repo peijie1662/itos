@@ -42,7 +42,7 @@ public class DispatchClientHandler {
 					if (r.succeeded()) {
 						clients.clear();
 						clients.addAll(r.result().getRows().stream().map(row -> {
-							return DispatchClient.from(row);
+							return new DispatchClient().from(row);
 						}).collect(Collectors.toList()));
 					} else {
 						throw new RuntimeException("load dispatch client data error!");

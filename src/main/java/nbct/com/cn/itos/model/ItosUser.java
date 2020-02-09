@@ -2,12 +2,13 @@ package nbct.com.cn.itos.model;
 
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.jdbc.RowMapper;
 
 /**
 * @author PJ 
 * @version 创建时间：2019年12月25日 下午12:29:47
 */
-public class ItosUser {
+public class ItosUser implements RowMapper<ItosUser>{
 	
 	private String userName;
 	
@@ -31,7 +32,7 @@ public class ItosUser {
 	
 	private ServerWebSocket ws;
 	
-	public static ItosUser from(JsonObject j) {
+	public ItosUser from(JsonObject j) {
 		ItosUser user = new ItosUser();
 		user.setUserId(j.getString("USERID"));
 		user.setUserName(j.getString("USERNAME"));

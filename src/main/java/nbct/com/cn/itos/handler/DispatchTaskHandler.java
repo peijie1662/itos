@@ -20,7 +20,7 @@ import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.TaskRowMapper;
+import nbct.com.cn.itos.model.CommonTask;
 import util.DateUtil;
 
 /**
@@ -37,7 +37,7 @@ public class DispatchTaskHandler {
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.CMD.getValue());
 		params.add(CategoryEnum.PROCEDURE.getValue());
-		JdbcHelper.rows(ctx, sql, params, new TaskRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
 
 	/**

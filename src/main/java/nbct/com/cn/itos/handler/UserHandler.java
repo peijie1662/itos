@@ -16,7 +16,7 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.UserRowMapper;
+import nbct.com.cn.itos.model.ItosUser;
 
 /**
  * @author PJ
@@ -59,7 +59,7 @@ public class UserHandler {
 	 */
 	public void getUserList(RoutingContext ctx) {
 		String sql = "select * from itos_user order by role,workId";
-		JdbcHelper.rows(ctx, sql, new UserRowMapper());
+		JdbcHelper.rows(ctx, sql, new ItosUser());
 	}
 
 	/**
@@ -120,7 +120,7 @@ public class UserHandler {
 						List<JsonObject> r = qr.result().getRows();
 						if (r.size() > 0) {
 							if (password.equals(r.get(0).getString("PASSWORD").toUpperCase())) {
-								res.end(OK(new UserRowMapper().from(r)));
+								res.end(OK(new ItosUser().from(r)));
 							} else {
 								res.end(Err("密码错误。"));
 							}

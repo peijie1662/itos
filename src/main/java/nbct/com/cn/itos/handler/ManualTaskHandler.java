@@ -21,7 +21,6 @@ import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.TaskRowMapper;
 import nbct.com.cn.itos.model.CommonTask;
 import util.ConvertUtil;
 import util.DateUtil;
@@ -39,7 +38,7 @@ public class ManualTaskHandler {
 		String sql = "select * from itos_task where category in (?) and invalid = 'N' and composeId is null order by opdate desc";
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.COMMON.getValue());
-		JdbcHelper.rows(ctx, sql, params, new TaskRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
 	
 	/**
@@ -153,7 +152,7 @@ public class ManualTaskHandler {
 							if (r.succeeded()) {
 								List<JsonObject> rs = r.result().getRows();
 								if (rs.size() > 0) {
-									CommonTask task = CommonTask.from(rs.get(0));
+									CommonTask task = new CommonTask().from(rs.get(0));
 									if (ConvertUtil.listToStr(task.getHandler()).equals(rp.getString("handler"))) {
 										promise.fail("处理人员没有变化，不需要保存。");
 									} else {

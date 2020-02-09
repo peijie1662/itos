@@ -17,6 +17,7 @@ import java.util.stream.IntStream;
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
+import nbct.com.cn.itos.jdbc.RowMapper;
 import util.ConvertUtil;
 import util.DateUtil;
 
@@ -26,7 +27,7 @@ import util.DateUtil;
  * @author PJ
  * @version 创建时间：2019年12月25日 上午10:44:30
  */
-public class CommonTask {
+public class CommonTask implements RowMapper<CommonTask>{
 
 	private String taskId;
 
@@ -56,7 +57,7 @@ public class CommonTask {
 	
 	private String composeId;
 
-	public static CommonTask from(JsonObject j) {
+	public CommonTask from(JsonObject j) {
 		CommonTask task = new CommonTask();
 		task.setTaskId(j.getString("TASKID"));
 		task.setAbs(j.getString("ABSTRACT"));

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.CycleEnum;
+import nbct.com.cn.itos.jdbc.RowMapper;
 import util.DateUtil;
 
 /**
@@ -14,14 +15,14 @@ import util.DateUtil;
  * @author PJ
  * @version 创建时间：2019年12月24日 上午10:30:22
  */
-public class TimerTaskModel {
+public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	private String modelId;
-	
+
 	private CategoryEnum category;
 
 	private CycleEnum cycle;
-	
+
 	private String abs;
 
 	private String comments;
@@ -31,9 +32,27 @@ public class TimerTaskModel {
 	private boolean invalid;
 
 	private LocalDateTime scanDate;
-	
+
 	private String apiKey;
-	
+
+	public TimerTaskModel from(JsonObject j) {
+		TimerTaskModel t = new TimerTaskModel();
+		t.setModelId(j.getString("MODELID"));
+		t.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
+		t.setCycle(CycleEnum.from(j.getString("CYCLE")).get());
+		t.setAbs(j.getString("ABSTRACT"));
+		t.setComments(j.getString("COMMENTS"));
+		t.setInvalid("Y".equals(j.getString("INVALID")));
+		t.setPlanDates(j.getString("PLANDATES"));
+		try {
+			t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
+		} catch (ParseException e) {
+			throw new RuntimeException("TimerTaskModel日期格式转换错误。");
+		}
+		t.setApiKey(j.getString("APIKEY"));
+		return t;
+	}
+
 	public String getModelId() {
 		return modelId;
 	}
@@ -57,7 +76,7 @@ public class TimerTaskModel {
 	public void setInvalid(boolean invalid) {
 		this.invalid = invalid;
 	}
-	
+
 	public String getPlanDates() {
 		return planDates;
 	}
@@ -65,7 +84,7 @@ public class TimerTaskModel {
 	public void setPlanDates(String planDates) {
 		this.planDates = planDates;
 	}
-	
+
 	public String getAbs() {
 		return abs;
 	}
@@ -73,7 +92,7 @@ public class TimerTaskModel {
 	public void setAbs(String abs) {
 		this.abs = abs;
 	}
-	
+
 	public CycleEnum getCycle() {
 		return cycle;
 	}
@@ -81,7 +100,7 @@ public class TimerTaskModel {
 	public void setCycle(CycleEnum cycle) {
 		this.cycle = cycle;
 	}
-	
+
 	public String getApiKey() {
 		return apiKey;
 	}
@@ -89,7 +108,7 @@ public class TimerTaskModel {
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
 	}
-	
+
 	public CategoryEnum getCategory() {
 		return category;
 	}
@@ -97,27 +116,13 @@ public class TimerTaskModel {
 	public void setCategory(CategoryEnum category) {
 		this.category = category;
 	}
-	
+
 	public LocalDateTime getScanDate() {
 		return scanDate;
 	}
 
 	public void setScanDate(LocalDateTime scanDate) {
 		this.scanDate = scanDate;
-	}
-
-	public static TimerTaskModel from(JsonObject j) throws ParseException {
-		TimerTaskModel t = new TimerTaskModel();
-		t.setModelId(j.getString("MODELID"));
-		t.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
-		t.setCycle(CycleEnum.from(j.getString("CYCLE")).get());
-		t.setAbs(j.getString("ABSTRACT"));
-		t.setComments(j.getString("COMMENTS"));
-		t.setInvalid("Y".equals(j.getString("INVALID")));
-		t.setPlanDates(j.getString("PLANDATES"));
-		t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
-		t.setApiKey(j.getString("APIKEY"));
-		return t;
 	}
 
 }

@@ -1,12 +1,13 @@
 package nbct.com.cn.itos.model;
 
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.jdbc.RowMapper;
 
 /**
 * @author PJ 
 * @version 创建时间：2020年1月21日 下午2:52:22
 */
-public class ComposeDetail {
+public class ComposeDetail implements RowMapper<ComposeDetail>{
 	
 	private String composeId;
 	
@@ -14,7 +15,7 @@ public class ComposeDetail {
 	
 	private String modelId;
 	
-	public static ComposeDetail from(JsonObject j){
+	public ComposeDetail from(JsonObject j){
 		ComposeDetail cd = new ComposeDetail();
 		cd.setComposeId(j.getString("COMPOSEID"));
 		cd.setComposeLevel(j.getInteger("COMPOSELEVEL"));

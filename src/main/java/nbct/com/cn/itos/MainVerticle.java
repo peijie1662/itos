@@ -14,6 +14,7 @@ import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
 import nbct.com.cn.itos.handler.DispatchTaskHandler;
+import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
@@ -35,7 +36,6 @@ public class MainVerticle extends AbstractVerticle {
 						.allowedHeader("X-PINGARUNER")//
 						.allowedHeader("Content-Type"));
 		router.route().handler(BodyHandler.create());
-		// LoginHandler loginHandler = new LoginHandler();
 		ModelHandler modelHandler = new ModelHandler();
 		CommonTaskHandler commonTaskHandler = new CommonTaskHandler();
 		ManualTaskHandler manualTaskHandler = new ManualTaskHandler();
@@ -46,6 +46,7 @@ public class MainVerticle extends AbstractVerticle {
 		AssociateItopHandler associateItopHandler = new AssociateItopHandler();
 		ComposeHandler composeHandler = new ComposeHandler();
 		UserHandler userHandler = new UserHandler();
+		FirstPageHandler firstPageHandler = new FirstPageHandler();
 
 		// 静态文件
 		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -139,6 +140,9 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/usertpage").blockingHandler(userHandler::updateFirstPage, false);
 		// 修改密码
 		router.post("/user/password").blockingHandler(userHandler::updatePassword, false);
+		
+		// 值班表
+		router.post("/firstpage/dutylist").blockingHandler(firstPageHandler::getDutyList, false);		
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据

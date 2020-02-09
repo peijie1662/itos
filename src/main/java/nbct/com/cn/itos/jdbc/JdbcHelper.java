@@ -95,6 +95,58 @@ public class JdbcHelper {
 	}
 
 	/**
+	 * 查询数据集(MAP)
+	 * 
+	 * @param <T>
+	 * 
+	 * @param ctx
+	 * @param sql
+	 */
+	public static <T> void entrys(RoutingContext ctx, String sql, RowMapper<T> mapper, String key) {
+		JdbcHelper.entrys(ctx, sql, null, mapper, key);
+	}
+
+	/**
+	 * 查询数据集(MAP)
+	 * 
+	 * @param ctx
+	 * @param sql
+	 * @param params
+	 */
+	public static <T> void entrys(RoutingContext ctx, String sql, JsonArray params, RowMapper<T> mapper, String key) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection connection = cr.result();
+				if (connection != null) {
+					connection.queryWithParams(sql, params, qr -> {
+						try {
+							if (qr.succeeded()) {
+								if (mapper != null) {
+									res.end(OK(mapper.mfrom(qr.result().getRows(), key)));
+								} else {
+									res.end(OK(qr.result().getRows()));
+								}
+							} else {
+								res.end(Err(qr.cause().getMessage()));
+							}
+						} catch (Exception e) {
+							res.end(Err(e.getMessage()));
+						}
+						connection.close();
+					});
+				} else {
+					res.end(Err("the DB connect is null."));
+				}
+			} else {
+				res.end(Err("get DB connect err."));
+			}
+		});
+	}
+
+	/**
 	 * 查询数据集(1)
 	 * 
 	 * @param ctx

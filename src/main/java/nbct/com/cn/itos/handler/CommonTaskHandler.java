@@ -20,8 +20,8 @@ import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.TaskLogRowMapper;
 import nbct.com.cn.itos.model.CommonTask;
+import nbct.com.cn.itos.model.CommonTaskLog;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.ConvertUtil;
 import util.DateUtil;
@@ -39,7 +39,7 @@ public class CommonTaskHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "select * from itos_tasklog where taskId = ? order by opdate";
 		JsonArray params = new JsonArray().add(rp.getString("taskId"));
-		JdbcHelper.rows(ctx, sql, params, new TaskLogRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new CommonTaskLog());
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class CommonTaskHandler {
 							if (r.succeeded()) {
 								List<JsonObject> rs = r.result().getRows();
 								if (rs.size() > 0) {
-									CommonTask task = CommonTask.from(rs.get(0));
+									CommonTask task = new CommonTask().from(rs.get(0));
 									if (task.getContent().equals(rp.getString("content"))) {
 										promise.fail("任务内容没有变化，不需要保存。");
 									} else {
@@ -165,7 +165,7 @@ public class CommonTaskHandler {
 							if (r.succeeded()) {
 								List<JsonObject> rs = r.result().getRows();
 								if (rs.size() > 0) {
-									promise.complete(CommonTask.from(rs.get(0)));
+									promise.complete(new CommonTask().from(rs.get(0)));
 								} else {
 									promise.fail("任务表中找不到这个TaskId");
 								}
@@ -299,7 +299,7 @@ public class CommonTaskHandler {
 								List<JsonObject> rs = r.result().getRows();
 								if (rs.size() > 0) {
 									try {
-										TimerTaskModel model = TimerTaskModel.from(rs.get(0));
+										TimerTaskModel model = new TimerTaskModel().from(rs.get(0));
 										CommonTask task = CommonTask.from(model,
 												DateUtil.utcToLocalEx(rp.getString("planDt")));
 										promise.complete(task);

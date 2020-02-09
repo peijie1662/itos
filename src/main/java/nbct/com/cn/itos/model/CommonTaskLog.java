@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.jdbc.RowMapper;
 import util.ConvertUtil;
 import util.DateUtil;
 
@@ -12,7 +13,7 @@ import util.DateUtil;
 * @author PJ 
 * @version 创建时间：2020年1月7日 上午9:52:51
 */
-public class CommonTaskLog {
+public class CommonTaskLog implements RowMapper<CommonTaskLog>{
 	
 	private String logId;
 	
@@ -38,7 +39,7 @@ public class CommonTaskLog {
 	
 	private LocalDateTime opDate;
 	
-	public static CommonTaskLog from(JsonObject j) throws ParseException{
+	public CommonTaskLog from(JsonObject j) {
 		CommonTaskLog log = new CommonTaskLog();
 		log.setLogId(j.getString("LOGID"));
 		log.setTaskId(j.getString("TASKID"));
@@ -50,7 +51,11 @@ public class CommonTaskLog {
 		log.setHandler(ConvertUtil.strToList(j.getString("HANDLER")));
 		log.setRemark(j.getString("REMARK"));
 		log.setOper(j.getString("OPER"));
-		log.setOpDate(DateUtil.utcToLocalDT(j.getString("OPDATE")));
+		try {
+			log.setOpDate(DateUtil.utcToLocalDT(j.getString("OPDATE")));
+		} catch (ParseException e) {
+			throw new RuntimeException("CommonTaskLog日期转换错误。");
+		}
 		return log;
 	}
 

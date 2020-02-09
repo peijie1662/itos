@@ -7,7 +7,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.SmartTipsRowMapper;
+import nbct.com.cn.itos.model.SmartTips;
 import util.DateUtil;
 
 /**
@@ -21,7 +21,7 @@ public class SettingsHandler {
 	 */
 	public void getSmartTipsList(RoutingContext ctx) {
 		String sql = "select * from itos_smart_tips";
-		JdbcHelper.rows(ctx, sql, new SmartTipsRowMapper());
+		JdbcHelper.rows(ctx, sql, new SmartTips());
 	}
 
 	/**

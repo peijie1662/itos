@@ -16,9 +16,9 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
-import nbct.com.cn.itos.jdbc.ComposeDetailRowMapper;
-import nbct.com.cn.itos.jdbc.ComposeTaskRowMapper;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.model.ComposeDetail;
+import nbct.com.cn.itos.model.ComposeTask;
 
 /**
  * @author PJ
@@ -103,7 +103,7 @@ public class ComposeHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "select * from itos_compose where composeId = ? order by composeLevel";
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
-		JdbcHelper.rows(ctx, sql, params, new ComposeDetailRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new ComposeDetail());
 	}
 
 	/**
@@ -121,7 +121,7 @@ public class ComposeHandler {
 				" where a.taskid = b.taskid(+)) bb " + //
 				" where aa.taskid = bb.taskid(+) ";
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
-		JdbcHelper.rows(ctx, sql, params, new ComposeTaskRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new ComposeTask());
 	}
 
 	/**
@@ -140,7 +140,7 @@ public class ComposeHandler {
 				" where aa.taskid = bb.taskid(+) order by aa.opdate desc";
 		JsonArray params = new JsonArray().add(rp.getString("modelId")).add(rp.getString("modelId"))
 				.add(rp.getString("modelId"));
-		JdbcHelper.rows(ctx, sql, params, new ComposeTaskRowMapper());
+		JdbcHelper.rows(ctx, sql, params, new ComposeTask());
 	}
 
 	/**

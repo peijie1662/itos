@@ -13,13 +13,13 @@ import util.DateUtil;
 * @author PJ 
 * @version 创建时间：2020年1月28日 上午10:43:29
 */
-public class ComposeTask extends CommonTask{
+public class ComposeTask extends CommonTask {
 	
 	private LocalDateTime bgDt;
 	
 	private LocalDateTime edDt;
 	
-	public static ComposeTask from(JsonObject j) {
+	public ComposeTask from(JsonObject j) {
 		ComposeTask task = new ComposeTask();
 		task.setTaskId(j.getString("TASKID"));
 		task.setAbs(j.getString("ABSTRACT"));

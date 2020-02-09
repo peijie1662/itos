@@ -55,7 +55,7 @@ public class TimerVerticle extends AbstractVerticle {
 							if (r.succeeded()) {
 								List<TimerTaskModel> models = r.result().getRows().stream().map(row -> {
 									try {
-										return TimerTaskModel.from(row);
+										return new TimerTaskModel().from(row);
 									} catch (Exception e) {
 										throw new RuntimeException(e.getMessage());
 									}

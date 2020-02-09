@@ -11,7 +11,7 @@ import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.jdbc.ModelRowMapper;
+import nbct.com.cn.itos.model.TimerTaskModel;
 import util.DateUtil;
 
 /**
@@ -27,7 +27,7 @@ public class ModelHandler {
 	public void getComposeModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel where invalid = 'N' "//
 				+ " and category = 'COMPOSE' order by opdate";
-		JdbcHelper.rows(ctx, sql, new ModelRowMapper());
+		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 	
 	/**
@@ -37,12 +37,12 @@ public class ModelHandler {
 	public void getNotComposeModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel where invalid = 'N' "//
 				+ " and category <> 'COMPOSE' order by opdate";
-		JdbcHelper.rows(ctx, sql, new ModelRowMapper());
+		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 
 	public void getTimerTaskModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel order by category,opdate";
-		JdbcHelper.rows(ctx, sql, new ModelRowMapper());
+		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 
 	public void updateTimerTaskModel(RoutingContext ctx) {
