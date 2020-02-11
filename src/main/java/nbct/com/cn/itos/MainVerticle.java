@@ -142,7 +142,11 @@ public class MainVerticle extends AbstractVerticle {
 		router.post("/user/password").blockingHandler(userHandler::updatePassword, false);
 		
 		// 值班表
-		router.post("/firstpage/dutylist").blockingHandler(firstPageHandler::getDutyList, false);		
+		router.post("/page/duty/list").blockingHandler(firstPageHandler::getDutyList, false);
+		// 添加值班
+		router.post("/page/duty/add").blockingHandler(firstPageHandler::addDuty, false);
+		// 删除值班
+		router.post("/page/duty/delete").blockingHandler(firstPageHandler::delDuty, false);		
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据

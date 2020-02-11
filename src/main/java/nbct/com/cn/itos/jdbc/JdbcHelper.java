@@ -134,6 +134,7 @@ public class JdbcHelper {
 							}
 						} catch (Exception e) {
 							res.end(Err(e.getMessage()));
+							e.printStackTrace();
 						}
 						connection.close();
 					});

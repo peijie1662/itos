@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.jdbc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,18 @@ public interface RowMapper<T> {
 		return result;
 	}
 
-	default Map<String, T> mfrom(List<JsonObject> rows, String key) {
-		Map<String, T> map = new HashMap<String, T>();
+	default Map<String, List<T>> mfrom(List<JsonObject> rows, String key) {
+		String bkey = key.toUpperCase();
+		Map<String, List<T>> map = new HashMap<String, List<T>>();
 		rows.forEach(r -> {
-			map.put(r.getString(key.toUpperCase()), from(r));
+			String k = r.getString(bkey);
+			if (map.get(k) != null) {
+				map.get(k).add(from(r));
+			} else {
+				List<T> list = new ArrayList<T>();
+				list.add(from(r));
+				map.put(k, list);
+			}
 		});
 		return map;
 	}
