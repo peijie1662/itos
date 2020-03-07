@@ -1,5 +1,8 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.model.CallResult.Err;
+import static nbct.com.cn.itos.model.CallResult.OK;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +30,10 @@ public class DispatchClientHandler {
 	 * 终端数据载入
 	 */
 	public void loadData(RoutingContext ctx) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
 		loadData();
+		res.end(OK());//不考虑失败了
 	}
 
 	/**
@@ -58,31 +64,34 @@ public class DispatchClientHandler {
 	 */
 	public void getClientList(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
-		LocalDateTime ct = LocalDateTime.now();
 		res.putHeader("content-type", "application/json");
+		LocalDateTime ct = LocalDateTime.now();
 		clients.forEach(client -> {
 			client.setOnline(ct.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
 		});
 		JsonArray cs = new JsonArray(clients);
-		res.end(cs.encodePrettily());
+		res.end(OK(cs));
 	}
 
 	/**
 	 * 终端注册
 	 */
-	@SuppressWarnings("unchecked")
 	public void registe(RoutingContext ctx) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
 		JsonObject rp = ctx.getBodyAsJson();
 		String serviceName = rp.getString("serviceName");
-		String ip = rp.getString("ip");
-		List<String> apiKey = rp.getJsonArray("apiKey").getList();
 		Optional<DispatchClient> c = clients.stream().filter(client -> {
 			return client.getServiceName().equals(serviceName);
 		}).findAny();
-		DispatchClient client = c.isPresent() ? c.get() : new DispatchClient();
-		client.setActiveTime(LocalDateTime.now());
-		client.setIp(ip);
-		client.setApiKey(apiKey);
+		if (c.isPresent()) {
+			c.get().setIp(rp.getString("ip"))//
+			.setApiKey(rp.getJsonArray("apiKey"))//
+			.setActiveTime(LocalDateTime.now());
+			res.end(OK());
+		}else{
+			res.end(Err(serviceName + "没有登记，不能登录。"));
+		}
 	}
 
 }

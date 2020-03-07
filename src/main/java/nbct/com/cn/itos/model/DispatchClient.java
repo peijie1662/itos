@@ -1,8 +1,8 @@
 package nbct.com.cn.itos.model;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.jdbc.RowMapper;
 
@@ -18,7 +18,7 @@ public class DispatchClient implements RowMapper<DispatchClient>{
 	
 	private String remark;
 	
-	private List<String> apiKey;
+	private JsonArray apiKey;
 	
 	private LocalDateTime activeTime;
 	
@@ -35,48 +35,54 @@ public class DispatchClient implements RowMapper<DispatchClient>{
 		return serviceName;
 	}
 
-	public void setServiceName(String serviceName) {
+	public DispatchClient setServiceName(String serviceName) {
 		this.serviceName = serviceName;
+		return this;
 	}
 
 	public String getIp() {
 		return ip;
 	}
 
-	public void setIp(String ip) {
+	public DispatchClient setIp(String ip) {
 		this.ip = ip;
+		return this;
 	}
 
 	public String getRemark() {
 		return remark;
 	}
 
-	public void setRemark(String remark) {
+	public DispatchClient setRemark(String remark) {
 		this.remark = remark;
-	}
-
-	public List<String> getApiKey() {
-		return apiKey;
-	}
-
-	public void setApiKey(List<String> apiKey) {
-		this.apiKey = apiKey;
+		return this;
 	}
 
 	public LocalDateTime getActiveTime() {
 		return activeTime;
 	}
 
-	public void setActiveTime(LocalDateTime activeTime) {
+	public DispatchClient setActiveTime(LocalDateTime activeTime) {
 		this.activeTime = activeTime;
+		return this;
 	}
 
 	public boolean isOnline() {
 		return online;
 	}
 
-	public void setOnline(boolean online) {
+	public DispatchClient setOnline(boolean online) {
 		this.online = online;
+		return this;
+	}
+
+	public JsonArray getApiKey() {
+		return apiKey;
+	}
+
+	public DispatchClient setApiKey(JsonArray apiKey) {
+		this.apiKey = apiKey;
+		return this;
 	}
 
 }
