@@ -1,6 +1,7 @@
 package nbct.com.cn.itos.model;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,20 +15,34 @@ public class DispatchClient implements RowMapper<DispatchClient>{
 	
 	private String serviceName;
 	
+	private JsonArray modelKey; 
+	
+	private String description;
+	
+	private String remark1;
+	
+	private String remark2;
+	
 	private String ip;
-	
-	private String remark;
-	
-	private JsonArray apiKey;
 	
 	private LocalDateTime activeTime;
 	
-	private boolean online;
+	private boolean onLine;
 	
+	/**
+	 * 从DB中读记录
+	 */
 	public DispatchClient from(JsonObject j){
 		DispatchClient client = new DispatchClient();
 		client.setServiceName(j.getString("SERVICENAME"));
-		client.setIp(j.getString("ip"));
+		client.setModelKey(new JsonArray());
+		Arrays.asList(j.getString("MODELKEY").split(",")).forEach(item -> {
+			client.getModelKey().add(item);
+		});
+		client.setDescription(j.getString("DESCRIPTION"));
+		client.setRemark1(j.getString("REMARK1"));
+		client.setRemark2(j.getString("REMARK2"));
+		client.setActiveTime(LocalDateTime.now());
 		return client;
 	}
 
@@ -40,24 +55,6 @@ public class DispatchClient implements RowMapper<DispatchClient>{
 		return this;
 	}
 
-	public String getIp() {
-		return ip;
-	}
-
-	public DispatchClient setIp(String ip) {
-		this.ip = ip;
-		return this;
-	}
-
-	public String getRemark() {
-		return remark;
-	}
-
-	public DispatchClient setRemark(String remark) {
-		this.remark = remark;
-		return this;
-	}
-
 	public LocalDateTime getActiveTime() {
 		return activeTime;
 	}
@@ -67,22 +64,53 @@ public class DispatchClient implements RowMapper<DispatchClient>{
 		return this;
 	}
 
-	public boolean isOnline() {
-		return online;
+	public JsonArray getModelKey() {
+		return modelKey;
 	}
 
-	public DispatchClient setOnline(boolean online) {
-		this.online = online;
+	public DispatchClient setModelKey(JsonArray modelKey) {
+		this.modelKey = modelKey;
 		return this;
 	}
 
-	public JsonArray getApiKey() {
-		return apiKey;
+	public String getDescription() {
+		return description;
 	}
 
-	public DispatchClient setApiKey(JsonArray apiKey) {
-		this.apiKey = apiKey;
-		return this;
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getRemark1() {
+		return remark1;
+	}
+
+	public void setRemark1(String remark1) {
+		this.remark1 = remark1;
+	}
+
+	public String getRemark2() {
+		return remark2;
+	}
+
+	public void setRemark2(String remark2) {
+		this.remark2 = remark2;
+	}
+
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public boolean isOnLine() {
+		return onLine;
+	}
+
+	public void setOnLine(boolean onLine) {
+		this.onLine = onLine;
 	}
 
 }

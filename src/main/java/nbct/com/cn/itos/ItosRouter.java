@@ -130,12 +130,16 @@ public class ItosRouter {
 	 */
 	public static Router dispatchclientRouter(Vertx vertx, DispatchClientHandler dispatchClientHandler) {
 		Router router = Router.router(vertx);
-		// 下发终端列表
+		// 登记终端
+		router.post("/add").blockingHandler(dispatchClientHandler::addClient, false);
+		// 终端列表
 		router.post("/list").blockingHandler(dispatchClientHandler::getClientList, false);
-		// 下发终端注册
-		router.post("/registe").blockingHandler(dispatchClientHandler::registe, false);
 		// 重载终端数据
-		router.post("/reload").blockingHandler(dispatchClientHandler::loadData, false);
+		router.post("/reload").blockingHandler(dispatchClientHandler::loadData, false);		
+		
+		// 终端注册
+		router.post("/registe").blockingHandler(dispatchClientHandler::registe, false);
+
 		return router;
 	}
 

@@ -151,7 +151,7 @@ public class ComposeHandler {
 	public void startComposeTask(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String func = "{call itos.p_compose_task_start(?,?,?,?)}";
-		JsonArray params = new JsonArray().add(rp.getString("taskId") + "," + rp.getString("userId"));
+		JsonArray params = new JsonArray().add(rp.getString("taskId") + "^" + rp.getString("userId"));
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
 	}

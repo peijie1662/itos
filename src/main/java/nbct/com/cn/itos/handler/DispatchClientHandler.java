@@ -16,6 +16,7 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.DispatchClient;
 
 /**
@@ -27,13 +28,13 @@ public class DispatchClientHandler {
 	private static List<DispatchClient> clients = new ArrayList<DispatchClient>();
 
 	/**
-	 * 终端数据载入
+	 * 终端数据载入(页面来刷新)
 	 */
 	public void loadData(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
 		loadData();
-		res.end(OK());//不考虑失败了
+		res.end(OK());// 不考虑失败了
 	}
 
 	/**
@@ -51,12 +52,24 @@ public class DispatchClientHandler {
 							return new DispatchClient().from(row);
 						}).collect(Collectors.toList()));
 					} else {
-						throw new RuntimeException("load dispatch client data error!");
+						r.cause().printStackTrace();
 					}
 					conn.close();
 				});
 			}
 		});
+	}
+
+	/**
+	 * 登记终端
+	 */
+	public void addClient(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String func = "{call itos.p_addclient(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.getString("serviceName") + "^" + rp.getString("modelKey") + "^"
+				+ rp.getString("description") + "^" + rp.getString("remark1") + "^" + rp.getString("remark2"));
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
 	}
 
 	/**
@@ -66,11 +79,16 @@ public class DispatchClientHandler {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
 		LocalDateTime ct = LocalDateTime.now();
-		clients.forEach(client -> {
-			client.setOnline(ct.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
-		});
-		JsonArray cs = new JsonArray(clients);
-		res.end(OK(cs));
+		try {
+			clients.forEach(client -> {
+				client.setOnLine(ct.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
+			});
+			JsonArray cs = new JsonArray(clients);
+			res.end(OK(cs));
+		} catch (Exception e) {
+			res.end(Err(e.getMessage()));
+		}
+
 	}
 
 	/**
@@ -85,11 +103,11 @@ public class DispatchClientHandler {
 			return client.getServiceName().equals(serviceName);
 		}).findAny();
 		if (c.isPresent()) {
-			c.get().setIp(rp.getString("ip"))//
-			.setApiKey(rp.getJsonArray("apiKey"))//
-			.setActiveTime(LocalDateTime.now());
+			// c.get().setIp(rp.getString("ip"))//
+			// .setModelKey(rp.getJsonArray("modelKey"))//
+			// .setActiveTime(LocalDateTime.now());
 			res.end(OK());
-		}else{
+		} else {
 			res.end(Err(serviceName + "没有登记，不能登录。"));
 		}
 	}

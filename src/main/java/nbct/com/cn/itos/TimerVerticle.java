@@ -192,7 +192,7 @@ public class TimerVerticle extends AbstractVerticle {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						logger.info(r.result());
+						//logger.info(r.result());
 					} else {
 						logger.error(r.cause().getMessage());
 					}
