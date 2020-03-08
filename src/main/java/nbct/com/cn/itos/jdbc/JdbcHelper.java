@@ -33,7 +33,7 @@ public class JdbcHelper {
 	/**
 	 * 查询数据集
 	 * 
-	 * @param <T>
+	 * @param     <T>
 	 * 
 	 * @param ctx
 	 * @param sql
@@ -45,7 +45,7 @@ public class JdbcHelper {
 	/**
 	 * 查询数据集
 	 * 
-	 * @param <T>
+	 * @param     <T>
 	 * 
 	 * @param ctx
 	 * @param sql
@@ -97,7 +97,7 @@ public class JdbcHelper {
 	/**
 	 * 查询数据集(MAP)
 	 * 
-	 * @param <T>
+	 * @param     <T>
 	 * 
 	 * @param ctx
 	 * @param sql
@@ -154,7 +154,7 @@ public class JdbcHelper {
 	 * @param sql
 	 * @param params
 	 */
-	public static void oneRow(RoutingContext ctx, String sql, JsonArray params) {
+	public static <T> void oneRow(RoutingContext ctx, String sql, JsonArray params, RowMapper<T> mapper) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
 		SQLClient client = Configer.client;
@@ -164,7 +164,7 @@ public class JdbcHelper {
 				if (connection != null) {
 					connection.queryWithParams(sql, params, qr -> {
 						if (qr.succeeded()) {
-							res.end(OK(qr.result().getRows().get(0)));
+							res.end(OK(mapper.from(qr.result().getRows().get(0))));
 						} else {
 							res.end(Err(qr.cause().getMessage()));
 						}
@@ -250,10 +250,8 @@ public class JdbcHelper {
 	 * 
 	 * @param ctx
 	 * @param func
-	 * @param params
-	 *            in参数
-	 * @param output
-	 *            out参数
+	 * @param params in参数
+	 * @param output out参数
 	 */
 	public static void call(RoutingContext ctx, String func, JsonArray params, JsonArray outputs) {
 		HttpServerResponse res = ctx.response();

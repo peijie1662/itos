@@ -15,8 +15,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
+import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.DispatchClient;
 
 /**
@@ -73,43 +75,94 @@ public class DispatchClientHandler {
 	}
 
 	/**
+	 * 修改终端
+	 */
+	public void updateClient(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_service set description = ?,modelKey = ?,remark1 = ?, remark2 = ? "//
+				+ "where serviceName = ?";
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("description"))//
+				.add(rp.getString("modelKey"))//
+				.add(rp.getString("remark1"))//
+				.add(rp.getString("remark2"))//
+				.add(rp.getString("serviceName"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 删除终端
+	 */
+	public void deleteClient(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "delete from itos_service where serviceName = ?";
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("serviceName"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 查找终端信息（终端访问）<br>
+	 * 终端访问参数 {serviceName:"..."}
+	 */
+	public void getClient(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_service where serviceName = ?";
+		JsonArray params = new JsonArray().add(rp.getString("serviceName"));
+		JdbcHelper.oneRow(ctx, sql, params, new DispatchClient());
+	}
+
+	/**
 	 * 所有可下发终端
 	 */
 	public void getClientList(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		LocalDateTime ct = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now();
 		try {
 			clients.forEach(client -> {
-				client.setOnLine(ct.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
+				client.setOnLine(now.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
 			});
 			JsonArray cs = new JsonArray(clients);
 			res.end(OK(cs));
 		} catch (Exception e) {
 			res.end(Err(e.getMessage()));
 		}
-
 	}
 
 	/**
-	 * 终端注册
+	 * 所有下发终端任务列表(页面访问)
 	 */
-	public void registe(RoutingContext ctx) {
-		HttpServerResponse res = ctx.response();
-		res.putHeader("content-type", "application/json");
+	public void getDispatchAllTask(RoutingContext ctx) {
+		String sql = "select * from itos_task where category in (?,?) and invalid = 'N' and composeId is null";
+		JsonArray params = new JsonArray();
+		params.add(CategoryEnum.CMD.getValue());
+		params.add(CategoryEnum.PROCEDURE.getValue());
+		JdbcHelper.rows(ctx, sql, params, new CommonTask());
+	}
+
+	/**
+	 * 下发终端任务列表(终端访问)<br>
+	 * 终端参数 {serviceName:"...",ip:"..."}
+	 */
+	public void getDispatchTaskList(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String serviceName = rp.getString("serviceName");
-		Optional<DispatchClient> c = clients.stream().filter(client -> {
+		// 1.更新在线状态
+		Optional<DispatchClient> o = clients.stream().filter(client -> {
 			return client.getServiceName().equals(serviceName);
 		}).findAny();
-		if (c.isPresent()) {
-			// c.get().setIp(rp.getString("ip"))//
-			// .setModelKey(rp.getJsonArray("modelKey"))//
-			// .setActiveTime(LocalDateTime.now());
-			res.end(OK());
-		} else {
-			res.end(Err(serviceName + "没有登记，不能登录。"));
+		if (o.isPresent()) {
+			DispatchClient c = o.get();
+			c.setIp(rp.getString("ip"));
+			c.setActiveTime(LocalDateTime.now());
 		}
+		// 2.终端对应任务
+		String sql = "select * from itos_task where status = 'CHECKIN' and invalid = 'N'" + //
+				" and instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0";
+		JsonArray params = new JsonArray();
+		params.add(serviceName);
+		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
 
 }

@@ -6,7 +6,6 @@ import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
-import nbct.com.cn.itos.handler.DispatchTaskHandler;
 import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
@@ -77,20 +76,6 @@ public class ItosRouter {
 	}
 
 	/**
-	 * 系统任务路由
-	 */
-	public static Router dispatchtaskRouter(Vertx vertx, DispatchTaskHandler dispatchTaskHandler) {
-		Router router = Router.router(vertx);
-		// 系统任务列表
-		router.post("/list").blockingHandler(dispatchTaskHandler::getDispatchTaskList, false);
-		// 系统任务列表
-		router.post("/all").blockingHandler(dispatchTaskHandler::getDispatchAllTask, false);
-		// 保存系统任务
-		router.post("/add").blockingHandler(dispatchTaskHandler::saveDispatchTask, false);
-		return router;
-	}
-
-	/**
 	 * 任务通用路由
 	 */
 	public static Router commonTaskRouter(Vertx vertx, CommonTaskHandler commonTaskHandler,
@@ -132,14 +117,20 @@ public class ItosRouter {
 		Router router = Router.router(vertx);
 		// 登记终端
 		router.post("/add").blockingHandler(dispatchClientHandler::addClient, false);
+		// 修改终端
+		router.post("/update").blockingHandler(dispatchClientHandler::updateClient, false);
+		// 删除终端
+		router.post("/delete").blockingHandler(dispatchClientHandler::deleteClient, false);
+		// 查找终端（终端访问）
+		router.post("/get").blockingHandler(dispatchClientHandler::getClient, false);		
 		// 终端列表
 		router.post("/list").blockingHandler(dispatchClientHandler::getClientList, false);
 		// 重载终端数据
-		router.post("/reload").blockingHandler(dispatchClientHandler::loadData, false);		
-		
-		// 终端注册
-		router.post("/registe").blockingHandler(dispatchClientHandler::registe, false);
-
+		router.post("/reload").blockingHandler(dispatchClientHandler::loadData, false);
+		// 终端对应任务列表（终端访问）
+		router.post("/clienttask").blockingHandler(dispatchClientHandler::getDispatchTaskList, false);
+		// 所有任务列表
+		router.post("/alltask").blockingHandler(dispatchClientHandler::getDispatchAllTask, false);
 		return router;
 	}
 

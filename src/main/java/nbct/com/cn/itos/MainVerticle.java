@@ -13,7 +13,6 @@ import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
-import nbct.com.cn.itos.handler.DispatchTaskHandler;
 import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
@@ -39,7 +38,6 @@ public class MainVerticle extends AbstractVerticle {
 		ModelHandler modelHandler = new ModelHandler();
 		CommonTaskHandler commonTaskHandler = new CommonTaskHandler();
 		ManualTaskHandler manualTaskHandler = new ManualTaskHandler();
-		DispatchTaskHandler dispatchTaskHandler = new DispatchTaskHandler();
 		SettingsHandler settingsHandler = new SettingsHandler();
 		UploadHandler uploadHandler = new UploadHandler();
 		DispatchClientHandler dispatchClientHandler = new DispatchClientHandler();
@@ -58,8 +56,6 @@ public class MainVerticle extends AbstractVerticle {
 		router.mountSubRouter("/composetask", ItosRouter.composeRouter(vertx, composeHandler));
 		//人工任务
 		router.mountSubRouter("/manualtask", ItosRouter.manualtaskRouter(vertx, manualTaskHandler));
-		//系统任务
-		router.mountSubRouter("/dispatchtask", ItosRouter.dispatchtaskRouter(vertx, dispatchTaskHandler));
 		//任务通用
 		router.mountSubRouter("/task", ItosRouter.commonTaskRouter(vertx, commonTaskHandler, uploadHandler));
 		//智能提示

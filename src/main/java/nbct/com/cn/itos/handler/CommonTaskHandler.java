@@ -227,7 +227,7 @@ public class CommonTaskHandler {
 						if (task.getComposeId() == null) {
 							promise.complete(task);// 非组合任务路过
 						} else {
-							JsonArray params = new JsonArray().add(task.getTaskId() + "," + "SYS");// 传入参数
+							JsonArray params = new JsonArray().add(task.getTaskId() + "^" + "SYS");// 传入参数
 							JsonArray outputs = new JsonArray()//
 									.addNull()// 传入
 									.add("VARCHAR")// flag
