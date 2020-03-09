@@ -131,7 +131,7 @@ public class DispatchClientHandler {
 	}
 
 	/**
-	 * 所有下发终端任务列表(页面访问)
+	 * 所有终端任务列表(页面访问)
 	 */
 	public void getDispatchAllTask(RoutingContext ctx) {
 		String sql = "select * from itos_task where category in (?,?) and invalid = 'N' and composeId is null";
@@ -142,7 +142,7 @@ public class DispatchClientHandler {
 	}
 
 	/**
-	 * 下发终端任务列表(终端访问)<br>
+	 * 终端任务列表(终端访问)<br>
 	 * 终端参数 {serviceName:"...",ip:"..."}
 	 */
 	public void getDispatchTaskList(RoutingContext ctx) {

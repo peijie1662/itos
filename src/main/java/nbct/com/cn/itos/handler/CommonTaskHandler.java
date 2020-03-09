@@ -145,7 +145,8 @@ public class CommonTaskHandler {
 	}
 
 	/**
-	 * 任务操作(PROCESSING,DONE,CANCEL)
+	 * 任务操作(PROCESSING,DONE,CANCEL)<br>
+	 * 参数 {taskId:"...",status:"...",oper:"...",remark:"..."}
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -320,8 +321,8 @@ public class CommonTaskHandler {
 				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
 					Future<CommonTask> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,modelId," + //
-								" status,content,planDt,invalid,taskicon,oper,opdate) " + //
-								" values(?,?,?,?,?,?,?,?,?,?,?)";
+						" status,content,planDt,invalid,taskicon,oper,opdate,expiredTime) " + //
+						" values(?,?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray()//
 								.add(task.getTaskId())//
 								.add(task.getCategory().getValue())//
@@ -333,7 +334,8 @@ public class CommonTaskHandler {
 								.add("N")//
 								.add(task.getTaskIcon())//
 								.add(rp.getString("userId"))//
-								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+								.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
+								.add(DateUtil.localToUtcStr(task.getExpiredTime()));
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);
@@ -387,7 +389,6 @@ public class CommonTaskHandler {
 					}
 					conn.close();
 				});
-
 			}
 		});
 	}

@@ -2,6 +2,7 @@ package nbct.com.cn.itos.model;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
@@ -32,8 +33,8 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 	private boolean invalid;
 
 	private LocalDateTime scanDate;
-
-	private String apiKey;
+	
+	private int expired;
 
 	public TimerTaskModel from(JsonObject j) {
 		TimerTaskModel t = new TimerTaskModel();
@@ -49,7 +50,11 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 		} catch (ParseException e) {
 			throw new RuntimeException("TimerTaskModel日期格式转换错误。");
 		}
-		t.setApiKey(j.getString("APIKEY"));
+		if (Objects.nonNull(j.getInteger("EXPIRED"))) {
+			t.setExpired(j.getInteger("EXPIRED"));
+		}else {
+			t.setExpired(24*60*60);//default 24 hours
+		}
 		return t;
 	}
 
@@ -101,14 +106,6 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 		this.cycle = cycle;
 	}
 
-	public String getApiKey() {
-		return apiKey;
-	}
-
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
-
 	public CategoryEnum getCategory() {
 		return category;
 	}
@@ -123,6 +120,14 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setScanDate(LocalDateTime scanDate) {
 		this.scanDate = scanDate;
+	}
+
+	public int getExpired() {
+		return expired;
+	}
+
+	public void setExpired(int expired) {
+		this.expired = expired;
 	}
 
 }

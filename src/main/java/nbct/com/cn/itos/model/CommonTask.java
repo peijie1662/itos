@@ -56,6 +56,8 @@ public class CommonTask implements RowMapper<CommonTask>{
 	private String taskIcon;
 	
 	private String composeId;
+	
+	private LocalDateTime expiredTime;
 
 	public CommonTask from(JsonObject j) {
 		CommonTask task = new CommonTask();
@@ -77,6 +79,11 @@ public class CommonTask implements RowMapper<CommonTask>{
 		} catch (ParseException e) {
 			throw new RuntimeException(e.getMessage());
 		}
+		try {
+			task.setExpiredTime(DateUtil.utcToLocalDT(j.getString("EXPIREDTIME")));
+		} catch (ParseException e) {
+			throw new RuntimeException(e.getMessage());
+		}		
 		return task;
 	}
 
@@ -96,6 +103,7 @@ public class CommonTask implements RowMapper<CommonTask>{
 		task.setModelId(model.getModelId());
 		task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
 		task.setPlanDt(planDt);
+		task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 		return task;
 	}
 
@@ -135,6 +143,7 @@ public class CommonTask implements RowMapper<CommonTask>{
 				int hour = Integer.parseInt(dt.substring(0, 2));
 				int min = Integer.parseInt(dt.substring(2));
 				task.setPlanDt(LocalDateTime.of(LocalDate.now(), LocalTime.of(hour, min)));
+				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 				tasks.add(task);
 			});
 			break;
@@ -155,6 +164,7 @@ public class CommonTask implements RowMapper<CommonTask>{
 				// 组合
 				CommonTask task = createTask.get();
 				task.setPlanDt(LocalDateTime.of(pd, pt));
+				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 				tasks.add(task);
 			});
 			break;
@@ -175,6 +185,7 @@ public class CommonTask implements RowMapper<CommonTask>{
 				// 组合
 				CommonTask task = createTask.get();
 				task.setPlanDt(LocalDateTime.of(pd, pt));
+				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 				tasks.add(task);
 			});
 			break;
@@ -184,10 +195,11 @@ public class CommonTask implements RowMapper<CommonTask>{
 			}
 			CommonTask task = createTask.get();
 			task.setPlanDt(LocalDateTime.now());
+			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 			tasks.add(task);
 			break;
 		default:
-			System.out.println("default");
+			System.out.println("find some strange cycle.");
 			break;
 		}
 		return tasks;
@@ -303,6 +315,14 @@ public class CommonTask implements RowMapper<CommonTask>{
 
 	public void setComposeId(String composeId) {
 		this.composeId = composeId;
+	}
+
+	public LocalDateTime getExpiredTime() {
+		return expiredTime;
+	}
+
+	public void setExpiredTime(LocalDateTime expiredTime) {
+		this.expiredTime = expiredTime;
 	}
 
 }

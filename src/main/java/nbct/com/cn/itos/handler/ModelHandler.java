@@ -3,6 +3,7 @@ package nbct.com.cn.itos.handler;
 import static nbct.com.cn.itos.model.CallResult.Err;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -22,6 +23,7 @@ public class ModelHandler {
 
 	/**
 	 * 组合任务模版列表
+	 * 
 	 * @param ctx
 	 */
 	public void getComposeModelList(RoutingContext ctx) {
@@ -29,9 +31,10 @@ public class ModelHandler {
 				+ " and category = 'COMPOSE' order by opdate";
 		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
-	
+
 	/**
 	 * 非组合任务模版列表
+	 * 
 	 * @param ctx
 	 */
 	public void getNotComposeModelList(RoutingContext ctx) {
@@ -45,12 +48,17 @@ public class ModelHandler {
 		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 
+	/**
+	 * 更新模版
+	 * @param ctx
+	 */
 	public void updateTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "update itos_taskmodel set comments = ?,planDates= ? where modelId = ? ";
+		String sql = "update itos_taskmodel set comments = ?,planDates = ?,expired = ? where modelId = ? ";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
+		params.add(rp.getString("expired"));
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
 		// 日志
@@ -58,6 +66,10 @@ public class ModelHandler {
 		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 	}
 
+	/**
+	 * 刪除模版
+	 * @param ctx
+	 */
 	public void deleteTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "delete itos_taskmodel where modelId = ? ";
@@ -69,6 +81,10 @@ public class ModelHandler {
 		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
 	}
 
+	/**
+	 * 添加模版
+	 * @param ctx
+	 */
 	public void addTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
@@ -76,6 +92,7 @@ public class ModelHandler {
 		String category = rp.getString("category");
 		String abs = rp.getString("abs");
 		String comments = rp.getString("comments");
+		String cycle = rp.getString("cycle");
 		String planDates = rp.getString("planDates");
 		if (category == null) {
 			res.end(Err("任务类别不能为空。"));
@@ -91,17 +108,17 @@ public class ModelHandler {
 		}
 		// COMPOSE任务无需执行周期与时间，因为都是临时手动触发的。
 		if (!CategoryEnum.COMPOSE.getValue().equals(category)) {
-			if (rp.getString("cycle") == null) {
+			if (cycle == null) {
 				res.end(Err("执行周期不能为空。"));
 				return;
 			}
-			if (planDates == null) {
+			if ((!"NONE".equals(cycle)) && Objects.isNull(planDates)) {
 				res.end(Err("任务时间不能为空。"));
 				return;
 			}
 		}
-		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate,invalid,abstract) "
-				+ " values(?,?,?,?,?,?,?,?,?)";
+		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate,invalid,abstract,expired) "
+				+ " values(?,?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		params.add(category);
@@ -112,6 +129,7 @@ public class ModelHandler {
 		params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 		params.add("N");
 		params.add(abs);
+		params.add(Integer.parseInt(rp.getString("expired")));
 		JdbcHelper.update(ctx, sql, params);
 		// 日志
 		String log = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";

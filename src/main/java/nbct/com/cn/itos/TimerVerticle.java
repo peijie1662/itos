@@ -57,10 +57,11 @@ public class TimerVerticle extends AbstractVerticle {
 									try {
 										return new TimerTaskModel().from(row);
 									} catch (Exception e) {
+										e.printStackTrace();
 										throw new RuntimeException(e.getMessage());
 									}
 								}).filter(model -> {
-									boolean valid = model.getScanDate() == null;
+									boolean valid = (!model.getCycle().eq("NONE")) && model.getScanDate() == null;
 									if (model.getScanDate() != null) {
 										LocalDateTime ct = LocalDateTime.now();
 										LocalDate cd = ct.toLocalDate();
@@ -192,7 +193,7 @@ public class TimerVerticle extends AbstractVerticle {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						//logger.info(r.result());
+						// logger.info(r.result());
 					} else {
 						logger.error(r.cause().getMessage());
 					}
