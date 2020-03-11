@@ -134,10 +134,11 @@ public class DispatchClientHandler {
 	 * 所有终端任务列表(页面访问)
 	 */
 	public void getDispatchAllTask(RoutingContext ctx) {
-		String sql = "select * from itos_task where category in (?,?) and invalid = 'N' and composeId is null";
+		String sql = "select * from itos_task where category in (?,?,?) and invalid = 'N' and composeId is null";
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.CMD.getValue());
 		params.add(CategoryEnum.PROCEDURE.getValue());
+		params.add(CategoryEnum.CUSTOM.getValue());
 		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
 

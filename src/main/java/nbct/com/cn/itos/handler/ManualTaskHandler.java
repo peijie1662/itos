@@ -16,21 +16,23 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.config.Header;
+import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
+import nbct.com.cn.itos.model.ItosMsg;
 import util.ConvertUtil;
 import util.DateUtil;
 
 /**
-* @author PJ 
-* @version 创建时间：2020年1月17日 上午8:54:23
-*/
+ * @author PJ
+ * @version 创建时间：2020年1月17日 上午8:54:23
+ */
 public class ManualTaskHandler {
-	
+
 	/**
 	 * 人工执行任务列表
 	 */
@@ -40,7 +42,7 @@ public class ManualTaskHandler {
 		params.add(CategoryEnum.COMMON.getValue());
 		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
-	
+
 	/**
 	 * 保存人工任务
 	 */
@@ -56,8 +58,8 @@ public class ManualTaskHandler {
 				Supplier<Future<JsonObject>> savef = () -> {
 					Future<JsonObject> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,phone,location,customer," + //
-								"status,content,handler,invalid,taskicon,plandt,oper,opdate) " + //
-								"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+						"status,content,handler,invalid,taskicon,plandt,oper,opdate) " + //
+						"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray();
 						String taskId = rp.getString("taskId");
 						String oper = rp.getString("oper");
@@ -120,7 +122,8 @@ public class ManualTaskHandler {
 				}).setHandler(r -> {
 					if (r.succeeded()) {
 						String log = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
-						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+						ItosMsg<String> msg = new ItosMsg<String>(Header.CRT_MANUAL_TASK.value(), log);
+						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
 						res.end(OK(r.result()));
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -130,7 +133,7 @@ public class ManualTaskHandler {
 			}
 		});
 	}
-	
+
 	/**
 	 * 任务操作(SWAP)
 	 */
@@ -213,7 +216,7 @@ public class ManualTaskHandler {
 						});
 					});
 					return f;
-				};				
+				};
 				// 4.EXECUTE
 				getf.get().compose(r -> {
 					return savef.apply(r);
@@ -222,7 +225,8 @@ public class ManualTaskHandler {
 				}).setHandler(r -> {
 					if (r.succeeded()) {
 						String log = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
-						ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+						ItosMsg<String> msg = new ItosMsg<String>(Header.SWAP_HANDLER.value(), log);
+						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));

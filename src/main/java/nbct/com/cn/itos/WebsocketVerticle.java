@@ -9,8 +9,8 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.model.ItosUser;
 
 /**
@@ -31,12 +31,12 @@ public class WebsocketVerticle extends AbstractVerticle {
 		websocketMethod(server);
 		server.requestHandler(router).listen(Configer.getWebsocketPort());
 		EventBus es = vertx.eventBus();
-		es.consumer(AddressEnum.SYSLOG.getValue(), this::pushSysLog);
-		es.consumer(AddressEnum.CONTROLCENTER.getValue(), this::pushControlCenter);
+		es.consumer(SceneEnum.SYSLOG.value(), this::pushSysLog);
+		es.consumer(SceneEnum.CONTROLCENTER.value(), this::pushControlCenter);
 	}
 
 	/**
-	 * 自动任务生成日志推送给管理员
+	 * 自动任务生成日志推送给管理员  //TODO 做消息匹配
 	 * @param msg
 	 */
 	private void pushSysLog(Message<String> msg) {

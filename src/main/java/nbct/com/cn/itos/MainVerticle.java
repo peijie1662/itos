@@ -47,7 +47,7 @@ public class MainVerticle extends AbstractVerticle {
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 
 		// 静态文件
-		router.route("/static/*").handler(StaticHandler.create(Configer.uploadDir));
+		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
 		// 登录
 		router.post("/login").blockingHandler(userHandler::handleLogin, false);
 		//任务模版

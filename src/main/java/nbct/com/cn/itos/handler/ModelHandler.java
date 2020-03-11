@@ -9,9 +9,11 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.AddressEnum;
 import nbct.com.cn.itos.config.CategoryEnum;
+import nbct.com.cn.itos.config.Header;
+import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.model.ItosMsg;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.DateUtil;
 
@@ -63,7 +65,8 @@ public class ModelHandler {
 		JdbcHelper.update(ctx, sql, params);
 		// 日志
 		String log = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
-		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+		ItosMsg<String> msg = new ItosMsg<String>(Header.UPADTE_MODEL.value(),log);
+		ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
 	}
 
 	/**
@@ -78,7 +81,8 @@ public class ModelHandler {
 		JdbcHelper.update(ctx, sql, params);
 		// 日志
 		String log = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被刪除。";
-		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+		ItosMsg<String> msg = new ItosMsg<String>(Header.DELETE_MODEL.value(),log);
+		ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
 	}
 
 	/**
@@ -129,11 +133,13 @@ public class ModelHandler {
 		params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 		params.add("N");
 		params.add(abs);
-		params.add(Integer.parseInt(rp.getString("expired")));
+		int expired = Objects.isNull(rp.getString("expired"))?24*60*60:Integer.parseInt(rp.getString("expired"));
+		params.add(expired);
 		JdbcHelper.update(ctx, sql, params);
 		// 日志
 		String log = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
-		ctx.vertx().eventBus().send(AddressEnum.SYSLOG.getValue(), log);
+		ItosMsg<String> msg = new ItosMsg<String>(Header.ADD_MODEL.value(),log);
+		ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
 	}
 
 	/**

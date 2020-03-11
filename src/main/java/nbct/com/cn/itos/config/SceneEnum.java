@@ -7,21 +7,22 @@ import java.util.Optional;
 * @author PJ 
 * @version 创建时间：2019年12月31日 上午11:05:05
 */
-public enum AddressEnum {
+public enum SceneEnum {
 	
 	SYSLOG("itos.sys.log", "系统日志"),
-	CONTROLCENTER("itos.controlcenter.notify","控制中心通知");
+	ONLINEUSER("itos.sys.users","用户在线"),
+	CONTROLCENTER("itos.controlcenter.msg","控制中心");
 
 	private String value;
 
 	private String desc;
 
-	private AddressEnum(String value, String desc) {
+	private SceneEnum(String value, String desc) {
 		this.value = value;
 		this.desc = desc;
 	}
 
-	public String getValue() {
+	public String value() {
 		return value;
 	}
 
@@ -30,11 +31,11 @@ public enum AddressEnum {
 	}
 
 	public boolean eq(String s) {
-		return s.equals(this.getValue());
+		return s.equals(this.value());
 	}
 
-	public static Optional<AddressEnum> from(String s) {
-		return Arrays.asList(AddressEnum.values()).stream().filter(item -> {
+	public static Optional<SceneEnum> from(String s) {
+		return Arrays.asList(SceneEnum.values()).stream().filter(item -> {
 			return item.eq(s);
 		}).findAny();
 	}

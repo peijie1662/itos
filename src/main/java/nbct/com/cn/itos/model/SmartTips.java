@@ -12,12 +12,15 @@ import util.ConvertUtil;
 */
 public class SmartTips implements RowMapper<SmartTips>{
 	
+	private String tipId;
+	
 	private String preReg;
 	
 	private List<String> nextWord;
 	
 	public SmartTips from(JsonObject j){
 		SmartTips st = new SmartTips();
+		st.setTipId(j.getString("TIPID"));
 		st.setPreReg(j.getString("PREREG"));
 		st.setNextWord(ConvertUtil.strToList(j.getString("NEXTWORD")));
 		return st;
@@ -37,6 +40,14 @@ public class SmartTips implements RowMapper<SmartTips>{
 
 	public void setNextWord(List<String> nextWord) {
 		this.nextWord = nextWord;
+	}
+
+	public String getTipId() {
+		return tipId;
+	}
+
+	public void setTipId(String tipId) {
+		this.tipId = tipId;
 	}
 
 }
