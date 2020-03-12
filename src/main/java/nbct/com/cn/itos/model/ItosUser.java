@@ -1,7 +1,10 @@
 package nbct.com.cn.itos.model;
 
+import java.util.List;
+
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.RowMapper;
 
 /**
@@ -31,6 +34,8 @@ public class ItosUser implements RowMapper<ItosUser>{
 	private String firstPage;
 	
 	private ServerWebSocket ws;
+	
+	private List<SceneEnum> scene;//用户所在场景 
 	
 	public ItosUser from(JsonObject j) {
 		ItosUser user = new ItosUser();
@@ -133,6 +138,14 @@ public class ItosUser implements RowMapper<ItosUser>{
 
 	public void setFirstPage(String firstPage) {
 		this.firstPage = firstPage;
+	}
+
+	public List<SceneEnum> getScene() {
+		return scene;
+	}
+
+	public void setScene(List<SceneEnum> scene) {
+		this.scene = scene;
 	}
 
 }

@@ -9,34 +9,51 @@ import java.util.Optional;
 */
 public enum SceneEnum {
 	
-	SYSLOG("itos.sys.log", "系统日志"),
-	ONLINEUSER("itos.sys.users","用户在线"),
-	CONTROLCENTER("itos.controlcenter.msg","控制中心");
+	SYSLOG("itos.sys.log","SYSLOG", "系统日志"),
+	ONLINEUSER("itos.sys.users","ONLINEUSER","用户在线"),
+	CONTROLCENTER("itos.controlcenter.msg","CONTROLCENTER","控制中心");
 
-	private String value;
+	private String addr;//地址
+	
+	private String abs;//简写
 
-	private String desc;
+	private String desc;//描述
 
-	private SceneEnum(String value, String desc) {
-		this.value = value;
+	private SceneEnum(String addr,String abs, String desc) {
+		this.addr = addr;
+		this.abs = abs;
 		this.desc = desc;
 	}
 
-	public String value() {
-		return value;
+	public String addr() {
+		return addr;
+	}
+	
+	public String abs() {
+		return abs;
 	}
 
-	public String getDesc() {
+	public String desc() {
 		return desc;
 	}
 
 	public boolean eq(String s) {
-		return s.equals(this.value());
+		return s.equals(this.addr());
 	}
 
 	public static Optional<SceneEnum> from(String s) {
 		return Arrays.asList(SceneEnum.values()).stream().filter(item -> {
 			return item.eq(s);
+		}).findAny();
+	}
+	
+	public boolean absEq(String s) {
+		return s.equals(this.abs());
+	}
+
+	public static Optional<SceneEnum> absFrom(String s) {
+		return Arrays.asList(SceneEnum.values()).stream().filter(item -> {
+			return item.absEq(s);
 		}).findAny();
 	}
 

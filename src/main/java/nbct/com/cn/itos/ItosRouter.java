@@ -165,6 +165,8 @@ public class ItosRouter {
 		router.post("/firstpage").blockingHandler(userHandler::updateFirstPage, false);
 		// 修改密码
 		router.post("/password").blockingHandler(userHandler::updatePassword, false);
+		// 在线用户
+		router.get("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
 		return router;
 	}
 
@@ -181,5 +183,6 @@ public class ItosRouter {
 		router.post("/duty/delete").blockingHandler(firstPageHandler::delDuty, false);
 		return router;
 	}
+
 
 }

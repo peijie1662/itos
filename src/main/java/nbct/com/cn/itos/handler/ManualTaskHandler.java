@@ -18,14 +18,12 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.Configer;
-import nbct.com.cn.itos.config.Header;
-import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
-import nbct.com.cn.itos.model.ItosMsg;
 import util.ConvertUtil;
 import util.DateUtil;
+import util.MsgUtil;
 
 /**
  * @author PJ
@@ -121,9 +119,8 @@ public class ManualTaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						String log = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
-						ItosMsg<String> msg = new ItosMsg<String>(Header.CRT_MANUAL_TASK.value(), log);
-						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+						String msg = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
+						MsgUtil.sysLog(ctx, msg);
 						res.end(OK(r.result()));
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -224,9 +221,8 @@ public class ManualTaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						String log = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
-						ItosMsg<String> msg = new ItosMsg<String>(Header.SWAP_HANDLER.value(), log);
-						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+						String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
+						MsgUtil.sysLog(ctx, msg);
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));

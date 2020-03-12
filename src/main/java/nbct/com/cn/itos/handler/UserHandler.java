@@ -15,6 +15,7 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosUser;
 
@@ -23,6 +24,21 @@ import nbct.com.cn.itos.model.ItosUser;
  * @version 创建时间：2020年1月30日 下午6:24:24
  */
 public class UserHandler {
+
+	/**
+	 * 在线用户
+	 */
+	public void onlineUsers(RoutingContext ctx) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		ctx.vertx().eventBus().request(SceneEnum.ONLINEUSER.addr(), null, reply -> {
+			if (reply.succeeded()) {
+				res.end(OK(reply.result().body()));
+			} else {
+				res.end(Err(reply.cause().getMessage()));
+			}
+		});
+	}
 
 	/**
 	 * 保存用户

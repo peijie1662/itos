@@ -25,13 +25,11 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.CycleEnum;
-import nbct.com.cn.itos.config.Header;
-import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.model.CommonTask;
-import nbct.com.cn.itos.model.ItosMsg;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.DateUtil;
+import util.MsgUtil;
 
 /**
  * 自动任务
@@ -153,10 +151,9 @@ public class TimerVerticle extends AbstractVerticle {
 				Function<List<CommonTask>, Future<String>> logf = (List<CommonTask> tasks) -> {
 					Future<String> f = Future.future(promise -> {
 						tasks.forEach(task -> {
-							String log = DateUtil.curDtStr() + " " + "系统按照任务模版'" + task.getAbs() + "'生成任务,执行时间是'"
+							String msg = DateUtil.curDtStr() + " " + "系统按照任务模版'" + task.getAbs() + "'生成任务,执行时间是'"
 									+ task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "'";
-							ItosMsg<String> msg = new ItosMsg<String>(Header.CRT_TASK_FROM_MODEL.value(), log);
-							vertx.eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+							MsgUtil.sysLog(vertx, msg);
 						});
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						tasks.forEach(task -> {

@@ -5,7 +5,6 @@ import static nbct.com.cn.itos.model.CallResult.OK;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,16 +17,14 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
-import nbct.com.cn.itos.config.Header;
-import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.CommonTaskLog;
-import nbct.com.cn.itos.model.ItosMsg;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.ConvertUtil;
 import util.DateUtil;
+import util.MsgUtil;
 
 /**
  * @author PJ
@@ -135,10 +132,8 @@ public class CommonTaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						// 消息点-修改任务内容
-						String content = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的内容";
-						ItosMsg<String> msg = new ItosMsg<String>(Header.UPDATE_TASK_CONTENT.value(), content);
-						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+						String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的内容";
+						MsgUtil.sysLog(ctx, msg);
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -244,9 +239,7 @@ public class CommonTaskHandler {
 									JsonArray j = r.result().getOutput();
 									Boolean flag = "0".equals(j.getString(1));// flag
 									String newTask = j.getString(3);// 新建下阶段任务数量
-									// 消息点-生成下一阶段组合任务
-									ItosMsg<String> msg = new ItosMsg<String>(Header.COMPOSE_NEXT_COUNT.value(), Integer.parseInt(newTask));
-									ctx.vertx().eventBus().send(SceneEnum.CONTROLCENTER.value(), msg.json());
+									MsgUtil.mixLC(ctx, Integer.parseInt(newTask),task.getComposeId());
 									if (flag) {
 										promise.complete(task);
 									} else {
@@ -270,13 +263,9 @@ public class CommonTaskHandler {
 					return composef.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						String log = DateUtil.curDtStr() + " " + "更新任务'" + r.result().getAbs() + "'的状态为"
+						String msg = DateUtil.curDtStr() + " " + "更新任务'" + r.result().getAbs() + "'的状态为"
 								+ rp.getString("status");
-						ItosMsg<String> msg = new ItosMsg<String>(Header.UPDATE_TASK_STATUS.value(),log);
-						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
-						if (Objects.nonNull(r.result().getComposeId())) {//如果是组合任务，也给控制中心发一份
-							ctx.vertx().eventBus().send(SceneEnum.CONTROLCENTER.value(), msg.json());
-						}
+						MsgUtil.mixLC(ctx, msg, r.result().getComposeId());
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -390,11 +379,9 @@ public class CommonTaskHandler {
 					return logf.apply(r);
 				}).setHandler(r -> {
 					if (r.succeeded()) {
-						// 消息点-生成即时任务
-						String log = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
+						String msg = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
 								+ r.result().getAbs() + "'";
-						ItosMsg<String> msg = new ItosMsg<String>(Header.CRT_ONCE_TASK.value(),log);
-						ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+						MsgUtil.mixLC(ctx, msg, r.result().getComposeId());
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));

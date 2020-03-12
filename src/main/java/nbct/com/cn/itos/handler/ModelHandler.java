@@ -10,12 +10,12 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.CategoryEnum;
-import nbct.com.cn.itos.config.Header;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosMsg;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.DateUtil;
+import util.MsgUtil;
 
 /**
  * @author PJ
@@ -63,10 +63,8 @@ public class ModelHandler {
 		params.add(rp.getString("expired"));
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
-		// 日志
-		String log = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
-		ItosMsg<String> msg = new ItosMsg<String>(Header.UPADTE_MODEL.value(),log);
-		ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
+		MsgUtil.sysLog(ctx, msg);
 	}
 
 	/**
@@ -79,10 +77,8 @@ public class ModelHandler {
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
-		// 日志
-		String log = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被刪除。";
-		ItosMsg<String> msg = new ItosMsg<String>(Header.DELETE_MODEL.value(),log);
-		ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被刪除。";
+		MsgUtil.sysLog(ctx, msg);
 	}
 
 	/**
@@ -136,10 +132,8 @@ public class ModelHandler {
 		int expired = Objects.isNull(rp.getString("expired"))?24*60*60:Integer.parseInt(rp.getString("expired"));
 		params.add(expired);
 		JdbcHelper.update(ctx, sql, params);
-		// 日志
-		String log = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
-		ItosMsg<String> msg = new ItosMsg<String>(Header.ADD_MODEL.value(),log);
-		ctx.vertx().eventBus().send(SceneEnum.SYSLOG.value(), msg.json());
+		String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
+		MsgUtil.sysLog(ctx, msg);
 	}
 
 	/**

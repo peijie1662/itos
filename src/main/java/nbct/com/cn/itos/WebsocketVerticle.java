@@ -1,17 +1,24 @@
 package nbct.com.cn.itos;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.model.ItosUser;
+
+import static nbct.com.cn.itos.model.CallResult.OK;
 
 /**
  * @author PJ
@@ -31,32 +38,49 @@ public class WebsocketVerticle extends AbstractVerticle {
 		websocketMethod(server);
 		server.requestHandler(router).listen(Configer.getWebsocketPort());
 		EventBus es = vertx.eventBus();
-		es.consumer(SceneEnum.SYSLOG.value(), this::pushSysLog);
-		es.consumer(SceneEnum.CONTROLCENTER.value(), this::pushControlCenter);
+		// 系统日志场景
+		es.consumer(SceneEnum.SYSLOG.addr(), this::pushSysLog);
+		// 控制中心场景
+		es.consumer(SceneEnum.CONTROLCENTER.addr(), this::pushControlCenter);
+		// 在线用户请求
+		es.consumer(SceneEnum.ONLINEUSER.addr(), this::onlineUsers);
 	}
 
 	/**
-	 * 自动任务生成日志推送给管理员  //TODO 做消息匹配
-	 * @param msg
+	 * 推送系统日志给'系统日志场景'用户
 	 */
 	private void pushSysLog(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {
-			if ("ADMIN".equals(user.getRole())) {
+			if (user.getScene().contains(SceneEnum.SYSLOG)) {
 				user.getWs().writeFinalTextFrame(msg.body());
 			}
 		});
 	}
 
 	/**
-	 * 控制中心消息推送给所有用户
-	 * @param msg
+	 * 推送控制中心消息给控制'中心场景'用户
 	 */
 	private void pushControlCenter(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {
-			user.getWs().writeFinalTextFrame(msg.body());
+			if (user.getScene().contains(SceneEnum.CONTROLCENTER)) {
+				user.getWs().writeFinalTextFrame(msg.body());
+			}
 		});
 	}
 
+	/**
+	 * 请求在线用户
+	 */
+	public void onlineUsers(Message<String> msg) {
+		List<JsonObject> list = onlineUsers.values().stream().map(item -> {
+			return JsonObject.mapFrom(item);
+		}).collect(Collectors.toList());
+		msg.reply(new JsonArray(list));
+	}
+
+	/**
+	 * 处理页面消息
+	 */
 	public void websocketMethod(HttpServer server) {
 		server.websocketHandler(webSocket -> {
 			String id = webSocket.binaryHandlerID();
@@ -64,19 +88,39 @@ public class WebsocketVerticle extends AbstractVerticle {
 				onlineUsers.put(id, new ItosUser().setWs(webSocket));
 			}
 			webSocket.frameHandler(handler -> {
-				String[] clentMsg = handler.textData().split("\\^");
-				String header = clentMsg[0];
-				switch (header) {
-				case "USERLOGIN":
-					// 按照ID补充用户信息
-					JsonObject j = new JsonObject(clentMsg[1]);
-					ItosUser user = onlineUsers.get(id);
-					user.setUserId(j.getString("userId"));
-					user.setUserName(j.getString("userName"));
-					user.setRole(j.getString("role"));
-					break;
-				default:
-					System.out.println("OTHERS WEBSOCKET HEADER.");
+
+				System.out.println("passing in: " + handler.textData());
+				
+				try {
+					String[] clientMsg = handler.textData().split("\\^");
+					if (clientMsg.length >= 2) {
+						String header = clientMsg[0];
+						JsonObject j = new JsonObject(clientMsg[1]);
+						ItosUser user = onlineUsers.get(id);
+						List<SceneEnum> scenes = j.getJsonArray("scenes").stream().map(item -> {
+							return SceneEnum.absFrom(item.toString()).get();
+						}).collect(Collectors.toList());
+						switch (header) {
+						// 用户登录时记录在线信息
+						case "USERLOGIN":
+							user.setUserId(j.getString("userId"));
+							user.setUserName(j.getString("userName"));
+							user.setDepartment(j.getString("department"));
+							user.setPhone(j.getString("phone"));
+							user.setShortPhone(j.getString("shortPhone"));
+							user.setRole(j.getString("role"));
+							user.setScene(scenes);
+							break;
+						// 用户的场景发生转换	
+						case "USERSCENE":
+							user.setScene(scenes);
+							break;
+						default:
+							System.out.println("OTHERS WEBSOCKET HEADER:" + header);
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			});
 			webSocket.closeHandler(handler -> onlineUsers.remove(id));
