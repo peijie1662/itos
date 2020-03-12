@@ -9,16 +9,12 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.model.ItosUser;
-
-import static nbct.com.cn.itos.model.CallResult.OK;
 
 /**
  * @author PJ
