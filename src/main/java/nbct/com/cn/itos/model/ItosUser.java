@@ -148,4 +148,11 @@ public class ItosUser implements RowMapper<ItosUser>{
 		this.scene = scene;
 	}
 
+	@Override
+	public String toString() {
+		return "ItosUser [userName=" + userName + ", userId=" + userId + ", password=" + password + ", workId=" + workId
+				+ ", role=" + role + ", department=" + department + ", phone=" + phone + ", shortPhone=" + shortPhone
+				+ ", authority=" + authority + ", firstPage=" + firstPage + ", ws=" + ws + ", scene=" + scene + "]";
+	}
+	
 }

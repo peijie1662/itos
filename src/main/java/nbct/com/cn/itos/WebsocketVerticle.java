@@ -85,38 +85,33 @@ public class WebsocketVerticle extends AbstractVerticle {
 			}
 			webSocket.frameHandler(handler -> {
 
-				System.out.println("passing in: " + handler.textData());
-				
-				try {
-					String[] clientMsg = handler.textData().split("\\^");
-					if (clientMsg.length >= 2) {
-						String header = clientMsg[0];
-						JsonObject j = new JsonObject(clientMsg[1]);
-						ItosUser user = onlineUsers.get(id);
-						List<SceneEnum> scenes = j.getJsonArray("scenes").stream().map(item -> {
+				System.out.println("passing in: " + handler.textData());// TODO 记录到日志
+
+				String[] clientMsg = handler.textData().split("\\^");
+				if (clientMsg.length >= 2) {
+					String header = clientMsg[0];
+					JsonObject j = new JsonObject(clientMsg[1]);
+					ItosUser user = onlineUsers.get(id);
+					switch (header) {
+					// 用户登录时记录在线信息
+					case "USERLOGIN":
+						user.setUserId(j.getString("userId"));
+						user.setUserName(j.getString("userName"));
+						user.setDepartment(j.getString("department"));
+						user.setPhone(j.getString("phone"));
+						user.setShortPhone(j.getString("shortPhone"));
+						user.setRole(j.getString("role"));
+						break;
+					// 用户的场景发生转换
+					case "USERSCENE":
+						List<SceneEnum> scene = j.getJsonArray("scene").stream().map(item -> {
 							return SceneEnum.absFrom(item.toString()).get();
 						}).collect(Collectors.toList());
-						switch (header) {
-						// 用户登录时记录在线信息
-						case "USERLOGIN":
-							user.setUserId(j.getString("userId"));
-							user.setUserName(j.getString("userName"));
-							user.setDepartment(j.getString("department"));
-							user.setPhone(j.getString("phone"));
-							user.setShortPhone(j.getString("shortPhone"));
-							user.setRole(j.getString("role"));
-							user.setScene(scenes);
-							break;
-						// 用户的场景发生转换	
-						case "USERSCENE":
-							user.setScene(scenes);
-							break;
-						default:
-							System.out.println("OTHERS WEBSOCKET HEADER:" + header);
-						}
+						user.setScene(scene);
+						break;
+					default:
+						System.out.println("OTHERS WEBSOCKET HEADER:" + header);
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			});
 			webSocket.closeHandler(handler -> onlineUsers.remove(id));
