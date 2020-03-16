@@ -9,6 +9,7 @@ import java.util.List;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
@@ -164,7 +165,8 @@ public class JdbcHelper {
 				if (connection != null) {
 					connection.queryWithParams(sql, params, qr -> {
 						if (qr.succeeded()) {
-							res.end(OK(mapper.from(qr.result().getRows().get(0))));
+							T t =  mapper.from(qr.result().getRows().get(0));
+							res.end(OK(JsonObject.mapFrom(t)));//需要转为JsonObject,普通Object不认
 						} else {
 							res.end(Err(qr.cause().getMessage()));
 						}

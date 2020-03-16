@@ -2,11 +2,17 @@ package nbct.com.cn.itos.model;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.CycleEnum;
+import nbct.com.cn.itos.config.ExpiredCallbackEnum;
+import nbct.com.cn.itos.config.NotifyEnum;
 import nbct.com.cn.itos.jdbc.RowMapper;
 import util.DateUtil;
 
@@ -17,6 +23,8 @@ import util.DateUtil;
  * @version 创建时间：2019年12月24日 上午10:30:22
  */
 public class TimerTaskModel implements RowMapper<TimerTaskModel> {
+
+	public static final int DEFAULT_EXPIRED = 24 * 60 * 60;// 默认超期时间为24小时
 
 	private String modelId;
 
@@ -33,29 +41,47 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 	private boolean invalid;
 
 	private LocalDateTime scanDate;
-	
+
 	private int expired;
 
+	private ExpiredCallbackEnum callback;
+
+	private List<NotifyEnum> notify;
+
 	public TimerTaskModel from(JsonObject j) {
-		TimerTaskModel t = new TimerTaskModel();
-		t.setModelId(j.getString("MODELID"));
-		t.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
-		t.setCycle(CycleEnum.from(j.getString("CYCLE")).get());
-		t.setAbs(j.getString("ABSTRACT"));
-		t.setComments(j.getString("COMMENTS"));
-		t.setInvalid("Y".equals(j.getString("INVALID")));
-		t.setPlanDates(j.getString("PLANDATES"));
 		try {
+			TimerTaskModel t = new TimerTaskModel();
+			t.setModelId(j.getString("MODELID"));
+			t.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
+			t.setCycle(CycleEnum.from(j.getString("CYCLE")).get());
+			t.setAbs(j.getString("ABSTRACT"));
+			t.setComments(j.getString("COMMENTS"));
+			t.setInvalid("Y".equals(j.getString("INVALID")));
+			t.setPlanDates(j.getString("PLANDATES"));
 			t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
+			// 超期时间
+			Integer expired = Objects.nonNull(j.getInteger("EXPIRED")) ? j.getInteger("EXPIRED") : DEFAULT_EXPIRED;
+			t.setExpired(expired);
+			// 超期回调
+			ExpiredCallbackEnum callback = Objects.nonNull(j.getString("EXPIREDCALLBACK"))
+					? ExpiredCallbackEnum.from(j.getString("EXPIREDCALLBACK")).get()
+					: ExpiredCallbackEnum.NONE;
+			t.setCallback(callback);
+			// 超期通知
+			String notify = j.getString("EXPIREDNOTIFY");
+			if (Objects.nonNull(notify)) {
+				List<NotifyEnum> n = Arrays.asList(notify.split(",")).stream().map(item -> {
+					return NotifyEnum.from(item).get();
+				}).collect(Collectors.toList());
+				t.setNotify(n);
+			} else {
+				t.setNotify(Collections.emptyList());
+			}
+			return t;
 		} catch (ParseException e) {
-			throw new RuntimeException("TimerTaskModel日期格式转换错误。");
+			e.printStackTrace();
+			throw new RuntimeException("后台数据转换成模版时发生错误。");
 		}
-		if (Objects.nonNull(j.getInteger("EXPIRED"))) {
-			t.setExpired(j.getInteger("EXPIRED"));
-		}else {
-			t.setExpired(24*60*60);//default 24 hours
-		}
-		return t;
 	}
 
 	public String getModelId() {
@@ -128,6 +154,22 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setExpired(int expired) {
 		this.expired = expired;
+	}
+
+	public ExpiredCallbackEnum getCallback() {
+		return callback;
+	}
+
+	public void setCallback(ExpiredCallbackEnum callback) {
+		this.callback = callback;
+	}
+
+	public List<NotifyEnum> getNotify() {
+		return notify;
+	}
+
+	public void setNotify(List<NotifyEnum> notify) {
+		this.notify = notify;
 	}
 
 }

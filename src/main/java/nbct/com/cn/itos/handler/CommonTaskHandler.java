@@ -5,9 +5,11 @@ import static nbct.com.cn.itos.model.CallResult.OK;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
@@ -239,7 +241,7 @@ public class CommonTaskHandler {
 									JsonArray j = r.result().getOutput();
 									Boolean flag = "0".equals(j.getString(1));// flag
 									String newTask = j.getString(3);// 新建下阶段任务数量
-									MsgUtil.mixLC(ctx, Integer.parseInt(newTask),task.getComposeId());
+									MsgUtil.mixLC(ctx, Integer.parseInt(newTask), task.getComposeId());
 									if (flag) {
 										promise.complete(task);
 									} else {
@@ -320,8 +322,9 @@ public class CommonTaskHandler {
 				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
 					Future<CommonTask> f = Future.future(promise -> {
 						String sql = "insert into itos_task(taskId,category,abstract,modelId," + //
-						" status,content,planDt,invalid,taskicon,oper,opdate,expiredTime) " + //
-						" values(?,?,?,?,?,?,?,?,?,?,?,?)";
+						" status,content,planDt,invalid,taskicon,oper,opdate," + //
+						" expiredTime,expiredcallback,expirednotify,executedcallback,executednotify) " + //
+						" values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 						JsonArray params = new JsonArray()//
 								.add(task.getTaskId())//
 								.add(task.getCategory().getValue())//
@@ -334,7 +337,13 @@ public class CommonTaskHandler {
 								.add(task.getTaskIcon())//
 								.add(rp.getString("userId"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
-								.add(DateUtil.localToUtcStr(task.getExpiredTime()));
+								.add(DateUtil.localToUtcStr(task.getExpiredTime()))//
+								.add(Objects.nonNull(task.getCallback()) ? task.getCallback().getValue() : "")//
+								.add(Objects.nonNull(task.getNotify()) ? task.getNotify().stream().map(item -> {
+									return item.getValue();
+								}).collect(Collectors.joining(",")) : "")//
+								.add("N")//
+								.add("N");
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);

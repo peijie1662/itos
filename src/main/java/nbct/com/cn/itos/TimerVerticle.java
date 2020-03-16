@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -28,6 +29,7 @@ import nbct.com.cn.itos.config.CycleEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.TimerTaskModel;
+import util.ConvertUtil;
 import util.DateUtil;
 import util.MsgUtil;
 
@@ -217,13 +219,148 @@ public class TimerVerticle extends AbstractVerticle {
 						}
 					});
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
+	}
+
+	/**
+	 * 扫描所有未完成任务，并执行超期回调<br>
+	 */
+	private void expired() {
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.读数据
+				Supplier<Future<List<CommonTask>>> loadf = () -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "select * from itos_task where expiredtime < sysdate " + //
+						" and expiredcallback <> 'NONE' and nvl(executedcallback,' ') <> 'Y'";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								CommonTask ct = new CommonTask();
+								List<CommonTask> list = r.result().getRows().stream().map(item -> {
+									return ct.from(item);
+								}).collect(Collectors.toList());
+								promise.complete(list);
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.更新状态
+				Function<List<CommonTask>, Future<List<CommonTask>>> uf = (list) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "update itos_task set status = ?,executedcallback = 'Y'";
+						List<JsonArray> params = list.stream().map(item -> {
+							return new JsonArray().add(item.getCallback().getValue());// 这里回调代码与状态代码相同，所以可以直接赋值。
+						}).collect(Collectors.toList());
+						conn.batchWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete(list);
+							} else {
+								r.cause().printStackTrace();
+								promise.fail("执行系统任务超期回调出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.记录日志
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = (List<CommonTask> tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						tasks.forEach(task -> {
+							String msg = DateUtil.curDtStr() + " " + "系统检测到任务'" + task.getAbs() + "'超期," + //
+							"任务状态自动转为'" + task.getCallback().getValue() + "'";
+							MsgUtil.mixLC(vertx, msg, task.getComposeId());
+						});
+						List<JsonArray> params = new ArrayList<JsonArray>();
+						tasks.forEach(task -> {
+							JsonArray param = new JsonArray()//
+									.add(UUID.randomUUID().toString())//
+									.add(task.getTaskId())//
+									.add(task.getModelId())//
+									.add(task.getStatus().getValue())//
+									.add("任务超期，系统将任务状态置为" + task.getCallback().getValue())//
+									.add(ConvertUtil.listToStr(task.getHandler()))//
+									.add(task.getAbs())//
+									.add("")// remark
+									.add("SYS")//
+									.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+							params.add(param);
+						});
+						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
+								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
+						conn.batchWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete(tasks);
+							} else {
+								r.cause().printStackTrace();
+								promise.fail("保存系统任务日志出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 4.组合任务
+				Function<List<CommonTask>, Future<String>> composef = (tasks) -> {
+					Future<String> f = Future.future(promise -> {
+						String param = tasks.stream().filter(item -> {
+							return Objects.nonNull(item.getComposeId());
+						}).map(item -> {
+							return item.getTaskId() + "^" + "SYS";
+						}).collect(Collectors.joining(","));
+						if (ConvertUtil.emptyOrNull(param)) {
+							promise.complete();
+						} else {
+							JsonArray params = new JsonArray().add(param);// 传入参数
+							JsonArray outputs = new JsonArray()//
+									.addNull()// 传入
+									.add("VARCHAR")// flag
+									.add("VARCHAR")// errMsg
+									.add("VARCHAR");// outMsg
+							conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
+								if (r.succeeded()) {
+									JsonArray j = r.result().getOutput();
+									Boolean flag = "0".equals(j.getString(1));// flag
+									String newTask = j.getString(3);// 新建下阶段任务数量
+									if (flag) {
+										MsgUtil.mixLC(vertx, newTask, "SOMEID");// 这时的值是批量值，没什么意义。
+										promise.complete();
+									} else {
+										promise.fail("组合任务过程内部出错:" + j.getString(2));
+									}
+								} else {
+									r.cause().printStackTrace();
+									promise.fail("调用组合任务的出错。");
+								}
+							});
+						}
+					});
+					return f;
+				};
+				// 5.执行
+				loadf.get().compose(r -> {
+					return uf.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
+				}).compose(r -> {
+					return composef.apply(r);
+				}).setHandler(r -> {
+					if (r.failed())
+						r.cause().printStackTrace();
+					conn.close();
+				});
+			}
+		});
 	}
 
 	@Override
 	public void start() throws Exception {
 		vertx.setPeriodic(5000, timerId -> {
+			expired();
 			task();
 			registe();
 		});

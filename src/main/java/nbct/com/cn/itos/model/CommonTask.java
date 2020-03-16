@@ -1,6 +1,5 @@
 package nbct.com.cn.itos.model;
 
-import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -9,13 +8,18 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
+import nbct.com.cn.itos.config.ExpiredCallbackEnum;
+import nbct.com.cn.itos.config.NotifyEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.RowMapper;
 import util.ConvertUtil;
@@ -27,7 +31,7 @@ import util.DateUtil;
  * @author PJ
  * @version 创建时间：2019年12月25日 上午10:44:30
  */
-public class CommonTask implements RowMapper<CommonTask>{
+public class CommonTask implements RowMapper<CommonTask> {
 
 	private String taskId;
 
@@ -54,37 +58,60 @@ public class CommonTask implements RowMapper<CommonTask>{
 	private LocalDateTime planDt;
 
 	private String taskIcon;
-	
+
 	private String composeId;
-	
+
 	private LocalDateTime expiredTime;
 
+	private ExpiredCallbackEnum callback;
+
+	private List<NotifyEnum> notify;
+
+	private boolean executedCallback;
+
+	private boolean executedNotify;
+
 	public CommonTask from(JsonObject j) {
-		CommonTask task = new CommonTask();
-		task.setTaskId(j.getString("TASKID"));
-		task.setAbs(j.getString("ABSTRACT"));
-		task.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
-		task.setStatus(TaskStatusEnum.from(j.getString("STATUS")).get());
-		task.setContent(j.getString("CONTENT"));
-		task.setHandler(ConvertUtil.strToList(j.getString("HANDLER")));
-		task.setKeys(ConvertUtil.strToList(j.getString("KEYS")));
-		task.setPhone(j.getString("PHONE"));
-		task.setLocation(j.getString("LOCATION"));
-		task.setCustomer(j.getString("CUSTOMER"));
-		task.setTaskIcon(j.getString("TASKICON"));
-		task.setModelId(j.getString("MODELID"));
-		task.setComposeId(j.getString("COMPOSEID"));
 		try {
+			CommonTask task = new CommonTask();
+			task.setTaskId(j.getString("TASKID"));
+			task.setAbs(j.getString("ABSTRACT"));
+			task.setCategory(CategoryEnum.from(j.getString("CATEGORY")).get());
+			task.setStatus(TaskStatusEnum.from(j.getString("STATUS")).get());
+			task.setContent(j.getString("CONTENT"));
+			task.setHandler(ConvertUtil.strToList(j.getString("HANDLER")));
+			task.setKeys(ConvertUtil.strToList(j.getString("KEYS")));
+			task.setPhone(j.getString("PHONE"));
+			task.setLocation(j.getString("LOCATION"));
+			task.setCustomer(j.getString("CUSTOMER"));
+			task.setTaskIcon(j.getString("TASKICON"));
+			task.setModelId(j.getString("MODELID"));
+			task.setComposeId(j.getString("COMPOSEID"));
 			task.setPlanDt(DateUtil.utcToLocalDT(j.getString("PLANDT")));
-		} catch (ParseException e) {
-			throw new RuntimeException(e.getMessage());
-		}
-		try {
 			task.setExpiredTime(DateUtil.utcToLocalDT(j.getString("EXPIREDTIME")));
-		} catch (ParseException e) {
-			throw new RuntimeException(e.getMessage());
-		}		
-		return task;
+			// 超期回调
+			ExpiredCallbackEnum callback = Objects.nonNull(j.getString("EXPIREDCALLBACK"))
+					? ExpiredCallbackEnum.from(j.getString("EXPIREDCALLBACK")).get()
+					: ExpiredCallbackEnum.NONE;
+			task.setCallback(callback);
+			// 超期通知
+			String notify = j.getString("EXPIREDNOTIFY");
+			if (Objects.nonNull(notify)) {
+				List<NotifyEnum> n = Arrays.asList(notify.split(",")).stream().map(item -> {
+					return NotifyEnum.from(item).get();
+				}).collect(Collectors.toList());
+				task.setNotify(n);
+			} else {
+				task.setNotify(Collections.emptyList());
+			}
+			// 标记
+			task.setExecutedCallback(ConvertUtil.strToBool(j.getString("EXECUTEDCALLBACK")));
+			task.setExecutedNotify(ConvertUtil.strToBool(j.getString("EXECUTEDNOTIFY")));
+			return task;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException("后台数据转换成任务时发生错误。");
+		}
 	}
 
 	/**
@@ -103,7 +130,11 @@ public class CommonTask implements RowMapper<CommonTask>{
 		task.setModelId(model.getModelId());
 		task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
 		task.setPlanDt(planDt);
-		task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+		task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));// 这里肯定有planDt
+		task.setCallback(model.getCallback());
+		task.setNotify(model.getNotify());
+		task.setExecutedCallback(false);
+		task.setExecutedNotify(false);
 		return task;
 	}
 
@@ -127,6 +158,10 @@ public class CommonTask implements RowMapper<CommonTask>{
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
+			task.setCallback(model.getCallback());
+			task.setNotify(model.getNotify());
+			task.setExecutedCallback(false);
+			task.setExecutedNotify(false);
 			return task;
 		};
 		// 2.创建
@@ -197,7 +232,7 @@ public class CommonTask implements RowMapper<CommonTask>{
 			task.setPlanDt(LocalDateTime.now());
 			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 			tasks.add(task);
-			break;
+			break;	
 		default:
 			System.out.println("find some strange cycle.");
 			break;
@@ -323,6 +358,38 @@ public class CommonTask implements RowMapper<CommonTask>{
 
 	public void setExpiredTime(LocalDateTime expiredTime) {
 		this.expiredTime = expiredTime;
+	}
+
+	public List<NotifyEnum> getNotify() {
+		return notify;
+	}
+
+	public void setNotify(List<NotifyEnum> notify) {
+		this.notify = notify;
+	}
+
+	public ExpiredCallbackEnum getCallback() {
+		return callback;
+	}
+
+	public void setCallback(ExpiredCallbackEnum callback) {
+		this.callback = callback;
+	}
+
+	public boolean isExecutedCallback() {
+		return executedCallback;
+	}
+
+	public void setExecutedCallback(boolean executedCallback) {
+		this.executedCallback = executedCallback;
+	}
+
+	public boolean isExecutedNotify() {
+		return executedNotify;
+	}
+
+	public void setExecutedNotify(boolean executedNotify) {
+		this.executedNotify = executedNotify;
 	}
 
 }
