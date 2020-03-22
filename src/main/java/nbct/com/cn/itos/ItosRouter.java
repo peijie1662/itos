@@ -40,6 +40,14 @@ public class ItosRouter {
 		router.post("/composelist").blockingHandler(modelHandler::getComposeModelList, false);
 		// 非组合任务模版
 		router.post("/notcomposelist").blockingHandler(modelHandler::getNotComposeModelList, false);
+		// 修改模版分组信息
+		router.post("/group").blockingHandler(modelHandler::chgModelGroup, false);
+		// 添加分组
+		router.post("/addgroup").blockingHandler(modelHandler::addGroup, false);
+		// 删除分组
+		router.post("/delgroup").blockingHandler(modelHandler::delGroup, false);
+		// 分组列表
+		router.post("/grouplist").blockingHandler(modelHandler::getGroups, false);
 		return router;
 	}
 
@@ -122,7 +130,7 @@ public class ItosRouter {
 		// 删除终端
 		router.post("/delete").blockingHandler(dispatchClientHandler::deleteClient, false);
 		// 查找终端（终端访问）
-		router.post("/get").blockingHandler(dispatchClientHandler::getClient, false);		
+		router.post("/get").blockingHandler(dispatchClientHandler::getClient, false);
 		// 终端列表
 		router.post("/list").blockingHandler(dispatchClientHandler::getClientList, false);
 		// 重载终端数据
@@ -183,6 +191,5 @@ public class ItosRouter {
 		router.post("/duty/delete").blockingHandler(firstPageHandler::delDuty, false);
 		return router;
 	}
-
 
 }

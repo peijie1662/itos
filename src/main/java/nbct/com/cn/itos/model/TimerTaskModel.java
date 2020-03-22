@@ -42,11 +42,15 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	private LocalDateTime scanDate;
 
-	private int expired;
+	private Integer expired;
 
 	private ExpiredCallbackEnum callback;
 
 	private List<NotifyEnum> notify;
+	
+	private String modelGroup;
+	
+	private Integer orderInGroup;
 
 	public TimerTaskModel from(JsonObject j) {
 		try {
@@ -77,6 +81,8 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 			} else {
 				t.setNotify(Collections.emptyList());
 			}
+			t.setModelGroup(j.getString("MODELGROUP"));
+			t.setOrderInGroup(j.getInteger("ORDERINGROUP"));
 			return t;
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -148,14 +154,6 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 		this.scanDate = scanDate;
 	}
 
-	public int getExpired() {
-		return expired;
-	}
-
-	public void setExpired(int expired) {
-		this.expired = expired;
-	}
-
 	public ExpiredCallbackEnum getCallback() {
 		return callback;
 	}
@@ -170,6 +168,30 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setNotify(List<NotifyEnum> notify) {
 		this.notify = notify;
+	}
+
+	public String getModelGroup() {
+		return modelGroup;
+	}
+
+	public void setModelGroup(String modelGroup) {
+		this.modelGroup = modelGroup;
+	}
+
+	public Integer getExpired() {
+		return expired;
+	}
+
+	public void setExpired(Integer expired) {
+		this.expired = expired;
+	}
+
+	public Integer getOrderInGroup() {
+		return orderInGroup;
+	}
+
+	public void setOrderInGroup(Integer orderInGroup) {
+		this.orderInGroup = orderInGroup;
 	}
 
 }

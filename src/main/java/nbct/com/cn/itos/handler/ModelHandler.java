@@ -13,6 +13,7 @@ import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.TimerTaskModel;
+import nbct.com.cn.itos.model.TimerTaskModelGroup;
 import util.DateUtil;
 import util.MsgUtil;
 
@@ -44,6 +45,10 @@ public class ModelHandler {
 		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 
+	/**
+	 * 所有模版列表
+	 * @param ctx
+	 */
 	public void getTimerTaskModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel order by category,opdate";
 		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
@@ -156,6 +161,54 @@ public class ModelHandler {
 		String sql = "update itos_taskmodel set invalid = ? where modelId = ?";
 		JsonArray params = new JsonArray().add(rp.getString("invalid")).add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
+	}
+	
+	/**
+	 * 修改模版分组信息
+	 * @param ctx
+	 */
+	public void chgModelGroup(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_taskmodel set modelgroup = ?,orderInGroup = ? where modelId = ?";
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("modelGroup"))//
+				.add(rp.getInteger("orderInGroup"))//
+				.add(rp.getString("modelId"));
+		JdbcHelper.update(ctx, sql, params);	
+	}
+	
+	/**
+	 * 添加分组
+	 * @param ctx
+	 */
+    public void addGroup(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "insert into itos_taskmodelgroup(modelgroup,grouporder) values(?,?)" ;
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("modelGroup"))//
+				.add(rp.getInteger("groupOrder"));
+		JdbcHelper.update(ctx, sql, params);	
+    }
+    
+	/**
+	 * 删除分组
+	 * @param ctx
+	 */
+    public void delGroup(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "delete from itos_taskmodelgroup where modelGroup = ?" ;
+		JsonArray params = new JsonArray()//
+				.add(rp.getInteger("modelGroup"));
+		JdbcHelper.update(ctx, sql, params);	
+    }
+    
+	/**
+	 * 分组列表
+	 * @param ctx
+	 */
+	public void getGroups(RoutingContext ctx) {
+		String sql = "select * from itos_taskmodelgroup order by groupOrder";
+		JdbcHelper.rows(ctx, sql, new TimerTaskModelGroup());
 	}
 
 }
