@@ -10,7 +10,7 @@ import java.util.Optional;
 public enum NotifyEnum {
 
 	SMS("SMS", "手机短信"), //
-	ITOSMES("ITOSMES","ITOS消息"),//
+	ITOSMES("ITOSMES","ITOS系统消息"),//
 	BIGHORN("BIGHORN","大喇叭");
 
 	private String value;

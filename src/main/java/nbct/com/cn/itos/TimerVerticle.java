@@ -134,10 +134,18 @@ public class TimerVerticle extends AbstractVerticle {
 									.add("N")//
 									.add(task.getTaskIcon())//
 									.add("SYS")//
-									.add(DateUtil.localToUtcStr(LocalDateTime.now())));//
+									.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
+									.add(DateUtil.localToUtcStr(task.getExpiredTime()))//
+									.add(Objects.nonNull(task.getCallback()) ? task.getCallback().getValue() : "")//
+									.add(Objects.nonNull(task.getNotify()) ? task.getNotify().stream().map(item -> {
+										return item.getValue();
+									}).collect(Collectors.joining(",")) : "")//
+									.add("N")//
+									.add("N"));
 						});
 						String sql = "insert into itos_task(taskId,category,status,abstract,content,plandt,modelId,"//
-								+ "invalid,taskicon,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
+								+ "invalid,taskicon,oper,opDate,expiredTime,expiredCallback,expiredNotify,"//
+								+ "executedCallback,executedNotify) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(tasks);
@@ -173,7 +181,7 @@ public class TimerVerticle extends AbstractVerticle {
 									.add(DateUtil.localToUtcStr(LocalDateTime.now())));//
 						});
 						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,oldcontent,newcontent,modelId,abstract,oper,opdate) "//
+								+ " handler,oldcontent,newcontent,modelId,abstract,oper,opdate) "//
 								+ " values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
@@ -234,8 +242,9 @@ public class TimerVerticle extends AbstractVerticle {
 				// 1.读数据
 				Supplier<Future<List<CommonTask>>> loadf = () -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
-						String sql = "select * from itos_task where expiredtime < sysdate " + //
-						" and expiredcallback <> 'NONE' and nvl(executedcallback,' ') <> 'Y'";
+						String sql = "select * from itos_task where status not in ('DONE','CANCEL') and " + //
+						" expiredTime is not null and expiredtime < sysdate and expiredcallback <> 'NONE' " + //
+						" and nvl(executedcallback,' ') <> 'Y'";
 						conn.query(sql, r -> {
 							if (r.succeeded()) {
 								CommonTask ct = new CommonTask();
@@ -251,11 +260,13 @@ public class TimerVerticle extends AbstractVerticle {
 					return f;
 				};
 				// 2.更新状态
-				Function<List<CommonTask>, Future<List<CommonTask>>> uf = (list) -> {
+				Function<List<CommonTask>, Future<List<CommonTask>>> uf = list -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
-						String sql = "update itos_task set status = ?,executedcallback = 'Y'";
+						String sql = "update itos_task set status = ?,executedcallback = 'Y' where taskId = ? ";
 						List<JsonArray> params = list.stream().map(item -> {
-							return new JsonArray().add(item.getCallback().getValue());// 这里回调代码与状态代码相同，所以可以直接赋值。
+							return new JsonArray()//
+									.add(item.getCallback().getValue())// 这里回调代码与状态代码相同，所以可以直接赋值。
+									.add(item.getTaskId());
 						}).collect(Collectors.toList());
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
@@ -269,16 +280,15 @@ public class TimerVerticle extends AbstractVerticle {
 					return f;
 				};
 				// 3.记录日志
-				Function<List<CommonTask>, Future<List<CommonTask>>> logf = (List<CommonTask> tasks) -> {
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						tasks.forEach(task -> {
 							String msg = DateUtil.curDtStr() + " " + "系统检测到任务'" + task.getAbs() + "'超期," + //
 							"任务状态自动转为'" + task.getCallback().getValue() + "'";
 							MsgUtil.mixLC(vertx, msg, task.getComposeId());
 						});
-						List<JsonArray> params = new ArrayList<JsonArray>();
-						tasks.forEach(task -> {
-							JsonArray param = new JsonArray()//
+						List<JsonArray> params = tasks.stream().map(task -> {
+							return new JsonArray()//
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
 									.add(task.getModelId())//
@@ -289,8 +299,7 @@ public class TimerVerticle extends AbstractVerticle {
 									.add("")// remark
 									.add("SYS")//
 									.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-							params.add(param);
-						});
+						}).collect(Collectors.toList());
 						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
 								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {

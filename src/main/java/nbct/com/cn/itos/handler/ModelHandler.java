@@ -4,6 +4,7 @@ import static nbct.com.cn.itos.model.CallResult.Err;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -50,15 +51,19 @@ public class ModelHandler {
 
 	/**
 	 * 更新模版
+	 * 
 	 * @param ctx
 	 */
 	public void updateTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "update itos_taskmodel set comments = ?,planDates = ?,expired = ? where modelId = ? ";
+		String sql = "update itos_taskmodel set comments = ?,planDates = ?,expired = ?, " + //
+				" expiredCallback = ?,expiredNotify = ? where modelId = ? ";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
 		params.add(rp.getString("expired"));
+		params.add(rp.getString("callback"));
+		params.add(rp.getString("notify"));
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
@@ -67,6 +72,7 @@ public class ModelHandler {
 
 	/**
 	 * 刪除模版
+	 * 
 	 * @param ctx
 	 */
 	public void deleteTimerTaskModel(RoutingContext ctx) {
@@ -81,6 +87,7 @@ public class ModelHandler {
 
 	/**
 	 * 添加模版
+	 * 
 	 * @param ctx
 	 */
 	public void addTimerTaskModel(RoutingContext ctx) {
@@ -115,8 +122,9 @@ public class ModelHandler {
 				return;
 			}
 		}
-		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate,invalid,abstract,expired) "
-				+ " values(?,?,?,?,?,?,?,?,?,?)";
+		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate," + //
+				" invalid,abstract,expired,expiredCallback,expiredNotify) " + //
+				" values(?,?,?,?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		params.add(category);
@@ -127,8 +135,14 @@ public class ModelHandler {
 		params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 		params.add("N");
 		params.add(abs);
-		int expired = Objects.isNull(rp.getString("expired"))?24*60*60:Integer.parseInt(rp.getString("expired"));
+		int expired = Objects.isNull(rp.getString("expired")) ? 24 * 60 * 60
+				: Integer.parseInt(rp.getString("expired"));
 		params.add(expired);
+		params.add(rp.getString("callback"));
+		String notify = rp.getJsonArray("notify").stream().map(item -> {
+			return item.toString();
+		}).collect(Collectors.joining(","));
+		params.add(notify);
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
 		MsgUtil.sysLog(ctx, msg);
