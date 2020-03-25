@@ -12,6 +12,7 @@ public enum CategoryEnum {
 	COMMON("COMMON", "人工来执行的普通任务"), //
 	CMD("CMD","下发终端的命令行任务"), //
 	PROCEDURE("PROCEDURE","下发终端的调用存储过程任务"),//
+	APPSERVER("APPSERVER","调用其它服务执行任务"),//
 	CUSTOM("CUSTOM","下发终端的自定义任务"),//
 	COMPOSE("COMPOSE","组合任务");//
 

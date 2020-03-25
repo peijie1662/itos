@@ -2,6 +2,7 @@ package nbct.com.cn.itos;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -47,8 +48,10 @@ public class WebsocketVerticle extends AbstractVerticle {
 	 */
 	private void pushSysLog(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {
-			if (user.getScene().contains(SceneEnum.SYSLOG)) {
-				user.getWs().writeFinalTextFrame(msg.body());
+			if (Objects.nonNull(user.getScene())) {
+				if (user.getScene().contains(SceneEnum.SYSLOG)) {
+					user.getWs().writeFinalTextFrame(msg.body());
+				}
 			}
 		});
 	}
@@ -58,8 +61,10 @@ public class WebsocketVerticle extends AbstractVerticle {
 	 */
 	private void pushControlCenter(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {
-			if (user.getScene().contains(SceneEnum.CONTROLCENTER)) {
-				user.getWs().writeFinalTextFrame(msg.body());
+			if (Objects.nonNull(user.getScene())) {
+				if (user.getScene().contains(SceneEnum.CONTROLCENTER)) {
+					user.getWs().writeFinalTextFrame(msg.body());
+				}
 			}
 		});
 	}

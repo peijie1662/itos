@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import io.vertx.core.json.JsonArray;
 
 /**
  * @author PJ
@@ -12,7 +15,7 @@ import java.util.Objects;
 public class ConvertUtil {
 
 	/**
-	 * 字符串','分割成List
+	 * String => List
 	 * 
 	 * @param arr
 	 */
@@ -24,6 +27,12 @@ public class ConvertUtil {
 		return list;
 	}
 
+	/**
+	 * List => String
+	 * 
+	 * @param list
+	 * @return
+	 */
 	public static String listToStr(List<String> list) {
 		if (list == null) {
 			return "";
@@ -32,6 +41,12 @@ public class ConvertUtil {
 		}
 	}
 
+	/**
+	 * String => boolean
+	 * 
+	 * @param s
+	 * @return
+	 */
 	public static boolean strToBool(String s) {
 		if (Objects.nonNull(s)) {
 			return "Y".equals(s) ? true : false;
@@ -40,12 +55,46 @@ public class ConvertUtil {
 		}
 	}
 
+	/**
+	 * boolean => String
+	 * 
+	 * @param b
+	 * @return
+	 */
 	public static String boolToStr(boolean b) {
 		return b ? "Y" : "N";
 	}
-	
+
+	/**
+	 * 空字符串
+	 * 
+	 * @param s
+	 * @return
+	 */
 	public static boolean emptyOrNull(String s) {
-		return Objects.isNull(s)||"".equals(s);
+		return Objects.isNull(s) || "".equals(s);
+	}
+	
+	/**
+	 * 整数值
+	 * @param val
+	 * @param defaultInt
+	 * @return
+	 */
+	public static Integer getInteger(Integer val,Integer defaultInt) {
+	  return Objects.isNull(val) ? 24 * 60 * 60 : val;
+	}
+
+	/**
+	 * JsonArray => String
+	 * 
+	 * @param ja
+	 * @return
+	 */
+	public static String arrToString(JsonArray ja) {
+		return Objects.nonNull(ja) ? ja.stream().map(item -> {
+			return item.toString();
+		}).collect(Collectors.joining(",")) : "";
 	}
 
 }

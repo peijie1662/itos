@@ -4,7 +4,6 @@ import static nbct.com.cn.itos.model.CallResult.Err;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -14,6 +13,7 @@ import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import nbct.com.cn.itos.model.TimerTaskModelGroup;
+import util.ConvertUtil;
 import util.DateUtil;
 import util.MsgUtil;
 
@@ -47,6 +47,7 @@ public class ModelHandler {
 
 	/**
 	 * 所有模版列表
+	 * 
 	 * @param ctx
 	 */
 	public void getTimerTaskModelList(RoutingContext ctx) {
@@ -66,9 +67,9 @@ public class ModelHandler {
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
-		params.add(rp.getString("expired"));
+		params.add(ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
 		params.add(rp.getString("callback"));
-		params.add(rp.getString("notify"));
+		params.add(ConvertUtil.arrToString(rp.getJsonArray("notify")));
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
@@ -140,14 +141,9 @@ public class ModelHandler {
 		params.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 		params.add("N");
 		params.add(abs);
-		int expired = Objects.isNull(rp.getString("expired")) ? 24 * 60 * 60
-				: Integer.parseInt(rp.getString("expired"));
-		params.add(expired);
+		params.add(ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
 		params.add(rp.getString("callback"));
-		String notify = rp.getJsonArray("notify").stream().map(item -> {
-			return item.toString();
-		}).collect(Collectors.joining(","));
-		params.add(notify);
+		params.add(ConvertUtil.arrToString(rp.getJsonArray("notify")));
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
 		MsgUtil.sysLog(ctx, msg);
@@ -162,9 +158,10 @@ public class ModelHandler {
 		JsonArray params = new JsonArray().add(rp.getString("invalid")).add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
 	}
-	
+
 	/**
 	 * 修改模版分组信息
+	 * 
 	 * @param ctx
 	 */
 	public void chgModelGroup(RoutingContext ctx) {
@@ -174,36 +171,39 @@ public class ModelHandler {
 				.add(rp.getString("modelGroup"))//
 				.add(rp.getInteger("orderInGroup"))//
 				.add(rp.getString("modelId"));
-		JdbcHelper.update(ctx, sql, params);	
+		JdbcHelper.update(ctx, sql, params);
 	}
-	
+
 	/**
 	 * 添加分组
+	 * 
 	 * @param ctx
 	 */
-    public void addGroup(RoutingContext ctx) {
+	public void addGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "insert into itos_taskmodelgroup(modelgroup,grouporder) values(?,?)" ;
+		String sql = "insert into itos_taskmodelgroup(modelgroup,grouporder) values(?,?)";
 		JsonArray params = new JsonArray()//
 				.add(rp.getString("modelGroup"))//
 				.add(rp.getInteger("groupOrder"));
-		JdbcHelper.update(ctx, sql, params);	
-    }
-    
+		JdbcHelper.update(ctx, sql, params);
+	}
+
 	/**
 	 * 删除分组
+	 * 
 	 * @param ctx
 	 */
-    public void delGroup(RoutingContext ctx) {
+	public void delGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "delete from itos_taskmodelgroup where modelGroup = ?" ;
+		String sql = "delete from itos_taskmodelgroup where modelGroup = ?";
 		JsonArray params = new JsonArray()//
 				.add(rp.getInteger("modelGroup"));
-		JdbcHelper.update(ctx, sql, params);	
-    }
-    
+		JdbcHelper.update(ctx, sql, params);
+	}
+
 	/**
 	 * 分组列表
+	 * 
 	 * @param ctx
 	 */
 	public void getGroups(RoutingContext ctx) {
