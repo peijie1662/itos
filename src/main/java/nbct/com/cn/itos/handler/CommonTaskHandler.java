@@ -147,10 +147,12 @@ public class CommonTaskHandler {
 	}
 
 	/**
+	 *
 	 * 任务操作(PROCESSING,DONE,CANCEL)<br>
 	 * 参数 {taskId:"...",status:"...",oper:"...",remark:"..."}
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
+		//TODO 改成存储过程。
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
@@ -161,8 +163,7 @@ public class CommonTaskHandler {
 				// 1.找到对应Task
 				Supplier<Future<CommonTask>> getf = () -> {
 					Future<CommonTask> f = Future.future(promise -> {
-						JsonArray params = new JsonArray()//
-								.add(rp.getString("taskId"));
+						JsonArray params = new JsonArray().add(rp.getString("taskId"));
 						String sql = "select * from itos_task where taskId = ?";
 						conn.queryWithParams(sql, params, r -> {
 							if (r.succeeded()) {
@@ -182,18 +183,24 @@ public class CommonTaskHandler {
 				// 2.更新状态
 				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
 					Future<CommonTask> f = Future.future(promise -> {
+						String status = rp.getString("status");
 						JsonArray params = new JsonArray()//
-								.add(rp.getString("status"))//
+								.add(status)//
 								.add(rp.getString("taskId"));
-						String sql = "update itos_task set status = ? where taskId = ?";
-						conn.updateWithParams(sql, params, r -> {
-							if (r.succeeded()) {
-								task.setStatus(TaskStatusEnum.from(rp.getString("status")).get());
-								promise.complete(task);
-							} else {
-								promise.fail("更新任务状态失败");
-							}
-						});
+						// order check
+						if (!task.getCategory().eq("COMMON") && task.getStatus().isAfterOrParalleling(status)) {
+							promise.fail("非普通任务的状态更新必须遵循顺序。");
+						} else {
+							String sql = "update itos_task set status = ? where taskId = ?";
+							conn.updateWithParams(sql, params, r -> {
+								if (r.succeeded()) {
+									task.setStatus(TaskStatusEnum.from(rp.getString("status")).get());
+									promise.complete(task);
+								} else {
+									promise.fail("更新任务状态失败");
+								}
+							});
+						}
 					});
 					return f;
 				};

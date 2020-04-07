@@ -206,6 +206,7 @@ public class TimerVerticle extends AbstractVerticle {
 						// logger.info(r.result());
 					} else {
 						logger.error(r.cause().getMessage());
+						r.cause().printStackTrace();
 					}
 					conn.close();
 				});

@@ -41,7 +41,7 @@ public class ComposeHandler {
 		SQLClient client = Configer.client;
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
-				SQLConnection conn = cr.result();				
+				SQLConnection conn = cr.result();
 				// 1.删除原数据
 				Supplier<Future<Void>> delf = () -> {
 					Future<Void> f = Future.future(promise -> {
@@ -113,12 +113,13 @@ public class ComposeHandler {
 	 */
 	public void getTaskInCompose(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "select aa.*,bb.bgDt,bb.edDt from " + //
+		String sql = "select aa.*,bb.bgDt,bb.edDt,bb.terminal,bb.ip from " + //
 				" (select * from itos_task where composeId = ?) aa, " + //
-				" (select a.taskId,a.opdate as bgDt,b.opdate as edDt from " + //
+				" (select a.taskId,a.opdate as bgDt,c.opdate as edDt,b.oper as terminal,b.remark as ip from " + //
 				" (select * from itos_tasklog where status = 'CHECKIN') a, " + //
-				" (select * from itos_tasklog where status in ('DONE','CANCEL')) b " + //
-				" where a.taskid = b.taskid(+)) bb " + //
+				" (select * from itos_tasklog where status = 'PROCESSING') b, " + //
+				" (select * from itos_tasklog where status in ('DONE','CANCEL')) c " + //
+				" where a.taskid = b.taskid(+) and a.taskid = c.taskid(+)) bb " + //
 				" where aa.taskid = bb.taskid(+) ";
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
 		JdbcHelper.rows(ctx, sql, params, new ComposeTask());

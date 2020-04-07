@@ -49,10 +49,18 @@ public class DispatchClientHandler {
 				SQLConnection conn = cr.result();
 				conn.query("select * from itos_service", r -> {
 					if (r.succeeded()) {
-						clients.clear();
-						clients.addAll(r.result().getRows().stream().map(row -> {
-							return new DispatchClient().from(row);
-						}).collect(Collectors.toList()));
+						List<DispatchClient> nc = r.result().getRows().stream().map(row -> {
+							DispatchClient c = new DispatchClient().from(row);
+							Optional<DispatchClient> matcher = clients.stream().filter(item -> {
+								return item.getServiceName().equals(c.getServiceName());
+							}).findAny();
+							if (matcher.isPresent()) {
+								c.setIp(matcher.get().getIp());
+								c.setOnLine(matcher.get().isOnLine());
+							}
+							return c;
+						}).collect(Collectors.toList());
+						clients = nc;
 					} else {
 						r.cause().printStackTrace();
 					}
@@ -145,11 +153,12 @@ public class DispatchClientHandler {
 
 	/**
 	 * 终端任务列表(终端访问)<br>
-	 * 终端参数 {serviceName:"...",ip:"..."}
+	 * 终端参数 {serviceName:"...",ip:"...",period:xxx}
 	 */
 	public void getDispatchTaskList(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String serviceName = rp.getString("serviceName");
+		Integer period = rp.getInteger("period");
 		// 1.更新在线状态
 		Optional<DispatchClient> o = clients.stream().filter(client -> {
 			return client.getServiceName().equals(serviceName);
@@ -161,9 +170,11 @@ public class DispatchClientHandler {
 		}
 		// 2.终端对应任务
 		String sql = "select * from itos_task where status = 'CHECKIN' and invalid = 'N'" + //
-				" and instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0";
+				" and instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0 " + //
+				" and (sysdate - plandt)*24*60*60 <= ?";
 		JsonArray params = new JsonArray();
 		params.add(serviceName);
+		params.add(period);
 		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
 

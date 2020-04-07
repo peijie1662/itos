@@ -158,7 +158,6 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
-			task.getPlanDt().minusSeconds(-model.getExpired());
 			task.setCallback(model.getCallback());
 			task.setNotify(model.getNotify());
 			task.setExecutedCallback(false);
