@@ -48,7 +48,7 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	private List<NotifyEnum> notify;
 	
-	private String modelGroup;
+	private String groupId;
 	
 	private Integer orderInGroup;
 
@@ -81,7 +81,7 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 			} else {
 				t.setNotify(Collections.emptyList());
 			}
-			t.setModelGroup(j.getString("MODELGROUP"));
+			t.setGroupId(j.getString("GROUPID"));
 			t.setOrderInGroup(j.getInteger("ORDERINGROUP"));
 			return t;
 		} catch (ParseException e) {
@@ -170,14 +170,6 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 		this.notify = notify;
 	}
 
-	public String getModelGroup() {
-		return modelGroup;
-	}
-
-	public void setModelGroup(String modelGroup) {
-		this.modelGroup = modelGroup;
-	}
-
 	public Integer getExpired() {
 		return expired;
 	}
@@ -192,6 +184,14 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setOrderInGroup(Integer orderInGroup) {
 		this.orderInGroup = orderInGroup;
+	}
+
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
 	}
 
 }

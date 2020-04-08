@@ -3,7 +3,12 @@ package nbct.com.cn.itos.handler;
 import static nbct.com.cn.itos.model.CallResult.Err;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -162,16 +167,21 @@ public class ModelHandler {
 	/**
 	 * 修改模版分组信息
 	 * 
-	 * @param ctx
+	 * @param ctx<br>
+	 *        传入数组 [{modelId:'xx',groupId:'xx',index:xx},...]
 	 */
 	public void chgModelGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "update itos_taskmodel set modelgroup = ?,orderInGroup = ? where modelId = ?";
-		JsonArray params = new JsonArray()//
-				.add(rp.getString("modelGroup"))//
-				.add(rp.getInteger("orderInGroup"))//
-				.add(rp.getString("modelId"));
-		JdbcHelper.update(ctx, sql, params);
+		List<String> sqls = rp.getJsonArray("models").stream().map(item -> {
+			JsonObject jo = JsonObject.mapFrom(item);
+			String modelId = jo.getString("modelId");
+			String groupId = jo.getString("groupId");
+			Integer index = jo.getInteger("index");
+			String sql = "update itos_taskmodel set groupId = '" + groupId + "',orderInGroup = " + String.valueOf(index)
+					+ " where modelId = '" + modelId + "'";
+			return sql;
+		}).collect(Collectors.toList());
+		JdbcHelper.batchUpdate(ctx, sqls);
 	}
 
 	/**
@@ -181,10 +191,12 @@ public class ModelHandler {
 	 */
 	public void addGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "insert into itos_taskmodelgroup(modelgroup,grouporder) values(?,?)";
+		String sql = "insert into itos_taskmodelgroup(groupId,groupName,groupOrder,groupDesc) values(?,?,?,?)";
 		JsonArray params = new JsonArray()//
-				.add(rp.getString("modelGroup"))//
-				.add(rp.getInteger("groupOrder"));
+				.add(UUID.randomUUID().toString())//
+				.add(rp.getString("groupName"))//
+				.add(rp.getInteger("groupOrder"))//
+				.add(rp.getString("groupDesc"));
 		JdbcHelper.update(ctx, sql, params);
 	}
 
@@ -195,10 +207,11 @@ public class ModelHandler {
 	 */
 	public void delGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "delete from itos_taskmodelgroup where modelGroup = ?";
-		JsonArray params = new JsonArray()//
-				.add(rp.getInteger("modelGroup"));
-		JdbcHelper.update(ctx, sql, params);
+		String groupId = rp.getString("groupId");
+		List<String> sqls = new ArrayList<String>();
+		sqls.add("delete from itos_taskmodelgroup where groupId = '" + groupId + "'");
+		sqls.add("update itos_taskmodel set groupId = '' where groupId = '" + groupId + "'");
+		JdbcHelper.batchUpdate(ctx, sqls);
 	}
 
 	/**

@@ -41,7 +41,7 @@ public class ItosRouter {
 		// 非组合任务模版
 		router.post("/notcomposelist").blockingHandler(modelHandler::getNotComposeModelList, false);
 		// 修改模版分组信息
-		router.post("/group").blockingHandler(modelHandler::chgModelGroup, false);
+		router.post("/updategroup").blockingHandler(modelHandler::chgModelGroup, false);
 		// 添加分组
 		router.post("/addgroup").blockingHandler(modelHandler::addGroup, false);
 		// 删除分组
