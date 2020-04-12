@@ -4,7 +4,6 @@ import static nbct.com.cn.itos.model.CallResult.Err;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,13 +67,14 @@ public class ModelHandler {
 	public void updateTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "update itos_taskmodel set comments = ?,planDates = ?,expired = ?, " + //
-				" expiredCallback = ?,expiredNotify = ? where modelId = ? ";
+				" expiredCallback = ?,expiredNotify = ?,startDate = ? where modelId = ? ";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("comments"));
 		params.add(rp.getString("planDates"));
 		params.add(ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
 		params.add(rp.getString("callback"));
 		params.add(ConvertUtil.arrToString(rp.getJsonArray("notify")));
+		params.add(rp.getString("startDate"));
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
@@ -134,8 +134,8 @@ public class ModelHandler {
 			}
 		}
 		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate," + //
-				" invalid,abstract,expired,expiredCallback,expiredNotify) " + //
-				" values(?,?,?,?,?,?,?,?,?,?,?,?)";
+				" invalid,abstract,expired,expiredCallback,expiredNotify,startDate) " + //
+				" values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		params.add(category);
@@ -149,6 +149,7 @@ public class ModelHandler {
 		params.add(ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
 		params.add(rp.getString("callback"));
 		params.add(ConvertUtil.arrToString(rp.getJsonArray("notify")));
+		params.add(rp.getString("startDate"));
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
 		MsgUtil.sysLog(ctx, msg);

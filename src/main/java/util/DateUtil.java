@@ -19,6 +19,19 @@ import java.util.TimeZone;
 public class DateUtil {
 
 	/**
+	 * UTC时间字符串转成LocalDateTime (无异常)
+	 */
+	public static LocalDateTime utcToLocalExNoExp(String utcTime) {
+		if (Objects.isNull(utcTime))
+			return LocalDateTime.now();
+		try {
+			return utcToLocalEx(utcTime);
+		} catch (Exception e) {
+			return LocalDateTime.now();
+		}
+	}
+
+	/**
 	 * UTC时间字符串转成LocalDateTime (DB -> OBJ)
 	 */
 	public static LocalDateTime utcToLocalEx(String utcTime) throws ParseException {
@@ -77,6 +90,24 @@ public class DateUtil {
 	}
 
 	/**
+	 * 给定UTC时间开始时间
+	 */
+	public static String getDBDateBeginStr(String dateUtcStr) {
+		LocalDateTime dt = utcToLocalExNoExp(dateUtcStr);
+		String dtStr = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 00:00:00";
+		return "to_date('" + dtStr + "','yyyy-mm-dd hh24:mi:ss')";
+	}
+
+	/**
+	 * 给定UTC时间结束时间
+	 */
+	public static String getDBDateEndStr(String dateUtcStr) {
+		LocalDateTime dt = utcToLocalExNoExp(dateUtcStr);
+		String dtStr = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 23:59:59";
+		return "to_date('" + dtStr + "','yyyy-mm-dd hh24:mi:ss')";
+	}
+
+	/**
 	 * 当前时间字符串
 	 */
 	public static String curDtStr() {
@@ -87,13 +118,16 @@ public class DateUtil {
 	 * 根据周几返回日期
 	 */
 	public static LocalDate getDateByYearAndWeekNumAndDayOfWeek(Integer year, Integer num, int dayOfWeek) {
-		// 周数小于10在前面补个0
+		// 1.周数小于10在前面补个0
 		String numStr = num < 10 ? "0" + String.valueOf(num) : String.valueOf(num);
-		// 2019-W01-01获取第一周的周一日期，2019-W02-07获取第二周的周日日期
+		// 2.2019-W01-01获取第一周的周一日期，2019-W02-07获取第二周的周日日期
 		String weekDate = String.format("%s-W%s-%s", year, numStr, dayOfWeek);
 		return LocalDate.parse(weekDate, DateTimeFormatter.ISO_WEEK_DATE);
 	}
 
+	/**
+	 * 数据库当前日期时间
+	 */
 	public static String getDBTimeStr() {
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String ds = "to_date('" + df.format(new Date()) + "','yyyy-mm-dd hh24:mi:ss')";

@@ -24,7 +24,7 @@ import util.DateUtil;
  */
 public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
-	public static final int DEFAULT_EXPIRED = 24 * 60 * 60;// 默认超期时间为24小时
+	public static final int DEFAULT_EXPIRED = 24 * 60 * 60;//default 24 hours
 
 	private String modelId;
 
@@ -39,6 +39,8 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 	private String planDates;
 
 	private boolean invalid;
+	
+	private LocalDateTime startDate;
 
 	private LocalDateTime scanDate;
 
@@ -62,16 +64,17 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 			t.setComments(j.getString("COMMENTS"));
 			t.setInvalid("Y".equals(j.getString("INVALID")));
 			t.setPlanDates(j.getString("PLANDATES"));
+			t.setStartDate(DateUtil.utcToLocalDT(j.getString("STARTDATE")));
 			t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
-			// 超期时间
+			// expired time
 			Integer expired = Objects.nonNull(j.getInteger("EXPIRED")) ? j.getInteger("EXPIRED") : DEFAULT_EXPIRED;
 			t.setExpired(expired);
-			// 超期回调
+			// expired callback
 			ExpiredCallbackEnum callback = Objects.nonNull(j.getString("EXPIREDCALLBACK"))
 					? ExpiredCallbackEnum.from(j.getString("EXPIREDCALLBACK")).get()
 					: ExpiredCallbackEnum.NONE;
 			t.setCallback(callback);
-			// 超期通知
+			// expired notify
 			String notify = j.getString("EXPIREDNOTIFY");
 			if (Objects.nonNull(notify)) {
 				List<NotifyEnum> n = Arrays.asList(notify.split(",")).stream().map(item -> {
@@ -192,6 +195,14 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
+	}
+
+	public LocalDateTime getStartDate() {
+		return startDate;
+	}
+
+	public void setStartDate(LocalDateTime startDate) {
+		this.startDate = startDate;
 	}
 
 }

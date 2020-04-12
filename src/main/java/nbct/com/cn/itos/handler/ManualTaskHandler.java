@@ -5,6 +5,7 @@ import static nbct.com.cn.itos.model.CallResult.OK;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -35,7 +36,16 @@ public class ManualTaskHandler {
 	 * 人工执行任务列表
 	 */
 	public void getManualTaskList(RoutingContext ctx) {
-		String sql = "select * from itos_task where category in (?) and invalid = 'N' and composeId is null order by opdate desc";
+		JsonObject rp = ctx.getBodyAsJson();
+		JsonArray range = rp.getJsonArray("dateRange");
+		boolean paramValid = Objects.nonNull(range) && range.size() == 2;
+		String startDt = paramValid ? DateUtil.getDBDateBeginStr(range.getString(0)) : DateUtil.getDBDateBeginStr(null);
+		String endDt = paramValid ? DateUtil.getDBDateEndStr(range.getString(1)) : DateUtil.getDBDateEndStr(null);
+		String sql = "select * from itos_task where category in (?) " + // 1.普通类型
+				" and invalid = 'N' " + // 2.有效
+				" and planDt >=" + startDt + " and planDt <=" + endDt + // 3.时间范围
+				" and composeId is null " + // 4.不是组合任务中的子任务
+				" order by opdate desc";
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.COMMON.getValue());
 		JdbcHelper.rows(ctx, sql, params, new CommonTask());
@@ -177,7 +187,7 @@ public class ManualTaskHandler {
 						String sql = "update itos_task set handler = ? where taskId = ?";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
-								// 这里不更新handler，保留原handler作为日志。
+								// 2.1这里不更新handler，保留原handler作为日志。
 								promise.complete(task);
 							} else {
 								promise.fail("修改任务处理人失败");

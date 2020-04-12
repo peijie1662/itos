@@ -70,19 +70,24 @@ public class TimerVerticle extends AbstractVerticle {
 										LocalDateTime mt = model.getScanDate();
 										LocalDate md = mt.toLocalDate();
 										CycleEnum mc = model.getCycle();
-										// 扫描每日任务，当前日期>标记时间的日期，就需要生成新任务。
+										// 1.扫描每日任务,当前日期>标记时间的日期，就需要生成新任务。
 										valid = valid || (mc == CycleEnum.PERDAY && md.isBefore(cd));
-										// 扫描每周任务，当前日期的年+第几周>标记时间的年+第几周，就需要生成新任务。
+										// 2.扫描每周任务，当前日期的年+第几周>标记时间的年+第几周，就需要生成新任务。
 										int cw = cd.getYear() + cd.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
 										int rw = md.getYear() + md.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
 										valid = valid || (mc == CycleEnum.PERWEEK && cw > rw);
-										// 扫描每月任务，当前日期的年+第几月>标记时间的年+第几月，就需要生成新任务。
+										// 3.扫描每月任务，当前日期的年+第几月>标记时间的年+第几月，就需要生成新任务。
 										int cm = cd.getYear() + cd.getMonthValue();
 										int rm = md.getYear() + md.getMonthValue();
 										valid = valid || (mc == CycleEnum.PERMONTH && cm > rm);
-										// 扫描循环任务，当前时间-间隔时间(秒)>标记时间，就需要生成新任务。
+										// 4.扫描循环任务，当前时间-间隔时间(秒)>标记时间，就需要生成新任务。
 										valid = valid || (mc == CycleEnum.CIRCULAR && mt
 												.isBefore(ct.minusSeconds(Integer.parseInt(model.getPlanDates()))));
+									}
+									// 5.循环任务不能超过开始时间
+									if (valid && model.getCycle() == CycleEnum.CIRCULAR) {
+										valid = Objects.isNull(model.getStartDate())
+												|| model.getStartDate().isBefore(LocalDateTime.now());
 									}
 									return valid;
 								}).collect(Collectors.toList());

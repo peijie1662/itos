@@ -76,7 +76,7 @@ public class DispatchClientHandler {
 	public void addClient(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String func = "{call itos.p_addclient(?,?,?,?)}";
-		JsonArray params = new JsonArray().add(rp.getString("serviceName") + "^" + rp.getString("modelKey") + "^"
+		JsonArray params = new JsonArray().add(rp.getString("serviceName") + "^" + rp.getString("modelKeyStr") + "^"
 				+ rp.getString("description") + "^" + rp.getString("remark1") + "^" + rp.getString("remark2"));
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
@@ -91,7 +91,7 @@ public class DispatchClientHandler {
 				+ "where serviceName = ?";
 		JsonArray params = new JsonArray()//
 				.add(rp.getString("description"))//
-				.add(rp.getString("modelKey"))//
+				.add(rp.getString("modelKeyStr"))//
 				.add(rp.getString("remark1"))//
 				.add(rp.getString("remark2"))//
 				.add(rp.getString("serviceName"));
