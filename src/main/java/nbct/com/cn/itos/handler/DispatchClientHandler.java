@@ -37,8 +37,33 @@ public class DispatchClientHandler {
 	public void loadData(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		loadData();
-		res.end(OK());// 不考虑失败了
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				conn.query("select * from itos_service", r -> {
+					if (r.succeeded()) {
+						List<DispatchClient> nc = r.result().getRows().stream().map(row -> {
+							DispatchClient c = new DispatchClient().from(row);
+							Optional<DispatchClient> matcher = clients.stream().filter(item -> {
+								return item.getServiceName().equals(c.getServiceName());
+							}).findAny();
+							if (matcher.isPresent()) {
+								c.setIp(matcher.get().getIp());
+								c.setOnLine(matcher.get().isOnLine());
+							}
+							return c;
+						}).collect(Collectors.toList());
+						clients = nc;
+						res.end(OK());
+					} else {
+						r.cause().printStackTrace();
+						res.end(Err());
+					}
+					conn.close();
+				});
+			}
+		});
 	}
 
 	/**
@@ -59,6 +84,7 @@ public class DispatchClientHandler {
 							if (matcher.isPresent()) {
 								c.setIp(matcher.get().getIp());
 								c.setOnLine(matcher.get().isOnLine());
+								c.setActiveTime(matcher.get().getActiveTime());
 							}
 							return c;
 						}).collect(Collectors.toList());

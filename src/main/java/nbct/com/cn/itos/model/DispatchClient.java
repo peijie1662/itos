@@ -1,48 +1,56 @@
 package nbct.com.cn.itos.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Objects;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.jdbc.RowMapper;
 
 /**
-* @author PJ 
-* @version 创建时间：2020年1月14日 下午2:21:00
-*/
-public class DispatchClient implements RowMapper<DispatchClient>{
-	
+ * @author PJ
+ * @version 创建时间：2020年1月14日 下午2:21:00
+ */
+public class DispatchClient implements RowMapper<DispatchClient> {
+
 	private String serviceName;
-	
-	private JsonArray modelKey; 
-	
+
+	private JsonArray modelKey;
+
 	private String description;
-	
+
 	private String remark1;
-	
+
 	private String remark2;
-	
+
 	private String ip;
-	
+
 	private LocalDateTime activeTime;
-	
+
 	private boolean onLine;
-	
+
 	/**
 	 * 从DB中读记录
 	 */
-	public DispatchClient from(JsonObject j){
+	public DispatchClient from(JsonObject j) {
 		DispatchClient client = new DispatchClient();
 		client.setServiceName(j.getString("SERVICENAME"));
 		client.setModelKey(new JsonArray());
-		Arrays.asList(j.getString("MODELKEY").split(",")).forEach(item -> {
-			client.getModelKey().add(item);
-		});
+		String modelKey = j.getString("MODELKEY");
+		if (Objects.isNull(modelKey)) {
+			client.setModelKey(new JsonArray());
+		} else {
+			Arrays.asList(j.getString("MODELKEY").split(",")).forEach(item -> {
+				client.getModelKey().add(item);
+			});
+		}
 		client.setDescription(j.getString("DESCRIPTION"));
 		client.setRemark1(j.getString("REMARK1"));
 		client.setRemark2(j.getString("REMARK2"));
-		client.setActiveTime(LocalDateTime.now());
+		client.setActiveTime(LocalDateTime.parse("2020-01-01 00:00:00", 
+				DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 		return client;
 	}
 
