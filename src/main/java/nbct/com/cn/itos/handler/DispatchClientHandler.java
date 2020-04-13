@@ -51,6 +51,7 @@ public class DispatchClientHandler {
 							if (matcher.isPresent()) {
 								c.setIp(matcher.get().getIp());
 								c.setOnLine(matcher.get().isOnLine());
+								c.setActiveTime(matcher.get().getActiveTime());
 							}
 							return c;
 						}).collect(Collectors.toList());

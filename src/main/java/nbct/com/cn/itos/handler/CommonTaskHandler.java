@@ -35,7 +35,7 @@ import util.MsgUtil;
 public class CommonTaskHandler {
 
 	/**
-	 *单个任务 
+	 * 单个任务
 	 */
 	public void getTask(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -163,9 +163,15 @@ public class CommonTaskHandler {
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
 		// TODO 改成存储过程。
-		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
+		JsonObject rp;
+		try {
+			rp = ctx.getBodyAsJson();
+		} catch (Exception e) {
+			res.end(Err("传入参数Json格式错误"));
+			return;
+		}
 		SQLClient client = Configer.client;
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
@@ -293,7 +299,6 @@ public class CommonTaskHandler {
 				});
 			}
 		});
-
 	}
 
 	/**

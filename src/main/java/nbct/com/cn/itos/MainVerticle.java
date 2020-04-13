@@ -46,27 +46,27 @@ public class MainVerticle extends AbstractVerticle {
 		UserHandler userHandler = new UserHandler();
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 
-		// 静态文件
+		//1.静态文件
 		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
-		// 登录
+		//2.登录
 		router.post("/login").blockingHandler(userHandler::handleLogin, false);
-		//任务模版
+		//3.任务模版
 		router.mountSubRouter("/model", ItosRouter.modelRouter(vertx,modelHandler,uploadHandler));
-		//组合任务
+		//4.组合任务
 		router.mountSubRouter("/composetask", ItosRouter.composeRouter(vertx, composeHandler));
-		//人工任务
+		//5.人工任务
 		router.mountSubRouter("/manualtask", ItosRouter.manualtaskRouter(vertx, manualTaskHandler));
-		//任务通用
+		//6.任务通用
 		router.mountSubRouter("/task", ItosRouter.commonTaskRouter(vertx, commonTaskHandler, uploadHandler));
-		//智能提示
+		//7.智能提示
 		router.mountSubRouter("/smarttips", ItosRouter.smarttipsRouter(vertx, settingsHandler));
-		//下发终端
+		//8.下发终端
 		router.mountSubRouter("/dispatchclient", ItosRouter.dispatchclientRouter(vertx, dispatchClientHandler));
-		//关联信息
+		//9.关联信息
 		router.mountSubRouter("/associate", ItosRouter.associateRouter(vertx, associateItopHandler));
-		//用户
+		//10.用户
 		router.mountSubRouter("/user", ItosRouter.userRouter(vertx, userHandler, uploadHandler));
-		//首页
+		//11.首页
 		router.mountSubRouter("/page", ItosRouter.pageRouter(vertx, firstPageHandler));		
 
 		Configer.initDbPool(vertx);
