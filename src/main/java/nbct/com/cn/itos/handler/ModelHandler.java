@@ -29,8 +29,6 @@ public class ModelHandler {
 
 	/**
 	 * 组合任务模版列表
-	 * 
-	 * @param ctx
 	 */
 	public void getComposeModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel where invalid = 'N' "//
@@ -40,8 +38,6 @@ public class ModelHandler {
 
 	/**
 	 * 非组合任务模版列表
-	 * 
-	 * @param ctx
 	 */
 	public void getNotComposeModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel where invalid = 'N' "//
@@ -50,9 +46,18 @@ public class ModelHandler {
 	}
 
 	/**
+	 * 单个模版
+	 */
+	public void getTimerTaskModel(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_taskmodel where modelId = ?";
+		JsonArray params = new JsonArray();
+		params.add(rp.getString("modelId"));
+		JdbcHelper.rows(ctx, sql, params, new TimerTaskModel());
+	}
+
+	/**
 	 * 所有模版列表
-	 * 
-	 * @param ctx
 	 */
 	public void getTimerTaskModelList(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodel order by category,opdate";
@@ -61,8 +66,6 @@ public class ModelHandler {
 
 	/**
 	 * 更新模版
-	 * 
-	 * @param ctx
 	 */
 	public void updateTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -83,8 +86,6 @@ public class ModelHandler {
 
 	/**
 	 * 刪除模版
-	 * 
-	 * @param ctx
 	 */
 	public void deleteTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -98,8 +99,6 @@ public class ModelHandler {
 
 	/**
 	 * 添加模版
-	 * 
-	 * @param ctx
 	 */
 	public void addTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -166,10 +165,8 @@ public class ModelHandler {
 	}
 
 	/**
-	 * 修改模版分组信息
-	 * 
-	 * @param ctx<br>
-	 *        传入数组 [{modelId:'xx',groupId:'xx',index:xx},...]
+	 * 修改模版分组信息 <br>
+	 * 传入数组 [{modelId:'xx',groupId:'xx',index:xx},...]
 	 */
 	public void chgModelGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -187,8 +184,6 @@ public class ModelHandler {
 
 	/**
 	 * 添加分组
-	 * 
-	 * @param ctx
 	 */
 	public void addGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -203,8 +198,6 @@ public class ModelHandler {
 
 	/**
 	 * 删除分组
-	 * 
-	 * @param ctx
 	 */
 	public void delGroup(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -217,8 +210,6 @@ public class ModelHandler {
 
 	/**
 	 * 分组列表
-	 * 
-	 * @param ctx
 	 */
 	public void getGroups(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodelgroup order by groupOrder";

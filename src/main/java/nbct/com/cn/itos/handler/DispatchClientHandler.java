@@ -6,6 +6,7 @@ import static nbct.com.cn.itos.model.CallResult.OK;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.DispatchClient;
+import util.DateUtil;
 
 /**
  * @author PJ
@@ -142,7 +144,16 @@ public class DispatchClientHandler {
 	 * 所有终端任务列表(页面访问)
 	 */
 	public void getDispatchAllTask(RoutingContext ctx) {
-		String sql = "select * from itos_task where category in (?,?,?,?) and invalid = 'N' and composeId is null";
+		JsonObject rp = ctx.getBodyAsJson();
+		JsonArray range = rp.getJsonArray("dateRange");
+		boolean paramValid = Objects.nonNull(range) && range.size() == 2;
+		String startDt = paramValid ? DateUtil.getDBDateBeginStr(range.getString(0)) : DateUtil.getDBDateBeginStr(null);
+		String endDt = paramValid ? DateUtil.getDBDateEndStr(range.getString(1)) : DateUtil.getDBDateEndStr(null);
+		String sql = "select * from itos_task where category in (?,?,?,?) " + // 1.类型
+				" and invalid = 'N' " + // 2.有效
+				" and planDt >=" + startDt + " and planDt <=" + endDt + // 3.时间范围
+				" and composeId is null" + // 4.不是组合任务中的子任务
+				" order by planDt desc";
 		JsonArray params = new JsonArray();
 		params.add(CategoryEnum.CMD.getValue());
 		params.add(CategoryEnum.PROCEDURE.getValue());

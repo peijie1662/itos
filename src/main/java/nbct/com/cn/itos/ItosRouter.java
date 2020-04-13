@@ -24,29 +24,31 @@ public class ItosRouter {
 	 */
 	public static Router modelRouter(Vertx vertx, ModelHandler modelHandler, UploadHandler uploadHandler) {
 		Router router = Router.router(vertx);
-		// 模版列表
+		// 0.模版
+		router.post("/get").blockingHandler(modelHandler::getTimerTaskModel, false);
+		// 1.模版列表
 		router.post("/list").blockingHandler(modelHandler::getTimerTaskModelList, false);
-		// 修改模版
+		// 2.修改模版
 		router.post("/update").blockingHandler(modelHandler::updateTimerTaskModel, false);
-		// 删除模版
+		// 3.删除模版
 		router.post("/delete").blockingHandler(modelHandler::deleteTimerTaskModel, false);
-		// 增加模版
+		// 4.增加模版
 		router.post("/add").blockingHandler(modelHandler::addTimerTaskModel, false);
-		// 模版文件上传
+		// 5.模版文件上传
 		router.post("/uploadfile").blockingHandler(uploadHandler::uploadModelFile, false);
-		// 模版状态改变
+		// 6.模版状态改变
 		router.post("/status").blockingHandler(modelHandler::chgModelStatus, false);
-		// 组合任务模版
+		// 7.组合任务模版
 		router.post("/composelist").blockingHandler(modelHandler::getComposeModelList, false);
-		// 非组合任务模版
+		// 8.非组合任务模版
 		router.post("/notcomposelist").blockingHandler(modelHandler::getNotComposeModelList, false);
-		// 修改模版分组信息
+		// 9.修改模版分组信息
 		router.post("/updategroup").blockingHandler(modelHandler::chgModelGroup, false);
-		// 添加分组
+		// 10.添加分组
 		router.post("/addgroup").blockingHandler(modelHandler::addGroup, false);
-		// 删除分组
+		// 11.删除分组
 		router.post("/delgroup").blockingHandler(modelHandler::delGroup, false);
-		// 分组列表
+		// 12.分组列表
 		router.post("/grouplist").blockingHandler(modelHandler::getGroups, false);
 		return router;
 	}
@@ -56,15 +58,15 @@ public class ItosRouter {
 	 */
 	public static Router composeRouter(Vertx vertx, ComposeHandler composeHandler) {
 		Router router = Router.router(vertx);
-		// 保存组合任务模版详细信息
+		// 1.保存组合任务模版详细信息
 		router.post("/savecomposedetail").blockingHandler(composeHandler::saveComposeModelDetail, false);
-		// 组合任务模版详细信息
+		// 2.组合任务模版详细信息
 		router.post("/getcomposedetail").blockingHandler(composeHandler::getComposeDetail, false);
-		// 读取该组合模版的组合任务
+		// 3.读取该组合模版的组合任务
 		router.post("/getcomposetaskbymodel").blockingHandler(composeHandler::getComposeTaskByModel, false);
-		// 启动组合任务
+		// 4.启动组合任务
 		router.post("/startcomposetask").blockingHandler(composeHandler::startComposeTask, false);
-		// 读取组合任务的子任务
+		// 5.读取组合任务的子任务
 		router.post("/gettaskincompose").blockingHandler(composeHandler::getTaskInCompose, false);
 		return router;
 	}
@@ -74,11 +76,11 @@ public class ItosRouter {
 	 */
 	public static Router manualtaskRouter(Vertx vertx, ManualTaskHandler manualTaskHandler) {
 		Router router = Router.router(vertx);
-		// 人工任务列表
+		// 1.人工任务列表
 		router.post("/list").blockingHandler(manualTaskHandler::getManualTaskList, false);
-		// 保存任务
+		// 2.保存任务
 		router.post("/add").blockingHandler(manualTaskHandler::saveManualTask, false);
-		// 任务状态-SWAP
+		// 3.任务状态-SWAP
 		router.post("/swap").blockingHandler(manualTaskHandler::swapTask, false);
 		return router;
 	}
@@ -89,15 +91,17 @@ public class ItosRouter {
 	public static Router commonTaskRouter(Vertx vertx, CommonTaskHandler commonTaskHandler,
 			UploadHandler uploadHandler) {
 		Router router = Router.router(vertx);
-		// 生成临时任务
+		// 0.任务
+		router.post("/get").blockingHandler(commonTaskHandler::getTask, false);
+		// 1.生成临时任务
 		router.post("/once").blockingHandler(commonTaskHandler::saveOnceTask, false);
-		// 任务日志
+		// 2.任务日志
 		router.post("/log").blockingHandler(commonTaskHandler::getTaskLog, false);
-		// 任务状态-PROCESSING,DONE,CANCEL
+		// 3.任务状态-PROCESSING,DONE,CANCEL
 		router.post("/updatestatus").blockingHandler(commonTaskHandler::updateTaskStatus, false);
-		// 任务状态-MODIFY
+		// 4.任务状态-MODIFY
 		router.post("/modify").blockingHandler(commonTaskHandler::modifyTask, false);
-		// 任务图片上传
+		// 5.任务图片上传
 		router.post("/uploadfile").blockingHandler(uploadHandler::uploadTaskFile, false);
 		return router;
 	}
@@ -107,13 +111,13 @@ public class ItosRouter {
 	 */
 	public static Router smarttipsRouter(Vertx vertx, SettingsHandler settingsHandler) {
 		Router router = Router.router(vertx);
-		// 智能提示列表
+		// 1.智能提示列表
 		router.post("/list").blockingHandler(settingsHandler::getSmartTipsList, false);
-		// 添加智能提示
+		// 2.添加智能提示
 		router.post("/add").blockingHandler(settingsHandler::addSmartTips, false);
-		// 修改智能提示
+		// 3.修改智能提示
 		router.post("/update").blockingHandler(settingsHandler::updateSmartTips, false);
-		// 删除智能提示
+		// 4.删除智能提示
 		router.post("/delete").blockingHandler(settingsHandler::deleteSmartTips, false);
 		return router;
 	}
@@ -123,21 +127,21 @@ public class ItosRouter {
 	 */
 	public static Router dispatchclientRouter(Vertx vertx, DispatchClientHandler dispatchClientHandler) {
 		Router router = Router.router(vertx);
-		// 登记终端
+		// 1.登记终端
 		router.post("/add").blockingHandler(dispatchClientHandler::addClient, false);
-		// 修改终端
+		// 2.修改终端
 		router.post("/update").blockingHandler(dispatchClientHandler::updateClient, false);
-		// 删除终端
+		// 3.删除终端
 		router.post("/delete").blockingHandler(dispatchClientHandler::deleteClient, false);
-		// 查找终端（终端访问）
+		// 4.查找终端（终端访问）
 		router.post("/get").blockingHandler(dispatchClientHandler::getClient, false);
-		// 终端列表
+		// 5.终端列表
 		router.post("/list").blockingHandler(dispatchClientHandler::getClientList, false);
-		// 重载终端数据
+		// 6.重载终端数据
 		router.post("/reload").blockingHandler(dispatchClientHandler::loadData, false);
-		// 终端对应任务列表（终端访问）
+		// 7.终端对应任务列表（终端访问）
 		router.post("/clienttask").blockingHandler(dispatchClientHandler::getDispatchTaskList, false);
-		// 所有任务列表
+		// 8.所有任务列表
 		router.post("/alltask").blockingHandler(dispatchClientHandler::getDispatchAllTask, false);
 		return router;
 	}
@@ -147,7 +151,7 @@ public class ItosRouter {
 	 */
 	public static Router associateRouter(Vertx vertx, AssociateItopHandler associateItopHandler) {
 		Router router = Router.router(vertx);
-		// ITOS设备号关联信息
+		// 1.ITOS设备号关联信息
 		router.post("/machinename").blockingHandler(associateItopHandler::machineNameAssociate, false);
 		return router;
 	}
@@ -157,23 +161,23 @@ public class ItosRouter {
 	 */
 	public static Router userRouter(Vertx vertx, UserHandler userHandler, UploadHandler uploadHandler) {
 		Router router = Router.router(vertx);
-		// 用户列表
+		// 1.用户列表
 		router.post("/list").blockingHandler(userHandler::getUserList, false);
-		// 用户权限
+		// 2.用户权限
 		router.post("/authority").blockingHandler(userHandler::updateAuthority, false);
-		// 用户信息
+		// 3.用户信息
 		router.post("/content").blockingHandler(userHandler::updateContent, false);
-		// 删除用户
+		// 4.删除用户
 		router.post("/delete").blockingHandler(userHandler::delUser, false);
-		// 新用户
+		// 5.新用户
 		router.post("/add").blockingHandler(userHandler::saveUser, false);
-		// 用户头像
+		// 6.用户头像
 		router.post("/face").blockingHandler(uploadHandler::uploadUserFace, false);
-		// 用户首页
+		// 7.用户首页
 		router.post("/firstpage").blockingHandler(userHandler::updateFirstPage, false);
-		// 修改密码
+		// 8.修改密码
 		router.post("/password").blockingHandler(userHandler::updatePassword, false);
-		// 在线用户
+		// 9.在线用户
 		router.get("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
 		return router;
 	}
@@ -183,11 +187,11 @@ public class ItosRouter {
 	 */
 	public static Router pageRouter(Vertx vertx, FirstPageHandler firstPageHandler) {
 		Router router = Router.router(vertx);
-		// 值班表
+		// 1.值班表
 		router.post("/duty/list").blockingHandler(firstPageHandler::getDutyList, false);
-		// 添加值班
+		// 2.添加值班
 		router.post("/duty/add").blockingHandler(firstPageHandler::addDuty, false);
-		// 删除值班
+		// 3.删除值班
 		router.post("/duty/delete").blockingHandler(firstPageHandler::delDuty, false);
 		return router;
 	}

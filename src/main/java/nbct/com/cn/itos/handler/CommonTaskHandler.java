@@ -35,6 +35,16 @@ import util.MsgUtil;
 public class CommonTaskHandler {
 
 	/**
+	 *单个任务 
+	 */
+	public void getTask(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_task where taskId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("taskId"));
+		JdbcHelper.rows(ctx, sql, params, new CommonTask());
+	}
+
+	/**
 	 * 任务日志
 	 */
 	public void getTaskLog(RoutingContext ctx) {
@@ -152,7 +162,7 @@ public class CommonTaskHandler {
 	 * 参数 {taskId:"...",status:"...",oper:"...",remark:"..."}
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
-		//TODO 改成存储过程。
+		// TODO 改成存储过程。
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
