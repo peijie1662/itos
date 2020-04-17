@@ -41,7 +41,7 @@ public class DispatchClientHandler {
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
-				conn.query("select * from itos_service", r -> {
+				conn.query("select * from itos_service order by serviceName", r -> {
 					if (r.succeeded()) {
 						List<DispatchClient> nc = r.result().getRows().stream().map(row -> {
 							DispatchClient c = new DispatchClient().from(row);

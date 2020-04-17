@@ -16,6 +16,7 @@ import nbct.com.cn.itos.handler.DispatchClientHandler;
 import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
+import nbct.com.cn.itos.handler.PdfHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 import nbct.com.cn.itos.handler.UserHandler;
@@ -45,6 +46,7 @@ public class MainVerticle extends AbstractVerticle {
 		ComposeHandler composeHandler = new ComposeHandler();
 		UserHandler userHandler = new UserHandler();
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
+		PdfHandler pdfHandler = new PdfHandler();
 
 		//1.静态文件
 		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -67,7 +69,9 @@ public class MainVerticle extends AbstractVerticle {
 		//10.用户
 		router.mountSubRouter("/user", ItosRouter.userRouter(vertx, userHandler, uploadHandler));
 		//11.首页
-		router.mountSubRouter("/page", ItosRouter.pageRouter(vertx, firstPageHandler));		
+		router.mountSubRouter("/page", ItosRouter.pageRouter(vertx, firstPageHandler));
+		//12.PDF
+		router.mountSubRouter("/pdf", ItosRouter.pdfRouter(vertx, pdfHandler));
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据

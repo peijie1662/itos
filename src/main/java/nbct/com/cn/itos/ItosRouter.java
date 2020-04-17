@@ -9,6 +9,7 @@ import nbct.com.cn.itos.handler.DispatchClientHandler;
 import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
+import nbct.com.cn.itos.handler.PdfHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 import nbct.com.cn.itos.handler.UserHandler;
@@ -195,5 +196,20 @@ public class ItosRouter {
 		router.post("/duty/delete").blockingHandler(firstPageHandler::delDuty, false);
 		return router;
 	}
+	
+	/**
+	 * PDF路由
+	 */
+	public static Router pdfRouter(Vertx vertx,PdfHandler pdfHandler) {
+		Router router = Router.router(vertx);
+		// 1.组合任务报告
+		router.post("/compose").blockingHandler(pdfHandler::getComposePdfReport, false);
+		return router;
+	}
+	
+	/**
+	 * 服务信息路由
+	 */
+	
 
 }
