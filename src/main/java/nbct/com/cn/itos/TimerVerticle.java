@@ -26,7 +26,9 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.CycleEnum;
+import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
+import nbct.com.cn.itos.model.AppInfo;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.ConvertUtil;
@@ -43,6 +45,9 @@ public class TimerVerticle extends AbstractVerticle {
 
 	public static Logger logger = Logger.getLogger(TimerVerticle.class);
 
+	/**
+	 * 扫描模版，生成任务
+	 */
 	private void task() {
 		SQLClient client = Configer.client;
 		client.getConnection(cr -> {
@@ -219,6 +224,9 @@ public class TimerVerticle extends AbstractVerticle {
 		});
 	}
 
+	/**
+	 * 定时注册
+	 */
 	private void registe() {
 		JsonObject provider = Configer.provider;
 		JsonObject registerUrl = Configer.registerUrl;
@@ -229,13 +237,43 @@ public class TimerVerticle extends AbstractVerticle {
 			wc.post(registerUrl.getInteger("port"), registerUrl.getString("ip"), registerUrl.getString("url"))
 					.timeout(1000).sendJsonObject(provider, ar -> {
 						if (!ar.succeeded()) {
-							ar.cause().printStackTrace();
+							//ar.cause().printStackTrace();
 						}
 					});
-		} catch (UnknownHostException e) {
+		} catch (Exception e) {
 			// e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * 设置新服务信息
+	 */
+	public void newAppInfo() {
+		JsonObject provider = Configer.provider;
+		JsonObject registerUrl = Configer.registerUrl;
+		WebClient wc = WebClient.create(vertx,
+				new WebClientOptions().setIdleTimeout(2).setConnectTimeout(2000).setMaxWaitQueueSize(5));
+		try {
+			provider.put("ip", InetAddress.getLocalHost().getHostAddress());
+			wc.post(registerUrl.getInteger("port"), registerUrl.getString("ip"), registerUrl.getString("active"))
+					.timeout(1000).sendJsonObject(provider, ar -> {
+						if (ar.succeeded()) {
+							ar.result().bodyAsJsonArray().stream().map(item -> {
+								JsonObject jo = JsonObject.mapFrom(item); 
+								AppInfo appInfo = new AppInfo();
+								appInfo.setServerName(jo.getString("serverName"));
+								
+								
+								return appInfo;
+							});
+							
+							vertx.eventBus().send(SceneEnum.NEWAPPINFO.addr(), null);
+						}
+					});
+		} catch (Exception e) {
+			// e.printStackTrace();
+		}			
+	}	
 
 	/**
 	 * 扫描所有未完成任务，并执行超期回调<br>
@@ -378,6 +416,7 @@ public class TimerVerticle extends AbstractVerticle {
 			expired();
 			task();
 			registe();
+			newAppInfo();
 		});
 	}
 

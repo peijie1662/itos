@@ -35,11 +35,11 @@ public class WebsocketVerticle extends AbstractVerticle {
 		websocketMethod(server);
 		server.requestHandler(router).listen(Configer.getWebsocketPort());
 		EventBus es = vertx.eventBus();
-		// 系统日志场景
+		// 1.系统日志场景
 		es.consumer(SceneEnum.SYSLOG.addr(), this::pushSysLog);
-		// 控制中心场景
+		// 2.控制中心场景
 		es.consumer(SceneEnum.CONTROLCENTER.addr(), this::pushControlCenter);
-		// 在线用户请求
+		// 3.在线用户请求
 		es.consumer(SceneEnum.ONLINEUSER.addr(), this::onlineUsers);
 	}
 
@@ -98,7 +98,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 					JsonObject j = new JsonObject(clientMsg[1]);
 					ItosUser user = onlineUsers.get(id);
 					switch (header) {
-					// 用户登录时记录在线信息
+					// 1.用户登录时记录在线信息
 					case "USERLOGIN":
 						user.setUserId(j.getString("userId"));
 						user.setUserName(j.getString("userName"));
@@ -107,7 +107,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 						user.setShortPhone(j.getString("shortPhone"));
 						user.setRole(j.getString("role"));
 						break;
-					// 用户的场景发生转换
+					// 2.用户的场景发生转换
 					case "USERSCENE":
 						List<SceneEnum> scene = j.getJsonArray("scene").stream().map(item -> {
 							return SceneEnum.absFrom(item.toString()).get();

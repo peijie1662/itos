@@ -4,7 +4,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.Duty;
+import nbct.com.cn.itos.model.FirstPageLog;
 
 /**
  * @author PJ
@@ -38,5 +40,14 @@ public class FirstPageHandler {
 		JsonArray params = new JsonArray().add(rp.getString("userId")).add(rp.getString("dutyDate").replace("-", ""));
 		String sql = "delete from itos_duty where userId = ? and dutyDate = ?";
 		JdbcHelper.update(ctx, sql, params);
+	}
+	
+	/**
+	 * 系统动态
+	 */
+	public void getItosLog(RoutingContext ctx) {
+		String sql = "select * from (select opdate,status,statusdesc from itos_tasklog order by opdate desc) a " + 
+				" where rownum <= 10";
+		JdbcHelper.rows(ctx, sql, new FirstPageLog());	
 	}
 }

@@ -3,12 +3,15 @@ package nbct.com.cn.itos;
 import org.apache.log4j.Logger;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.config.SceneEnum;
+import nbct.com.cn.itos.handler.AppInfoHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
@@ -47,6 +50,7 @@ public class MainVerticle extends AbstractVerticle {
 		UserHandler userHandler = new UserHandler();
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 		PdfHandler pdfHandler = new PdfHandler();
+		AppInfoHandler appInfoHandler = new AppInfoHandler();
 
 		//1.静态文件
 		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -72,12 +76,19 @@ public class MainVerticle extends AbstractVerticle {
 		router.mountSubRouter("/page", ItosRouter.pageRouter(vertx, firstPageHandler));
 		//12.PDF
 		router.mountSubRouter("/pdf", ItosRouter.pdfRouter(vertx, pdfHandler));
+		//13.APP
+		router.mountSubRouter("/appinfo", ItosRouter.appInfoRouter(vertx, appInfoHandler));
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
+		
+		//0.通讯
+		EventBus es = vertx.eventBus();
+		//1.设置新服务信息
+		es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);		
 
 		logger.info("ITOS server start");
 

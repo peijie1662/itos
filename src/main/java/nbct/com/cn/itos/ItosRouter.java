@@ -2,6 +2,7 @@ package nbct.com.cn.itos;
 
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
+import nbct.com.cn.itos.handler.AppInfoHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
@@ -194,22 +195,31 @@ public class ItosRouter {
 		router.post("/duty/add").blockingHandler(firstPageHandler::addDuty, false);
 		// 3.删除值班
 		router.post("/duty/delete").blockingHandler(firstPageHandler::delDuty, false);
+		// 4.日志
+		router.post("/itoslog").blockingHandler(firstPageHandler::getItosLog, false);
 		return router;
 	}
-	
+
 	/**
 	 * PDF路由
 	 */
-	public static Router pdfRouter(Vertx vertx,PdfHandler pdfHandler) {
+	public static Router pdfRouter(Vertx vertx, PdfHandler pdfHandler) {
 		Router router = Router.router(vertx);
 		// 1.组合任务报告
 		router.post("/compose").blockingHandler(pdfHandler::getComposePdfReport, false);
 		return router;
 	}
-	
+
 	/**
 	 * 服务信息路由
 	 */
-	
+	public static Router appInfoRouter(Vertx vertx, AppInfoHandler appInfoHandler) {
+		Router router = Router.router(vertx);
+		// 1.设置遗产服务信息
+		router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
+		// 2.服务信息列表
+		router.post("/list").blockingHandler(appInfoHandler::getAppInfoList, false);
+		return router;
+	}
 
 }

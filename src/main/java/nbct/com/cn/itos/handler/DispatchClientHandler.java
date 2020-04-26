@@ -29,7 +29,7 @@ import util.DateUtil;
  */
 public class DispatchClientHandler {
 
-	private static List<DispatchClient> clients = new ArrayList<DispatchClient>();
+	private static List<DispatchClient> CLIENTS = new ArrayList<DispatchClient>();
 
 	/**
 	 * 终端数据载入(页面来刷新)
@@ -45,7 +45,7 @@ public class DispatchClientHandler {
 					if (r.succeeded()) {
 						List<DispatchClient> nc = r.result().getRows().stream().map(row -> {
 							DispatchClient c = new DispatchClient().from(row);
-							Optional<DispatchClient> matcher = clients.stream().filter(item -> {
+							Optional<DispatchClient> matcher = CLIENTS.stream().filter(item -> {
 								return item.getServiceName().equals(c.getServiceName());
 							}).findAny();
 							if (matcher.isPresent()) {
@@ -55,7 +55,7 @@ public class DispatchClientHandler {
 							}
 							return c;
 						}).collect(Collectors.toList());
-						clients = nc;
+						CLIENTS = nc;
 						res.end(OK());
 					} else {
 						r.cause().printStackTrace();
@@ -79,7 +79,7 @@ public class DispatchClientHandler {
 					if (r.succeeded()) {
 						List<DispatchClient> nc = r.result().getRows().stream().map(row -> {
 							DispatchClient c = new DispatchClient().from(row);
-							Optional<DispatchClient> matcher = clients.stream().filter(item -> {
+							Optional<DispatchClient> matcher = CLIENTS.stream().filter(item -> {
 								return item.getServiceName().equals(c.getServiceName());
 							}).findAny();
 							if (matcher.isPresent()) {
@@ -89,7 +89,7 @@ public class DispatchClientHandler {
 							}
 							return c;
 						}).collect(Collectors.toList());
-						clients = nc;
+						CLIENTS = nc;
 					} else {
 						r.cause().printStackTrace();
 					}
@@ -157,10 +157,10 @@ public class DispatchClientHandler {
 		res.putHeader("content-type", "application/json");
 		LocalDateTime now = LocalDateTime.now();
 		try {
-			clients.forEach(client -> {
+			CLIENTS.forEach(client -> {
 				client.setOnLine(now.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
 			});
-			JsonArray cs = new JsonArray(clients);
+			JsonArray cs = new JsonArray(CLIENTS);
 			res.end(OK(cs));
 		} catch (Exception e) {
 			res.end(Err(e.getMessage()));
@@ -198,7 +198,7 @@ public class DispatchClientHandler {
 		String serviceName = rp.getString("serviceName");
 		Integer period = rp.getInteger("period");
 		// 1.更新在线状态
-		Optional<DispatchClient> o = clients.stream().filter(client -> {
+		Optional<DispatchClient> o = CLIENTS.stream().filter(client -> {
 			return client.getServiceName().equals(serviceName);
 		}).findAny();
 		if (o.isPresent()) {

@@ -89,12 +89,12 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setComposeId(j.getString("COMPOSEID"));
 			task.setPlanDt(DateUtil.utcToLocalDT(j.getString("PLANDT")));
 			task.setExpiredTime(DateUtil.utcToLocalDT(j.getString("EXPIREDTIME")));
-			// 超期回调
+			// 1.超期回调
 			ExpiredCallbackEnum callback = Objects.nonNull(j.getString("EXPIREDCALLBACK"))
 					? ExpiredCallbackEnum.from(j.getString("EXPIREDCALLBACK")).get()
 					: ExpiredCallbackEnum.NONE;
 			task.setCallback(callback);
-			// 超期通知
+			// 2.超期通知
 			String notify = j.getString("EXPIREDNOTIFY");
 			if (Objects.nonNull(notify)) {
 				List<NotifyEnum> n = Arrays.asList(notify.split(",")).stream().map(item -> {
@@ -104,7 +104,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 			} else {
 				task.setNotify(Collections.emptyList());
 			}
-			// 标记
+			// 3.标记
 			task.setExecutedCallback(ConvertUtil.strToBool(j.getString("EXECUTEDCALLBACK")));
 			task.setExecutedNotify(ConvertUtil.strToBool(j.getString("EXECUTEDNOTIFY")));
 			return task;
