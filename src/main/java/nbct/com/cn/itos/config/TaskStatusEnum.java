@@ -14,7 +14,8 @@ public enum TaskStatusEnum {
 	MODIFY("MODIFY", "修改任务内容", -1), //
 	SWAP("SWAP", "任务处理人更换", -1), //
 	CANCEL("CANCEL", "取消任务", 3), //
-	DONE("DONE", "任务完成", 3);
+	DONE("DONE", "任务完成", 3),//
+	FAIL("FAIL","任务失败",3);
 
 	private String value;
 

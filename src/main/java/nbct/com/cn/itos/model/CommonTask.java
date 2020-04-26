@@ -128,9 +128,9 @@ public class CommonTask implements RowMapper<CommonTask> {
 		task.setContent(model.getComments());
 		task.setCustomer("SYS");
 		task.setModelId(model.getModelId());
-		task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
+		task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
 		task.setPlanDt(planDt);
-		task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));// 这里肯定有planDt
+		task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));// c这里肯定有planDt
 		task.setCallback(model.getCallback());
 		task.setNotify(model.getNotify());
 		task.setExecutedCallback(false);
@@ -157,7 +157,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setContent(model.getComments());
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
-			task.setTaskIcon("AUTO");// 机器人，代表系统生成任务
+			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
 			task.setCallback(model.getCallback());
 			task.setNotify(model.getNotify());
 			task.setExecutedCallback(false);
@@ -174,7 +174,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 		case PERDAY:
 			Arrays.asList(model.getPlanDates().split(",")).forEach(dt -> {
 				CommonTask task = createTask.get();
-				// 自定义每日格式 HHMM
+				// 1.自定义每日格式 HHMM
 				int hour = Integer.parseInt(dt.substring(0, 2));
 				int min = Integer.parseInt(dt.substring(2));
 				task.setPlanDt(LocalDateTime.of(LocalDate.now(), LocalTime.of(hour, min)));
@@ -187,16 +187,16 @@ public class CommonTask implements RowMapper<CommonTask> {
 				throw new RuntimeException("周计划的计划时间格式出错，无法生成计划任务。");
 			}
 			IntStream.range(0, dts.length / 2).forEach(i -> {
-				// 日期
-				int weekDay = Integer.parseInt(dts[i * 2]);// 每周第几天
+				// 1.日期
+				int weekDay = Integer.parseInt(dts[i * 2]);// c每周第几天
 				LocalDate curDt = LocalDate.now();
 				LocalDate pd = DateUtil.getDateByYearAndWeekNumAndDayOfWeek(curDt.getYear(),
 						curDt.get(ChronoField.ALIGNED_WEEK_OF_YEAR), weekDay);
-				// 时间
+				// 2.时间
 				int hour = Integer.parseInt(dts[i * 2 + 1].substring(0, 2));
 				int min = Integer.parseInt(dts[i * 2 + 1].substring(2));
 				LocalTime pt = LocalTime.of(hour, min);
-				// 组合
+				// 3.组合
 				CommonTask task = createTask.get();
 				task.setPlanDt(LocalDateTime.of(pd, pt));
 				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
@@ -208,16 +208,16 @@ public class CommonTask implements RowMapper<CommonTask> {
 				throw new RuntimeException("月计划的计划时间格式出错，无法生成计划任务。");
 			}
 			IntStream.range(0, dts.length / 3).forEach(i -> {
-				// 日期
-				int week = Integer.parseInt(dts[i * 3]);// 每月第几周
-				int day = Integer.parseInt(dts[i * 3 + 1]);// 周几
+				// 1.日期
+				int week = Integer.parseInt(dts[i * 3]);// c每月第几周
+				int day = Integer.parseInt(dts[i * 3 + 1]);// c周几
 				LocalDate curDt = LocalDate.now();
 				LocalDate pd = curDt.with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
-				// 时间
+				// 2.时间
 				int hour = Integer.parseInt(dts[i * 3 + 2].substring(0, 2));
 				int min = Integer.parseInt(dts[i * 3 + 2].substring(2));
 				LocalTime pt = LocalTime.of(hour, min);
-				// 组合
+				// 3.组合
 				CommonTask task = createTask.get();
 				task.setPlanDt(LocalDateTime.of(pd, pt));
 				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));

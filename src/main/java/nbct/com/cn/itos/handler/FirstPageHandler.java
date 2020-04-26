@@ -4,7 +4,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
-import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.Duty;
 import nbct.com.cn.itos.model.FirstPageLog;
 

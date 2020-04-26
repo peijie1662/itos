@@ -1,7 +1,6 @@
 package nbct.com.cn.itos;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -171,8 +170,10 @@ public class TimerVerticle extends AbstractVerticle {
 				Function<List<CommonTask>, Future<String>> logf = (List<CommonTask> tasks) -> {
 					Future<String> f = Future.future(promise -> {
 						tasks.forEach(task -> {
-							String msg = DateUtil.curDtStr() + " " + "系统按照任务模版'" + task.getAbs() + "'生成任务,执行时间是'"
-									+ task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "'";
+							String msg = String.format("%s 系统按照任务模版%s生成任务，执行时间是%s", //
+									DateUtil.curDtStr(), //
+									task.getAbs(), //
+									task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 							MsgUtil.sysLog(vertx, msg);
 						});
 						List<JsonArray> params = new ArrayList<JsonArray>();
@@ -181,7 +182,7 @@ public class TimerVerticle extends AbstractVerticle {
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
 									.add(TaskStatusEnum.CHECKIN.getValue())//
-									.add("系统按照任务模版'" + task.getAbs() + "'生成任务。")//
+									.add(String.format("系统按照任务模版%s生成任务。", task.getAbs()))//
 									.add("")// 待认领
 									.add("")// 原内容
 									.add("")// 新内容
@@ -237,14 +238,14 @@ public class TimerVerticle extends AbstractVerticle {
 			wc.post(registerUrl.getInteger("port"), registerUrl.getString("ip"), registerUrl.getString("url"))
 					.timeout(1000).sendJsonObject(provider, ar -> {
 						if (!ar.succeeded()) {
-							//ar.cause().printStackTrace();
+							// ar.cause().printStackTrace();
 						}
 					});
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * 设置新服务信息
 	 */
@@ -259,21 +260,20 @@ public class TimerVerticle extends AbstractVerticle {
 					.timeout(1000).sendJsonObject(provider, ar -> {
 						if (ar.succeeded()) {
 							ar.result().bodyAsJsonArray().stream().map(item -> {
-								JsonObject jo = JsonObject.mapFrom(item); 
+								JsonObject jo = JsonObject.mapFrom(item);
 								AppInfo appInfo = new AppInfo();
 								appInfo.setServerName(jo.getString("serverName"));
-								
-								
+
 								return appInfo;
 							});
-							
+
 							vertx.eventBus().send(SceneEnum.NEWAPPINFO.addr(), null);
 						}
 					});
 		} catch (Exception e) {
 			// e.printStackTrace();
-		}			
-	}	
+		}
+	}
 
 	/**
 	 * 扫描所有未完成任务，并执行超期回调<br>

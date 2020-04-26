@@ -100,7 +100,7 @@ public class CommonTaskHandler {
 						String sql = "update itos_task set content = ? where taskId = ?";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
-								// 这里不更新内容，保留原内容作为日志。
+								// c这里不更新内容，保留原内容作为日志。
 								promise.complete(task);
 							} else {
 								promise.fail("修改任务内容失败");
@@ -158,7 +158,7 @@ public class CommonTaskHandler {
 
 	/**
 	 *
-	 * 任务操作(PROCESSING,DONE,CANCEL)<br>
+	 * 任务操作(PROCESSING,DONE,CANCEL,FAIL)<br>
 	 * 参数 {taskId:"...",status:"...",oper:"...",remark:"..."}
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
@@ -263,7 +263,7 @@ public class CommonTaskHandler {
 								if (r.succeeded()) {
 									JsonArray j = r.result().getOutput();
 									Boolean flag = "0".equals(j.getString(1));// flag
-									String newTask = j.getString(3);// 新建下阶段任务数量
+									String newTask = j.getString(3);// c新建下阶段任务数量
 									MsgUtil.mixLC(ctx, Integer.parseInt(newTask), task.getComposeId());
 									if (flag) {
 										promise.complete(task);

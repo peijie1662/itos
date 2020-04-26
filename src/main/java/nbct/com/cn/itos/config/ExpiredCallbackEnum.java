@@ -10,6 +10,7 @@ import java.util.Optional;
 public enum ExpiredCallbackEnum {
 	
 	DONE("DONE", "视作完成"), //
+	FAIL("FAIL","视作失败"),//
 	CANCEL("CANCEL","视作取消"), //
 	NONE("NONE","不处理");
 
