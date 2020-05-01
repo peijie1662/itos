@@ -84,6 +84,14 @@ public class ItosRouter {
 		router.post("/add").blockingHandler(manualTaskHandler::saveManualTask, false);
 		// 3.任务状态-SWAP
 		router.post("/swap").blockingHandler(manualTaskHandler::swapTask, false);
+		// 4.新委外记录
+		router.post("/newdr").blockingHandler(manualTaskHandler::saveDeliverRepair, false);
+		// 5.修改委外记录
+		router.post("/updatedr").blockingHandler(manualTaskHandler::updateDeliverRepair, false);
+		// 6. 删除委外记录
+		router.post("/deletedr").blockingHandler(manualTaskHandler::deleteDeliverRepair, false);
+		// 7.任务委外列表
+		router.post("/drlist").blockingHandler(manualTaskHandler::getDeliverRepair, false);
 		return router;
 	}
 

@@ -14,14 +14,14 @@ import io.vertx.ext.sql.SQLClient;
  */
 @SuppressWarnings("resource")
 public class Configer {
-	
+
 	private static JsonObject config;
 
 	/**
 	 * 登录服务URL
 	 */
 	public static String loginServer;
-	
+
 	/**
 	 * ITOP服务URL
 	 */
@@ -46,7 +46,7 @@ public class Configer {
 	 * 数据库链接
 	 */
 	public static SQLClient client;
-	
+
 	/**
 	 * dispatch client 心跳阈值
 	 */
@@ -68,6 +68,9 @@ public class Configer {
 		}
 	}
 
+	/**
+	 * 初始化数据库连接池
+	 */
 	public static void initDbPool(Vertx vertx, String dsName) {
 		JsonObject dbConfig = config.getJsonObject(dsName);
 		if (dbConfig == null) {
@@ -88,7 +91,17 @@ public class Configer {
 		return provider.getInteger("wsport");
 	}
 
+	/**
+	 * 注册URL
+	 */
 	public static String getRegisterUrl() {
 		return "http://" + registerUrl.getString("ip") + ":" + registerUrl.getInteger("port");
+	}
+
+	/** 
+	 * 服务列表URL
+	 */
+	public static String getActiveUrl() {
+		return getRegisterUrl() + registerUrl.getString("active");
 	}
 }

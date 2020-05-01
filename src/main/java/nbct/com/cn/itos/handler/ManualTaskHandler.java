@@ -22,6 +22,7 @@ import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
+import nbct.com.cn.itos.model.DeliverRepair;
 import util.ConvertUtil;
 import util.DateUtil;
 import util.MsgUtil;
@@ -241,6 +242,64 @@ public class ManualTaskHandler {
 				});
 			}
 		});
+	}
+
+	/**
+	 * 新委外记录
+	 */
+	public void saveDeliverRepair(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		JsonArray params = new JsonArray()//
+				.add(UUID.randomUUID().toString())//
+				.add(rp.getString("taskId"))//
+				.add(rp.getString("deliverDate"))//
+				.add(rp.getString("receiptDate"))//
+				.add(rp.getString("invoiceNumber"))//
+				.add(rp.getString("amount"))//
+				.add(rp.getString("remark"))//
+				.add(rp.getString("oper"))//
+				.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+		String sql = "insert into itos_deliver_repair(drId,taskId,deliverDate,receiptDate," + //
+				" invoiceNumber,amount,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 修改委外记录
+	 */
+	public void updateDeliverRepair(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("deliverDate"))//
+				.add(rp.getString("receiptDate"))//
+				.add(rp.getString("invoiceNumber"))//
+				.add(rp.getString("amount"))//
+				.add(rp.getString("remark"))//
+				.add(rp.getString("drId"));
+		String sql = "update itos_deliver_repair set deliverDate = ?,receiptDate = ?," + //
+				"invoiceNumber = ?,amount = ?,remark = ? where drId = ?";
+		JdbcHelper.update(ctx, sql, params);
+	}
+	
+	/**
+	 * 删除委外记录
+	 */
+	public void deleteDeliverRepair(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		JsonArray params = new JsonArray()//
+				.add(rp.getString("drId"));
+		String sql = "delete itos_deliver_repair where drId = ?";
+		JdbcHelper.update(ctx, sql, params);		
+	}
+	
+	/**
+	 * 任务委外列表
+	 */
+	public void getDeliverRepair(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_deliver_repair where taskId = ? order by opDate";
+		JsonArray params = new JsonArray().add(rp.getString("taskId"));
+		JdbcHelper.rows(ctx, sql, params, new DeliverRepair());
 	}
 
 }

@@ -24,7 +24,7 @@ public class AppInfo {
 	public static AppInfo from(JsonObject jo) {
 		AppInfo app = new AppInfo();
 		app.setServerName(jo.getString("serverName"));
-		app.setServerDesc(jo.getString("serverDesc"));
+		app.setServerDesc(jo.getString("desc"));
 		app.setIp(jo.getString("ip"));
 		app.setPort(jo.getInteger("port"));
 		app.setValid(ConvertUtil.strToBool(jo.getString("valid")));

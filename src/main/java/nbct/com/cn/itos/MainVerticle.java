@@ -50,7 +50,7 @@ public class MainVerticle extends AbstractVerticle {
 		UserHandler userHandler = new UserHandler();
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 		PdfHandler pdfHandler = new PdfHandler();
-		AppInfoHandler appInfoHandler = new AppInfoHandler();
+		AppInfoHandler appInfoHandler = new AppInfoHandler(vertx);
 
 		//1.静态文件
 		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
