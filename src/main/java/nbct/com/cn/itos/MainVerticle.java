@@ -31,13 +31,12 @@ public class MainVerticle extends AbstractVerticle {
 	@Override
 	public void start() throws Exception {
 		Router router = Router.router(vertx);
-		router.route()
-				.handler(CorsHandler.create("*")//
-						.allowedMethod(HttpMethod.GET)//
-						.allowedMethod(HttpMethod.OPTIONS)//
-						.allowedMethod(HttpMethod.POST)//
-						.allowedHeader("X-PINGARUNER")//
-						.allowedHeader("Content-Type"));
+		router.route().handler(CorsHandler.create("*")//
+				.allowedMethod(HttpMethod.GET)//
+				.allowedMethod(HttpMethod.OPTIONS)//
+				.allowedMethod(HttpMethod.POST)//
+				.allowedHeader("X-PINGARUNER")//
+				.allowedHeader("Content-Type"));
 		router.route().handler(BodyHandler.create());
 		ModelHandler modelHandler = new ModelHandler();
 		CommonTaskHandler commonTaskHandler = new CommonTaskHandler();
@@ -52,31 +51,31 @@ public class MainVerticle extends AbstractVerticle {
 		PdfHandler pdfHandler = new PdfHandler();
 		AppInfoHandler appInfoHandler = new AppInfoHandler(vertx);
 
-		//1.静态文件
+		// 1.静态文件
 		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
-		//2.登录
+		// 2.登录
 		router.post("/login").blockingHandler(userHandler::handleLogin, false);
-		//3.任务模版
-		router.mountSubRouter("/model", ItosRouter.modelRouter(vertx,modelHandler,uploadHandler));
-		//4.组合任务
+		// 3.任务模版
+		router.mountSubRouter("/model", ItosRouter.modelRouter(vertx, modelHandler, uploadHandler));
+		// 4.组合任务
 		router.mountSubRouter("/composetask", ItosRouter.composeRouter(vertx, composeHandler));
-		//5.人工任务
+		// 5.人工任务
 		router.mountSubRouter("/manualtask", ItosRouter.manualtaskRouter(vertx, manualTaskHandler));
-		//6.任务通用
+		// 6.任务通用
 		router.mountSubRouter("/task", ItosRouter.commonTaskRouter(vertx, commonTaskHandler, uploadHandler));
-		//7.智能提示
+		// 7.智能提示
 		router.mountSubRouter("/smarttips", ItosRouter.smarttipsRouter(vertx, settingsHandler));
-		//8.下发终端
+		// 8.下发终端
 		router.mountSubRouter("/dispatchclient", ItosRouter.dispatchclientRouter(vertx, dispatchClientHandler));
-		//9.关联信息
+		// 9.关联信息
 		router.mountSubRouter("/associate", ItosRouter.associateRouter(vertx, associateItopHandler));
-		//10.用户
+		// 10.用户
 		router.mountSubRouter("/user", ItosRouter.userRouter(vertx, userHandler, uploadHandler));
-		//11.首页
+		// 11.首页
 		router.mountSubRouter("/page", ItosRouter.pageRouter(vertx, firstPageHandler));
-		//12.PDF
-		router.mountSubRouter("/pdf", ItosRouter.pdfRouter(vertx, pdfHandler));
-		//13.APP
+		// 12.PDF
+		router.mountSubRouter("/pdf", ItosRouter.pdfRouter(vertx, pdfHandler, uploadHandler));
+		// 13.APP
 		router.mountSubRouter("/appinfo", ItosRouter.appInfoRouter(vertx, appInfoHandler));
 
 		Configer.initDbPool(vertx);
@@ -85,11 +84,11 @@ public class MainVerticle extends AbstractVerticle {
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.deployVerticle(new NotifyVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
-		
-		//0.通讯
+
+		// 0.通讯
 		EventBus es = vertx.eventBus();
-		//1.设置新服务信息
-		es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);		
+		// 1.设置新服务信息
+		es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);
 
 		logger.info("ITOS server start");
 

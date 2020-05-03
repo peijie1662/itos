@@ -48,7 +48,7 @@ public class NotifyVerticle extends AbstractVerticle {
 					smsServer.getString("sendUrl")) //
 					.addQueryParam("jsonStr", JSON.toJSONString(sqs))//
 					.send(r -> {
-						if(r.failed()) {
+						if (r.failed()) {
 							r.cause().printStackTrace();
 						}
 					});
@@ -66,7 +66,7 @@ public class NotifyVerticle extends AbstractVerticle {
 		System.out.println("SMS: " + msg.body());
 
 		SQLClient client = Configer.client;
-		String sql = "select * from itos_user where userid in ('PJ')";
+		String sql = "select * from itos_user where userid in ('PJ','LSH','XZL','WMH')";
 		String content = String.format("计划%s执行的任务%s已超时,%s", //
 				msg.body().getString("planDt"), //
 				msg.body().getString("abs"), //
@@ -83,7 +83,7 @@ public class NotifyVerticle extends AbstractVerticle {
 								TSmsQueue sq = new TSmsQueue();
 								sq.setPhone(row.getString("PHONE"));
 								sq.setContent(content);
-								sq.setEnvironment("PRD");
+								sq.setEnvironment("OFFICE");
 								return sq;
 							}).collect(Collectors.toList());
 							callSmsSend(sqs);

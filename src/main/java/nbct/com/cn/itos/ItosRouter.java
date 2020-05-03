@@ -211,10 +211,12 @@ public class ItosRouter {
 	/**
 	 * PDF路由
 	 */
-	public static Router pdfRouter(Vertx vertx, PdfHandler pdfHandler) {
+	public static Router pdfRouter(Vertx vertx, PdfHandler pdfHandler, UploadHandler uploadHandler) {
 		Router router = Router.router(vertx);
 		// 1.组合任务报告
 		router.post("/compose").blockingHandler(pdfHandler::getComposePdfReport, false);
+		// 2.文档文件列表
+		router.get("/document/list").blockingHandler(uploadHandler::getDocumentFileList, false);
 		return router;
 	}
 
