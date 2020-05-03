@@ -12,7 +12,10 @@ public enum SceneEnum {
 	SYSLOG("itos.sys.log","SYSLOG", "系统日志"),
 	ONLINEUSER("itos.sys.users","ONLINEUSER","用户在线"),
 	CONTROLCENTER("itos.controlcenter.msg","CONTROLCENTER","控制中心"),
-	NEWAPPINFO("itos.appinfo.new","NEWAPPINFO","设置新服务列表信息");
+	NEWAPPINFO("itos.appinfo.new","NEWAPPINFO","设置新服务列表信息"),
+	SMS("itos.sms","SMS","发送短信"),
+	BIGHORN("itos.bighorn","BIGHORN","大喇叭"),
+	ITOSMSG("itos.msg","ITOSMSG","消息推送");
 
 	private String addr;//地址
 	

@@ -41,6 +41,21 @@ public class WebsocketVerticle extends AbstractVerticle {
 		es.consumer(SceneEnum.CONTROLCENTER.addr(), this::pushControlCenter);
 		// 3.在线用户请求
 		es.consumer(SceneEnum.ONLINEUSER.addr(), this::onlineUsers);
+		// 4.消息推送
+		es.consumer(SceneEnum.ITOSMSG.addr(), this::pushItosMsg);
+	}
+
+	/**
+	 * 推送消息给'系统消息场景'用户
+	 */
+	private void pushItosMsg(Message<String> msg) {
+		onlineUsers.forEach((id, user) -> {
+			if (Objects.nonNull(user.getScene())) {
+				if (user.getScene().contains(SceneEnum.ITOSMSG)) {
+					user.getWs().writeFinalTextFrame(msg.body());
+				}
+			}
+		});
 	}
 
 	/**
@@ -57,7 +72,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 	}
 
 	/**
-	 * 推送控制中心消息给控制'中心场景'用户
+	 * 推送控制中心消息给'控制中心场景'用户
 	 */
 	private void pushControlCenter(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {

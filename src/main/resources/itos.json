@@ -1,31 +1,36 @@
 {
-  "registerUrl" : {
-      "ip": "169.169.41.35",
-      "port": 9000,
-      "url": "/register",
-      "active": "/active"
-  },
-  "loginServer": "hr_service_prd",
-  "itopServer": "Itop_Service",
-  "provider":{
-    "serverId":"ITOS",
-    "serverName": "ITOS",
-    "port": 7856,
-    "wsport": 7857,
-    "weight":1,
-    "version": "1.0",
-    "type": "http",
-    "desc": "IT运维系统(IT Operation System)"
-  },
-  "db":{
-    "provider_class": "io.vertx.ext.jdbc.spi.impl.C3P0DataSourceProvider",
-    "url": "jdbc:oracle:thin:@169.169.41.25:1521:appdb",
-    "driverClassName": "oracle.jdbc.driver.OracleDriver",
-    "user": "itos",
-    "password": "itos"
-  },
-  "uploadDir": "d:/itos/",
-  "dispatchClient":{
-      "heartbeatThreshold":45
-  }
+    "registerUrl": {
+        "ip": "169.169.41.35",
+        "port": 9000,
+        "url": "/register",
+        "active": "/active"
+    },
+    "provider": {
+        "serverId": "ITOS",
+        "serverName": "ITOS",
+        "port": 7856,
+        "wsport": 7857,
+        "weight": 1,
+        "version": "1.0",
+        "type": "http",
+        "desc": "IT运维系统(IT Operation System)"
+    },
+    "loginServer": "hr_service_prd",
+    "itopServer": "Itop_Service",
+    "smsServer":{
+    	"ip":"169.169.41.93",
+    	"port":8080,
+    	"sendUrl":"/crab/smsAction!setSmsList.action"
+    },
+    "db": {
+        "provider_class": "io.vertx.ext.jdbc.spi.impl.C3P0DataSourceProvider",
+        "url": "jdbc:oracle:thin:@169.169.41.25:1521:appdb",
+        "driverClassName": "oracle.jdbc.driver.OracleDriver",
+        "user": "itos",
+        "password": "itos"
+    },
+    "uploadDir": "d:/itos/",
+    "dispatchClient": {
+        "heartbeatThreshold": 45
+    }
 }

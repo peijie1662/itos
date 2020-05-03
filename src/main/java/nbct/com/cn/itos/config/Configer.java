@@ -26,6 +26,11 @@ public class Configer {
 	 * ITOP服务URL
 	 */
 	public static String itopServer;
+	
+	/**
+	 * 短信服务
+	 */
+	public static JsonObject smsServer;
 
 	/**
 	 * 注册服务URL
@@ -60,6 +65,7 @@ public class Configer {
 			registerUrl = config.getJsonObject("registerUrl");
 			loginServer = config.getString("loginServer");
 			itopServer = config.getString("itopServer");
+			smsServer = config.getJsonObject("smsServer");
 			provider = config.getJsonObject("provider");
 			uploadDir = config.getString("uploadDir");
 			heartbeatThreshold = config.getJsonObject("dispatchClient").getInteger("heartbeatThreshold");

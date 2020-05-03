@@ -83,6 +83,7 @@ public class MainVerticle extends AbstractVerticle {
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
+		vertx.deployVerticle(new NotifyVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
 		
 		//0.通讯

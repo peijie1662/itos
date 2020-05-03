@@ -247,7 +247,7 @@ public class TimerVerticle extends AbstractVerticle {
 	}
 
 	/**
-	 * 设置新服务信息
+	 * 从注册获取服务信息-NEW
 	 */
 	public void newAppInfo() {
 		JsonObject provider = Configer.provider;
@@ -263,10 +263,8 @@ public class TimerVerticle extends AbstractVerticle {
 								JsonObject jo = JsonObject.mapFrom(item);
 								AppInfo appInfo = new AppInfo();
 								appInfo.setServerName(jo.getString("serverName"));
-
 								return appInfo;
 							});
-
 							vertx.eventBus().send(SceneEnum.NEWAPPINFO.addr(), null);
 						}
 					});
@@ -286,7 +284,7 @@ public class TimerVerticle extends AbstractVerticle {
 				// 1.读数据
 				Supplier<Future<List<CommonTask>>> loadf = () -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
-						String sql = "select * from itos_task where status not in ('DONE','CANCEL') and " + //
+						String sql = "select * from itos_task where status not in ('DONE','CANCEL','FAIL') and " + //
 						" expiredTime is not null and expiredtime < sysdate and expiredcallback <> 'NONE' " + //
 						" and nvl(executedcallback,' ') <> 'Y'";
 						conn.query(sql, r -> {
@@ -323,7 +321,35 @@ public class TimerVerticle extends AbstractVerticle {
 					});
 					return f;
 				};
-				// 3.记录日志
+				// 3.超期通知
+				Function<List<CommonTask>, Future<List<CommonTask>>> nf = list -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						list.stream().forEach(task -> {
+							task.getNotify().forEach(item -> {
+								switch (item) {
+								case SMS:
+									String planDt = task.getPlanDt()
+											.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+									vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
+											.put("abs", task.getAbs())//
+											.put("planDt", planDt)//
+											.put("expiredStatus", task.getCallback().getValue())//
+											.put("expiredDesc", task.getCallback().getDesc()));
+									break;
+								case BIGHORN:
+									break;
+								case ITOSMES:
+									break;
+								default:
+									break;
+								}
+							});
+						});
+						promise.complete(list);
+					});
+					return f;
+				};
+				// 4.记录日志
 				Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						tasks.forEach(task -> {
@@ -357,7 +383,7 @@ public class TimerVerticle extends AbstractVerticle {
 					});
 					return f;
 				};
-				// 4.组合任务
+				// 5.组合任务
 				Function<List<CommonTask>, Future<String>> composef = (tasks) -> {
 					Future<String> f = Future.future(promise -> {
 						String param = tasks.stream().filter(item -> {
@@ -368,9 +394,9 @@ public class TimerVerticle extends AbstractVerticle {
 						if (ConvertUtil.emptyOrNull(param)) {
 							promise.complete();
 						} else {
-							JsonArray params = new JsonArray().add(param);// 传入参数
+							JsonArray params = new JsonArray().add(param);// c传入参数
 							JsonArray outputs = new JsonArray()//
-									.addNull()// 传入
+									.addNull()// c传入
 									.add("VARCHAR")// flag
 									.add("VARCHAR")// errMsg
 									.add("VARCHAR");// outMsg
@@ -378,9 +404,9 @@ public class TimerVerticle extends AbstractVerticle {
 								if (r.succeeded()) {
 									JsonArray j = r.result().getOutput();
 									Boolean flag = "0".equals(j.getString(1));// flag
-									String newTask = j.getString(3);// 新建下阶段任务数量
+									String newTask = j.getString(3);// c新建下阶段任务数量
 									if (flag) {
-										MsgUtil.mixLC(vertx, newTask, "SOMEID");// 这时的值是批量值，没什么意义。
+										MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
 										promise.complete();
 									} else {
 										promise.fail("组合任务过程内部出错:" + j.getString(2));
@@ -394,11 +420,13 @@ public class TimerVerticle extends AbstractVerticle {
 					});
 					return f;
 				};
-				// 5.执行
+				// 6.执行
 				loadf.get().compose(r -> {
 					return uf.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
+				}).compose(r -> {
+					return nf.apply(r);
 				}).compose(r -> {
 					return composef.apply(r);
 				}).setHandler(r -> {
