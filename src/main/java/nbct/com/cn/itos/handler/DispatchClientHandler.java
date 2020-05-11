@@ -105,8 +105,12 @@ public class DispatchClientHandler {
 	public void addClient(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String func = "{call itos.p_addclient(?,?,?,?)}";
-		JsonArray params = new JsonArray().add(rp.getString("serviceName") + "^" + rp.getString("modelKeyStr") + "^"
-				+ rp.getString("description") + "^" + rp.getString("remark1") + "^" + rp.getString("remark2"));
+		JsonArray params = new JsonArray().add(rp.getString("serviceName") + //
+				"^" + rp.getString("modelKeyStr") + //
+				"^" + rp.getString("description") + //
+				"^" + rp.getString("domain") + //
+				"^" + rp.getString("remark1") + //
+				"^" + rp.getString("remark2"));
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
 	}
@@ -116,11 +120,12 @@ public class DispatchClientHandler {
 	 */
 	public void updateClient(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "update itos_service set description = ?,modelKey = ?,remark1 = ?, remark2 = ? "//
+		String sql = "update itos_service set description = ?,modelKey = ?,domain = ?,remark1 = ?, remark2 = ? "//
 				+ "where serviceName = ?";
 		JsonArray params = new JsonArray()//
 				.add(rp.getString("description"))//
 				.add(rp.getString("modelKeyStr"))//
+				.add(rp.getString("domain"))//
 				.add(rp.getString("remark1"))//
 				.add(rp.getString("remark2"))//
 				.add(rp.getString("serviceName"));

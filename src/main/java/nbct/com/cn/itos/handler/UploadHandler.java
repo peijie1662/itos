@@ -49,11 +49,54 @@ public class UploadHandler {
 				}).collect(Collectors.toList());
 				item.put("fns", fns);
 			});
+			// 3.根目录下未分类文件
+			List<String> rfs = files.stream().filter(item -> {
+				return new File(item).isFile();
+			}).map(item -> {
+				return item.substring(item.lastIndexOf("\\") + 1);
+			}).collect(Collectors.toList());
+			fr.add(new JsonObject().put("group", "root_files").put("fns", rfs));
 			res.end(OK(fr));
 		} catch (Exception e) {
 			e.printStackTrace();
 			res.end(Err(e.getMessage()));
 		}
+	}
+
+	/**
+	 * 移动文件
+	 */
+	public void moveDocumentFile(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		try {
+			String item = rp.getString("item");
+			// 1.源路径
+			String from = rp.getString("from");
+			if ("root".equals(from)) {
+				from = Configer.uploadDir + "pdf/document/";
+			} else {
+				from = Configer.uploadDir + "pdf/document/" + from + "/";
+			}
+			from += item;
+			// 2.目的路径
+			String to = rp.getString("to");
+			if ("root".equals(to)) {
+				to = Configer.uploadDir + "pdf/document/";
+			} else {
+				to = Configer.uploadDir + "pdf/document/" + to + "/";
+			}
+			to += item;
+			// 3.移动
+			FileSystem fs = ctx.vertx().fileSystem();
+			fs.moveBlocking(from, to);
+			res.end(OK());
+		} catch (Exception e) {
+			e.printStackTrace();
+			res.end(Err(e.getMessage()));
+		}
+
 	}
 
 	/**

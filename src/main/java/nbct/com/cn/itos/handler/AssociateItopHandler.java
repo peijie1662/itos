@@ -21,6 +21,15 @@ import nbct.com.cn.itos.config.Configer;
  * @version 创建时间：2020年1月20日 上午10:52:19
  */
 public class AssociateItopHandler {
+	
+	/**
+	 * 测试
+	 */
+	public void test(RoutingContext ctx) {
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		res.end(OK("test is ok!"));
+	}
 
 	/**
 	 * 电话关联数据

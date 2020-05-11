@@ -161,7 +161,9 @@ public class ItosRouter {
 	 */
 	public static Router associateRouter(Vertx vertx, AssociateItopHandler associateItopHandler) {
 		Router router = Router.router(vertx);
-		// 1.ITOS设备号关联信息
+		// 1.测试
+		router.get("/test").blockingHandler(associateItopHandler::test, false);
+		// 2.ITOS设备号关联信息
 		router.post("/machinename").blockingHandler(associateItopHandler::machineNameAssociate, false);
 		return router;
 	}
@@ -216,7 +218,9 @@ public class ItosRouter {
 		// 1.组合任务报告
 		router.post("/compose").blockingHandler(pdfHandler::getComposePdfReport, false);
 		// 2.文档文件列表
-		router.get("/document/list").blockingHandler(uploadHandler::getDocumentFileList, false);
+		router.post("/document/list").blockingHandler(uploadHandler::getDocumentFileList, false);
+		// 3.移动文档
+		router.post("/document/move").blockingHandler(uploadHandler::moveDocumentFile, false);
 		return router;
 	}
 

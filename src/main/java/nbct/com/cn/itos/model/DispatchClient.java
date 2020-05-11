@@ -20,6 +20,8 @@ public class DispatchClient implements RowMapper<DispatchClient> {
 	private JsonArray modelKey;
 
 	private String description;
+	
+	private String domain;
 
 	private String remark1;
 
@@ -47,6 +49,7 @@ public class DispatchClient implements RowMapper<DispatchClient> {
 			});
 		}
 		client.setDescription(j.getString("DESCRIPTION"));
+		client.setDomain(j.getString("DOMAIN"));
 		client.setRemark1(j.getString("REMARK1"));
 		client.setRemark2(j.getString("REMARK2"));
 		client.setActiveTime(LocalDateTime.parse("2020-01-01 00:00:00", 
@@ -119,6 +122,14 @@ public class DispatchClient implements RowMapper<DispatchClient> {
 
 	public void setOnLine(boolean onLine) {
 		this.onLine = onLine;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 }
