@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.FileSystem;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
@@ -56,28 +59,25 @@ public class Configer {
 	 * dispatch client 心跳阈值
 	 */
 	public static int heartbeatThreshold;
-
-	static {
-		byte[] buff = new byte[102400];
-		try {
-			new FileInputStream(new File("d:/itos.json")).read(buff);
-			config = new JsonObject(new String(buff, "utf-8"));
-			registerUrl = config.getJsonObject("registerUrl");
-			loginServer = config.getString("loginServer");
-			itopServer = config.getString("itopServer");
-			smsServer = config.getJsonObject("smsServer");
-			provider = config.getJsonObject("provider");
-			uploadDir = config.getString("uploadDir");
-			heartbeatThreshold = config.getJsonObject("dispatchClient").getInteger("heartbeatThreshold");
-		} catch (Exception e) {
-			System.out.println("读取配置文件失败");
-		}
+	
+	private static JsonObject getConfig(Vertx vertx) {
+		FileSystem fs = vertx.fileSystem();
+		Buffer buf = fs.readFileBlocking("d:/itos.json");
+		return new JsonObject(buf);
 	}
 
 	/**
 	 * 初始化数据库连接池
 	 */
 	public static void initDbPool(Vertx vertx, String dsName) {
+		config = getConfig(vertx);
+		registerUrl = config.getJsonObject("registerUrl");
+		loginServer = config.getString("loginServer");
+		itopServer = config.getString("itopServer");
+		smsServer = config.getJsonObject("smsServer");
+		provider = config.getJsonObject("provider");
+		uploadDir = config.getString("uploadDir");
+		heartbeatThreshold = config.getJsonObject("dispatchClient").getInteger("heartbeatThreshold");
 		JsonObject dbConfig = config.getJsonObject(dsName);
 		if (dbConfig == null) {
 			throw new RuntimeException("没有找到指定的数据源");

@@ -142,7 +142,7 @@ public class CommonTaskHandler {
 					return savef.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的内容";
 						MsgUtil.sysLog(ctx, msg);
@@ -286,7 +286,7 @@ public class CommonTaskHandler {
 					return logf.apply(r);
 				}).compose(r -> {
 					return composef.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						String msg = DateUtil.curDtStr() + " " + "更新任务'" + r.result().getAbs() + "'的状态为"
 								+ rp.getString("status");
@@ -408,7 +408,7 @@ public class CommonTaskHandler {
 					return savef.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						String msg = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
 								+ r.result().getAbs() + "'";

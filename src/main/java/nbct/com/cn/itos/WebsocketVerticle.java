@@ -98,7 +98,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 	 * 处理页面消息
 	 */
 	public void websocketMethod(HttpServer server) {
-		server.websocketHandler(webSocket -> {
+		server.webSocketHandler(webSocket -> {
 			String id = webSocket.binaryHandlerID();
 			if (!onlineUsers.containsKey(id)) {
 				onlineUsers.put(id, new ItosUser().setWs(webSocket));

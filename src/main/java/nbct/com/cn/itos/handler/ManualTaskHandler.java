@@ -128,7 +128,7 @@ public class ManualTaskHandler {
 				// 3.执行
 				savef.get().compose(r -> {
 					return logf.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						String msg = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
 						MsgUtil.sysLog(ctx, msg);
@@ -230,7 +230,7 @@ public class ManualTaskHandler {
 					return savef.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
 						MsgUtil.sysLog(ctx, msg);

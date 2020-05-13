@@ -212,7 +212,7 @@ public class TimerVerticle extends AbstractVerticle {
 					return taskf.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						// logger.info(r.result());
 					} else {
@@ -429,7 +429,7 @@ public class TimerVerticle extends AbstractVerticle {
 					return nf.apply(r);
 				}).compose(r -> {
 					return composef.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.failed())
 						r.cause().printStackTrace();
 					conn.close();

@@ -60,7 +60,7 @@ public class ModelHandler {
 	 * 所有模版列表
 	 */
 	public void getTimerTaskModelList(RoutingContext ctx) {
-		String sql = "select * from itos_taskmodel order by category,opdate";
+		String sql = "select * from itos_taskmodel order by groupId,orderInGroup";
 		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 
@@ -214,6 +214,21 @@ public class ModelHandler {
 	public void getGroups(RoutingContext ctx) {
 		String sql = "select * from itos_taskmodelgroup order by groupOrder";
 		JdbcHelper.rows(ctx, sql, new TimerTaskModelGroup());
+	}
+
+	/**
+	 * 分组排序['id1','id2',...]
+	 */
+	public void sortingGroup(RoutingContext ctx) {
+		JsonArray gps = ctx.getBodyAsJsonArray();
+		HttpServerResponse res = ctx.response();
+		res.putHeader("content-type", "application/json");
+		List<String> sqls = new ArrayList<String>();
+		for (int i = 0; i <= gps.size() - 1 ; i++) {
+			sqls.add("update itos_taskmodelgroup set grouporder = " + i + //
+					" where groupId = '" + gps.getString(i) + "'");
+		}
+		JdbcHelper.batchUpdate(ctx, sqls);
 	}
 
 }

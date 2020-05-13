@@ -82,7 +82,7 @@ public class ComposeHandler {
 				// 3.执行
 				delf.get().compose(r -> {
 					return savef.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						res.end(OK());
 					} else {

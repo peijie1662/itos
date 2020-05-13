@@ -205,7 +205,7 @@ public class UserHandler {
 				// 3.执行
 				getf.get().compose(r -> {
 					return uf.apply(r);
-				}).setHandler(r -> {
+				}).onComplete(r -> {
 					if (r.succeeded()) {
 						res.end(OK());
 					} else {

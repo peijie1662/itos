@@ -52,6 +52,8 @@ public class ItosRouter {
 		router.post("/delgroup").blockingHandler(modelHandler::delGroup, false);
 		// 12.分组列表
 		router.post("/grouplist").blockingHandler(modelHandler::getGroups, false);
+		// 13.分组排序
+		router.post("/sortgroup").blockingHandler(modelHandler::sortingGroup, false);
 		return router;
 	}
 
