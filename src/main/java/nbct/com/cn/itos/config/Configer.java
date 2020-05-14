@@ -1,12 +1,8 @@
 package nbct.com.cn.itos.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
@@ -15,7 +11,6 @@ import io.vertx.ext.sql.SQLClient;
  * @author PJ
  * @version 创建时间：2019年12月23日 上午9:03:04 类说明
  */
-@SuppressWarnings("resource")
 public class Configer {
 
 	private static JsonObject config;
@@ -62,7 +57,7 @@ public class Configer {
 	
 	private static JsonObject getConfig(Vertx vertx) {
 		FileSystem fs = vertx.fileSystem();
-		Buffer buf = fs.readFileBlocking("d:/itos.json");
+		Buffer buf = fs.readFileBlocking("./itos.json");
 		return new JsonObject(buf);
 	}
 

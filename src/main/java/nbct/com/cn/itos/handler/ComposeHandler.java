@@ -156,5 +156,18 @@ public class ComposeHandler {
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
 	}
+	
+	/**
+	 * 删除组合任务
+	 * 
+	 * @param ctx(composeId)
+	 */
+	public void deleteComposeTask(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String func = "{call itos.p_compose_task_delete(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.getString("composeId"));
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}	
 
 }

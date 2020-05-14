@@ -72,6 +72,8 @@ public class ItosRouter {
 		router.post("/startcomposetask").blockingHandler(composeHandler::startComposeTask, false);
 		// 5.读取组合任务的子任务
 		router.post("/gettaskincompose").blockingHandler(composeHandler::getTaskInCompose, false);
+		// 6.删除组合任务
+		router.post("/deletecomposetask").blockingHandler(composeHandler::deleteComposeTask, false);
 		return router;
 	}
 

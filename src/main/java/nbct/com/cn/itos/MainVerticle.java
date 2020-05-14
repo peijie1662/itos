@@ -50,6 +50,9 @@ public class MainVerticle extends AbstractVerticle {
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 		PdfHandler pdfHandler = new PdfHandler();
 		AppInfoHandler appInfoHandler = new AppInfoHandler(vertx);
+		
+		Configer.initDbPool(vertx);
+		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 
 		// 1.静态文件
 		router.route("/itosfile/*").handler(StaticHandler.create(Configer.uploadDir));
@@ -78,8 +81,6 @@ public class MainVerticle extends AbstractVerticle {
 		// 13.APP
 		router.mountSubRouter("/appinfo", ItosRouter.appInfoRouter(vertx, appInfoHandler));
 
-		Configer.initDbPool(vertx);
-		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.deployVerticle(new NotifyVerticle());
