@@ -15,11 +15,14 @@ public class ComposeDetail implements RowMapper<ComposeDetail>{
 	
 	private String modelId;
 	
+	private int orderInLevel;
+	
 	public ComposeDetail from(JsonObject j){
 		ComposeDetail cd = new ComposeDetail();
 		cd.setComposeId(j.getString("COMPOSEID"));
 		cd.setComposeLevel(j.getInteger("COMPOSELEVEL"));
 		cd.setModelId(j.getString("MODELID"));
+		cd.setOrderInLevel(j.getInteger("ORDERINLEVEL"));
 		return cd;
 	}
 
@@ -45,6 +48,14 @@ public class ComposeDetail implements RowMapper<ComposeDetail>{
 
 	public void setModelId(String modelId) {
 		this.modelId = modelId;
+	}
+
+	public int getOrderInLevel() {
+		return orderInLevel;
+	}
+
+	public void setOrderInLevel(int orderInLevel) {
+		this.orderInLevel = orderInLevel;
 	}
 	
 }

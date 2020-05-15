@@ -60,14 +60,15 @@ public class ComposeHandler {
 				// 2.保存新数据
 				Function<Void, Future<Void>> savef = (task) -> {
 					Future<Void> f = Future.future(promise -> {
-						String sql = "insert into itos_compose(composeId,composeLevel,modelId) values(?,?,?)";
+						String sql = "insert into itos_compose(composeId,composeLevel,modelId,orderInlevel) values(?,?,?,?)";
 						List<JsonArray> batch = new ArrayList<>();
 						details.stream().forEach(item -> {
 							JsonObject j = JsonObject.mapFrom(item);
 							batch.add(new JsonArray()//
 									.add(j.getString("composeId"))//
 									.add(j.getInteger("composeLevel"))//
-									.add(j.getString("modelId")));
+									.add(j.getString("modelId"))//
+									.add(j.getInteger("orderInLevel")));
 						});
 						conn.batchWithParams(sql, batch, r -> {
 							if (r.succeeded()) {
@@ -101,7 +102,7 @@ public class ComposeHandler {
 	 */
 	public void getComposeDetail(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "select * from itos_compose where composeId = ? order by composeLevel";
+		String sql = "select * from itos_compose where composeId = ? order by composeLevel,orderInLevel";
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
 		JdbcHelper.rows(ctx, sql, params, new ComposeDetail());
 	}
