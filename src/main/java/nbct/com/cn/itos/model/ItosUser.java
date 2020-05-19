@@ -37,6 +37,8 @@ public class ItosUser implements RowMapper<ItosUser>{
 	
 	private List<SceneEnum> scene;//用户所在场景 
 	
+	private String ip;
+	
 	public ItosUser from(JsonObject j) {
 		ItosUser user = new ItosUser();
 		user.setUserId(j.getString("USERID"));
@@ -146,6 +148,14 @@ public class ItosUser implements RowMapper<ItosUser>{
 
 	public void setScene(List<SceneEnum> scene) {
 		this.scene = scene;
+	}
+	
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
 	}
 
 	@Override

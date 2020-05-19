@@ -59,7 +59,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 	}
 
 	/**
-	 * 推送系统日志给'系统日志场景'用户
+	 * 推送系统日志给'系统日志场景'用户'
 	 */
 	private void pushSysLog(Message<String> msg) {
 		onlineUsers.forEach((id, user) -> {
@@ -104,9 +104,6 @@ public class WebsocketVerticle extends AbstractVerticle {
 				onlineUsers.put(id, new ItosUser().setWs(webSocket));
 			}
 			webSocket.frameHandler(handler -> {
-
-				System.out.println("passing in: " + handler.textData());// TODO 记录到日志
-
 				String[] clientMsg = handler.textData().split("\\^");
 				if (clientMsg.length >= 2) {
 					String header = clientMsg[0];
@@ -121,13 +118,14 @@ public class WebsocketVerticle extends AbstractVerticle {
 						user.setPhone(j.getString("phone"));
 						user.setShortPhone(j.getString("shortPhone"));
 						user.setRole(j.getString("role"));
+						user.setIp(webSocket.remoteAddress().toString());
 						break;
 					// 2.用户的场景发生转换
 					case "USERSCENE":
-						List<SceneEnum> scene = j.getJsonArray("scene").stream().map(item -> {
+						List<SceneEnum> updateScenes = j.getJsonArray("scene").stream().map(item -> {
 							return SceneEnum.absFrom(item.toString()).get();
 						}).collect(Collectors.toList());
-						user.setScene(scene);
+						user.setScene(updateScenes);
 						break;
 					default:
 						System.out.println("OTHERS WEBSOCKET HEADER:" + header);

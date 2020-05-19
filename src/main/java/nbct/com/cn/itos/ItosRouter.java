@@ -194,8 +194,8 @@ public class ItosRouter {
 		// 8.修改密码
 		router.post("/password").blockingHandler(userHandler::updatePassword, false);
 		// 9.在线用户
-		router.get("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
-		return router;
+		router.post("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
+		return router; 
 	}
 
 	/**
