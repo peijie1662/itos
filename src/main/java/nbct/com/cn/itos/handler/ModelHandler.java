@@ -40,8 +40,13 @@ public class ModelHandler {
 	 * 非组合任务模版列表
 	 */
 	public void getNotComposeModelList(RoutingContext ctx) {
-		String sql = "select * from itos_taskmodel where invalid = 'N' "//
-				+ " and category <> 'COMPOSE' order by opdate";
+		String sql = "select aa.*,bb.serviceName,bb.description as serviceDescription,bb.domain as serviceDomain from " + //
+				" (select * from itos_taskmodel where invalid = 'N' " + //
+				" and category not in ('COMPOSE', 'BROADCAST'))  aa, " + //
+				" (select a.modelId, b.serviceName, b.description, b.domain from (select * " + //
+				" from itos_taskmodel where invalid = 'N' and category not in ('COMPOSE', 'BROADCAST')) a, " + //
+				" itos_service b where instr(b.modelkey, a.modelId) > 0) bb " + //
+				" where aa.modelId = bb.modelId(+) order by aa.opdate";
 		JdbcHelper.rows(ctx, sql, new TimerTaskModel());
 	}
 
@@ -224,7 +229,7 @@ public class ModelHandler {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
 		List<String> sqls = new ArrayList<String>();
-		for (int i = 0; i <= gps.size() - 1 ; i++) {
+		for (int i = 0; i <= gps.size() - 1; i++) {
 			sqls.add("update itos_taskmodelgroup set grouporder = " + i + //
 					" where groupId = '" + gps.getString(i) + "'");
 		}

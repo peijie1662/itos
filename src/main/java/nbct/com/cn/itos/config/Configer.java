@@ -57,7 +57,7 @@ public class Configer {
 	
 	private static JsonObject getConfig(Vertx vertx) {
 		FileSystem fs = vertx.fileSystem();
-		Buffer buf = fs.readFileBlocking("./itos.json");
+		Buffer buf = fs.readFileBlocking("d:/itos.json");
 		return new JsonObject(buf);
 	}
 

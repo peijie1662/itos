@@ -53,6 +53,12 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 	private String groupId;
 	
 	private Integer orderInGroup;
+	
+	private String serviceName;
+	
+	private String serviceDescription;
+	
+	private String serviceDomain;
 
 	public TimerTaskModel from(JsonObject j) {
 		try {
@@ -86,6 +92,9 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 			}
 			t.setGroupId(j.getString("GROUPID"));
 			t.setOrderInGroup(j.getInteger("ORDERINGROUP"));
+			t.setServiceName(j.getString("SERVICENAME"));
+			t.setServiceDescription(j.getString("SERVICEDESCRIPTION"));
+			t.setServiceDomain(j.getString("SERVICEDOMAIN"));
 			return t;
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -203,6 +212,34 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setStartDate(LocalDateTime startDate) {
 		this.startDate = startDate;
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public String getServiceDescription() {
+		return serviceDescription;
+	}
+
+	public void setServiceDescription(String serviceDescription) {
+		this.serviceDescription = serviceDescription;
+	}
+
+	public static int getDefaultExpired() {
+		return DEFAULT_EXPIRED;
+	}
+
+	public String getServiceDomain() {
+		return serviceDomain;
+	}
+
+	public void setServiceDomain(String serviceDomain) {
+		this.serviceDomain = serviceDomain;
 	}
 
 }
