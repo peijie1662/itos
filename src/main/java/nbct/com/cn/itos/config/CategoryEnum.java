@@ -14,7 +14,8 @@ public enum CategoryEnum {
 	PROCEDURE("PROCEDURE","下发终端的调用存储过程任务"),//
 	APPSERVER("APPSERVER","调用其它服务执行任务"),//
 	CUSTOM("CUSTOM","下发终端的自定义任务"),//
-	COMPOSE("COMPOSE","组合任务");//
+	COMPOSE("COMPOSE","组合任务"),//
+	BROADCAST("BROADCAST","广播任务");//
 
 	private String value;
 

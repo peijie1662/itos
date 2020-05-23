@@ -62,7 +62,7 @@ public class Configer {
 	}
 
 	/**
-	 * 初始化数据库连接池
+	 * 初始化数据库连接池 
 	 */
 	public static void initDbPool(Vertx vertx, String dsName) {
 		config = getConfig(vertx);

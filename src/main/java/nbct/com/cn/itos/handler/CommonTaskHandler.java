@@ -18,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
+import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
@@ -185,7 +186,12 @@ public class CommonTaskHandler {
 							if (r.succeeded()) {
 								List<JsonObject> rs = r.result().getRows();
 								if (rs.size() > 0) {
-									promise.complete(new CommonTask().from(rs.get(0)));
+									CommonTask task = new CommonTask().from(rs.get(0));
+									if (CategoryEnum.BROADCAST == task.getCategory()) {
+										promise.fail("广播任务不能改变状态");
+									} else {
+										promise.complete(task);
+									}
 								} else {
 									promise.fail("任务表中找不到这个TaskId");
 								}
@@ -203,7 +209,6 @@ public class CommonTaskHandler {
 						JsonArray params = new JsonArray()//
 								.add(status)//
 								.add(rp.getString("taskId"));
-						// order check
 						if (!task.getCategory().eq("COMMON") && task.getStatus().isAfterOrParalleling(status)) {
 							promise.fail("非普通任务的状态更新必须遵循顺序。");
 						} else {

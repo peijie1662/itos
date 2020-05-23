@@ -213,7 +213,8 @@ public class DispatchClientHandler {
 		}
 		// 2.终端对应任务
 		String sql = "select * from itos_task where status = 'CHECKIN' and invalid = 'N'" + //
-				" and instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0 " + //
+				" and ((instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0) " + //
+				" or (category = 'BROADCAST' and executedcallback = 'N'))" + //
 				" and (sysdate - plandt)*24*60*60 <= ?";
 		JsonArray params = new JsonArray();
 		params.add(serviceName);
