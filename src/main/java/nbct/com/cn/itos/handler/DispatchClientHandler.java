@@ -181,7 +181,7 @@ public class DispatchClientHandler {
 		boolean paramValid = Objects.nonNull(range) && range.size() == 2;
 		String startDt = paramValid ? DateUtil.getDBDateBeginStr(range.getString(0)) : DateUtil.getDBDateBeginStr(null);
 		String endDt = paramValid ? DateUtil.getDBDateEndStr(range.getString(1)) : DateUtil.getDBDateEndStr(null);
-		String sql = "select * from itos_task where category in (?,?,?,?) " + // 1.类型
+		String sql = "select * from itos_task where category in (?,?,?,?,?) " + // 1.类型
 				" and invalid = 'N' " + // 2.有效
 				" and planDt >=" + startDt + " and planDt <=" + endDt + // 3.时间范围
 				" and composeId is null" + // 4.不是组合任务中的子任务
@@ -191,6 +191,7 @@ public class DispatchClientHandler {
 		params.add(CategoryEnum.PROCEDURE.getValue());
 		params.add(CategoryEnum.CUSTOM.getValue());
 		params.add(CategoryEnum.APPSERVER.getValue());
+		params.add(CategoryEnum.SYSTEM.getValue());
 		JdbcHelper.rows(ctx, sql, params, new CommonTask());
 	}
 

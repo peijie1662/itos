@@ -50,7 +50,8 @@ public class CommonTaskHandler {
 	 */
 	public void getTaskLog(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "select * from itos_tasklog where taskId = ? order by opdate";
+		String sql = "select * from (select a.*,decode(status,'CHECKIN',1,'PROCESSING',2,3) as seq " + //
+				"from itos_tasklog a where taskId = ? ) order by seq";
 		JsonArray params = new JsonArray().add(rp.getString("taskId"));
 		JdbcHelper.rows(ctx, sql, params, new CommonTaskLog());
 	}

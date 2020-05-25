@@ -64,10 +64,11 @@ public class TimerVerticle extends AbstractVerticle {
 										return new TimerTaskModel().from(row);
 									} catch (Exception e) {
 										e.printStackTrace();
-										throw new RuntimeException(e.getMessage());
+										return null;
 									}
 								}).filter(model -> {
-									boolean valid = (!model.getCycle().eq("NONE")) && model.getScanDate() == null;
+									boolean valid = model != null;
+									valid = (!model.getCycle().eq("NONE")) && model.getScanDate() == null;
 									if (model.getScanDate() != null) {
 										LocalDateTime ct = LocalDateTime.now();
 										LocalDate cd = ct.toLocalDate();
@@ -223,6 +224,7 @@ public class TimerVerticle extends AbstractVerticle {
 				});
 			}
 		});
+
 	}
 
 	/**
@@ -436,6 +438,140 @@ public class TimerVerticle extends AbstractVerticle {
 				});
 			}
 		});
+
+	}
+
+	/**
+	 * 执行系统延时任务
+	 */
+	private void systemTask() {
+		SQLClient client = Configer.client;
+		client.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.读系统延时任务
+				Supplier<Future<List<CommonTask>>> loadf = () -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "select * from itos_task where status = 'CHECKIN' " + //
+						"and category = 'SYSTEM' and invalid = 'N'";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								CommonTask ct = new CommonTask();
+								List<CommonTask> list = r.result().getRows().stream().map(item -> {
+									return ct.from(item);
+								}).filter(item -> {
+									JsonObject jo = new JsonObject(item.getContent());
+									boolean valid = "TIMER".equals(jo.getString("header"));
+									LocalDateTime doneTime = item.getPlanDt().plusSeconds(jo.getInteger("length"));
+									valid = valid && doneTime.isBefore(LocalDateTime.now());
+									return valid;
+								}).collect(Collectors.toList());
+								promise.complete(list);
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.更新状态
+				Function<List<CommonTask>, Future<List<CommonTask>>> uf = list -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "update itos_task set status = 'DONE' where taskId = ? ";
+						List<JsonArray> params = list.stream().map(item -> {
+							return new JsonArray().add(item.getTaskId());
+						}).collect(Collectors.toList());
+						conn.batchWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete(list);
+							} else {
+								r.cause().printStackTrace();
+								promise.fail("延时任务更新状态出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.记录日志
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						List<JsonArray> params = tasks.stream().map(task -> {
+							return new JsonArray()//
+									.add(UUID.randomUUID().toString())//
+									.add(task.getTaskId())//
+									.add(task.getModelId())//
+									.add("DONE")//
+									.add("时间到期，系统将任务状态置为DONE")//
+									.add(ConvertUtil.listToStr(task.getHandler()))//
+									.add(task.getAbs())//
+									.add("")// remark
+									.add("SYS")//
+									.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+						}).collect(Collectors.toList());
+						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
+								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
+						conn.batchWithParams(sql, params, r -> {
+							if (r.succeeded()) {
+								promise.complete(tasks);
+							} else {
+								r.cause().printStackTrace();
+								promise.fail("保存系统任务日志出错。");
+							}
+						});
+					});
+					return f;
+				};
+				// 4.组合任务
+				Function<List<CommonTask>, Future<String>> composef = (tasks) -> {
+					Future<String> f = Future.future(promise -> {
+						String param = tasks.stream().filter(item -> {
+							return Objects.nonNull(item.getComposeId());
+						}).map(item -> {
+							return item.getTaskId() + "^" + "SYS";
+						}).collect(Collectors.joining(","));
+						if (ConvertUtil.emptyOrNull(param)) {
+							promise.complete();
+						} else {
+							JsonArray params = new JsonArray().add(param);// c传入参数
+							JsonArray outputs = new JsonArray()//
+									.addNull()// c传入
+									.add("VARCHAR")// flag
+									.add("VARCHAR")// errMsg
+									.add("VARCHAR");// outMsg
+							conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
+								if (r.succeeded()) {
+									JsonArray j = r.result().getOutput();
+									Boolean flag = "0".equals(j.getString(1));// flag
+									String newTask = j.getString(3);// c新建下阶段任务数量
+									if (flag) {
+										MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
+										promise.complete();
+									} else {
+										promise.fail("组合任务过程内部出错:" + j.getString(2));
+									}
+								} else {
+									r.cause().printStackTrace();
+									promise.fail("调用组合任务的出错。");
+								}
+							});
+						}
+					});
+					return f;
+				};
+				// 5.执行
+				loadf.get().compose(r -> {
+					return uf.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
+				}).compose(r -> {
+					return composef.apply(r);
+				}).onComplete(r -> {
+					if (r.failed())
+						r.cause().printStackTrace();
+					conn.close();
+				});
+			}
+		});
 	}
 
 	@Override
@@ -445,6 +581,7 @@ public class TimerVerticle extends AbstractVerticle {
 			task();
 			registe();
 			newAppInfo();
+			systemTask();
 		});
 	}
 
