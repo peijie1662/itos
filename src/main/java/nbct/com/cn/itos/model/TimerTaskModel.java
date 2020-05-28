@@ -98,7 +98,8 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 			return t;
 		} catch (ParseException e) {
 			e.printStackTrace();
-			throw new RuntimeException("后台数据转换成模版时发生错误。");
+			System.out.println("后台数据转换成模版时发生错误。");
+			return null;		
 		}
 	}
 

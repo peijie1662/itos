@@ -139,12 +139,9 @@ public class CommonTask implements RowMapper<CommonTask> {
 	}
 
 	/**
-	 * 生成新任务
-	 * 
-	 * @param content
-	 * @return
+	 * 指定时间生成新任务
 	 */
-	public static List<CommonTask> from(TimerTaskModel model) {
+	public static List<CommonTask> fromAt(TimerTaskModel model, LocalDateTime appointedTime) {
 		if (model.isInvalid())
 			throw new RuntimeException("模版处于无效状态，不能生成任务。");
 		// 1.初始化
@@ -167,6 +164,9 @@ public class CommonTask implements RowMapper<CommonTask> {
 		// 2.创建
 		List<CommonTask> tasks = new ArrayList<CommonTask>();
 		if (DateUtil.isEmpty(model.getPlanDates())) {
+			// TODO
+			System.out.println("ERROR: " + model.getAbs());
+			System.out.println("ERROR: " + model.getModelId());
 			throw new RuntimeException("未发现计划时间，无法生成计划任务。");
 		}
 		String[] dts = model.getPlanDates().split(",");
@@ -177,7 +177,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 				// 1.自定义每日格式 HHMM
 				int hour = Integer.parseInt(dt.substring(0, 2));
 				int min = Integer.parseInt(dt.substring(2));
-				task.setPlanDt(LocalDateTime.of(LocalDate.now(), LocalTime.of(hour, min)));
+				task.setPlanDt(LocalDateTime.of(LocalDate.from(appointedTime), LocalTime.of(hour, min)));
 				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 				tasks.add(task);
 			});
@@ -189,7 +189,108 @@ public class CommonTask implements RowMapper<CommonTask> {
 			IntStream.range(0, dts.length / 2).forEach(i -> {
 				// 1.日期
 				int weekDay = Integer.parseInt(dts[i * 2]);// c每周第几天
-				LocalDate curDt = LocalDate.now();
+				LocalDate pd = DateUtil.getDateByYearAndWeekNumAndDayOfWeek(appointedTime.getYear(),
+						appointedTime.get(ChronoField.ALIGNED_WEEK_OF_YEAR), weekDay);
+				// 2.时间
+				int hour = Integer.parseInt(dts[i * 2 + 1].substring(0, 2));
+				int min = Integer.parseInt(dts[i * 2 + 1].substring(2));
+				LocalTime pt = LocalTime.of(hour, min);
+				// 3.组合
+				CommonTask task = createTask.get();
+				task.setPlanDt(LocalDateTime.of(pd, pt));
+				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+				tasks.add(task);
+			});
+			break;
+		case PERMONTH:
+			if (dts.length % 3 != 0) {
+				throw new RuntimeException("月计划的计划时间格式出错，无法生成计划任务。");
+			}
+			IntStream.range(0, dts.length / 3).forEach(i -> {
+				// 1.日期
+				int week = Integer.parseInt(dts[i * 3]);// c每月第几周
+				int day = Integer.parseInt(dts[i * 3 + 1]);// c周几
+				LocalDate pd = LocalDate.from(appointedTime)
+						.with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
+				// 2.时间
+				int hour = Integer.parseInt(dts[i * 3 + 2].substring(0, 2));
+				int min = Integer.parseInt(dts[i * 3 + 2].substring(2));
+				LocalTime pt = LocalTime.of(hour, min);
+				// 3.组合
+				CommonTask task = createTask.get();
+				task.setPlanDt(LocalDateTime.of(pd, pt));
+				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+				tasks.add(task);
+			});
+			break;
+		case CIRCULAR:
+			if (dts.length > 1) {
+				throw new RuntimeException("循环计划的计划时间格式出错，无法生成计划任务。");
+			}
+			CommonTask task = createTask.get();
+			task.setPlanDt(appointedTime);
+			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+			tasks.add(task);
+			break;
+		default:
+			System.out.println("find some strange cycle.");
+			break;
+		}
+		return tasks;
+	}
+
+	/**
+	 * 扫描生成新任务
+	 */
+	public static List<CommonTask> fromCur(TimerTaskModel model, LocalDateTime curDt) {
+		if (model.isInvalid())
+			throw new RuntimeException("模版处于无效状态，不能生成任务。");
+		// 1.初始化
+		Supplier<CommonTask> createTask = () -> {
+			CommonTask task = new CommonTask();
+			task.setTaskId(UUID.randomUUID().toString());
+			task.setCategory(model.getCategory());
+			task.setStatus(TaskStatusEnum.CHECKIN);
+			task.setAbs(model.getAbs());
+			task.setContent(model.getComments());
+			task.setCustomer("SYS");
+			task.setModelId(model.getModelId());
+			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
+			task.setCallback(model.getCallback());
+			task.setNotify(model.getNotify());
+			task.setExecutedCallback(false);
+			task.setExecutedNotify(false);
+			return task;
+		};
+		// 2.创建
+		List<CommonTask> tasks = new ArrayList<CommonTask>();
+		if (DateUtil.isEmpty(model.getPlanDates())) {
+
+			System.out.println("ERROR: " + model.getAbs());
+			System.out.println("ERROR: " + model.getModelId());
+
+			throw new RuntimeException("未发现计划时间，无法生成计划任务。");
+		}
+		String[] dts = model.getPlanDates().split(",");
+		switch (model.getCycle()) {
+		case PERDAY:
+			Arrays.asList(model.getPlanDates().split(",")).forEach(dt -> {
+				CommonTask task = createTask.get();
+				// 1.自定义每日格式 HHMM
+				int hour = Integer.parseInt(dt.substring(0, 2));
+				int min = Integer.parseInt(dt.substring(2));
+				task.setPlanDt(LocalDateTime.of(LocalDate.from(curDt), LocalTime.of(hour, min)));
+				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+				tasks.add(task);
+			});
+			break;
+		case PERWEEK:
+			if (dts.length % 2 != 0) {
+				throw new RuntimeException("周计划的计划时间格式出错，无法生成计划任务。");
+			}
+			IntStream.range(0, dts.length / 2).forEach(i -> {
+				// 1.日期
+				int weekDay = Integer.parseInt(dts[i * 2]);// c每周第几天
 				LocalDate pd = DateUtil.getDateByYearAndWeekNumAndDayOfWeek(curDt.getYear(),
 						curDt.get(ChronoField.ALIGNED_WEEK_OF_YEAR), weekDay);
 				// 2.时间
@@ -211,8 +312,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 				// 1.日期
 				int week = Integer.parseInt(dts[i * 3]);// c每月第几周
 				int day = Integer.parseInt(dts[i * 3 + 1]);// c周几
-				LocalDate curDt = LocalDate.now();
-				LocalDate pd = curDt.with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
+				LocalDate pd = LocalDate.from(curDt).with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
 				// 2.时间
 				int hour = Integer.parseInt(dts[i * 3 + 2].substring(0, 2));
 				int min = Integer.parseInt(dts[i * 3 + 2].substring(2));
@@ -229,10 +329,10 @@ public class CommonTask implements RowMapper<CommonTask> {
 				throw new RuntimeException("循环计划的计划时间格式出错，无法生成计划任务。");
 			}
 			CommonTask task = createTask.get();
-			task.setPlanDt(LocalDateTime.now());
+			task.setPlanDt(curDt);
 			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 			tasks.add(task);
-			break;	
+			break;
 		default:
 			System.out.println("find some strange cycle.");
 			break;

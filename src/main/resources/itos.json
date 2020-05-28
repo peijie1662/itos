@@ -17,6 +17,7 @@
     },
     "loginServer": "hr_service_prd",
     "itopServer": "Itop_Service",
+    "itafServer": "ITAF",
     "smsServer":{
     	"ip":"169.169.41.93",
     	"port":8080,

@@ -17,6 +17,14 @@ import java.util.TimeZone;
  * @version 创建时间：2019年12月24日 下午4:05:31 类说明
  */
 public class DateUtil {
+	
+	/**
+	 * 字符串转LocalDateTime
+	 */
+	public static LocalDateTime strToLocal(String str) {
+		DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		return LocalDateTime.parse(str, df);
+	}
 
 	/**
 	 * UTC时间字符串转成LocalDateTime (无异常)
@@ -134,6 +142,9 @@ public class DateUtil {
 		return ds;
 	}
 
+	/**
+	 * 字符串相等
+	 */
 	public static boolean strEquals(String str1, String str2) {
 		if (str1 == null && str2 == null) {
 			return true;
@@ -143,6 +154,9 @@ public class DateUtil {
 		return false;
 	}
 
+	/**
+	 *字符串为空 
+	 */
 	public static boolean isEmpty(String s) {
 		if (s == null) {
 			return true;

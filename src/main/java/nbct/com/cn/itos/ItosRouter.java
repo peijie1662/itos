@@ -109,13 +109,15 @@ public class ItosRouter {
 		router.post("/get").blockingHandler(commonTaskHandler::getTask, false);
 		// 1.生成临时任务
 		router.post("/once").blockingHandler(commonTaskHandler::saveOnceTask, false);
-		// 2.任务日志
+		// 2.在时间周期内生成任务
+		router.post("/period").blockingHandler(commonTaskHandler::savePeriodTask, false);
+		// 3.任务日志
 		router.post("/log").blockingHandler(commonTaskHandler::getTaskLog, false);
-		// 3.任务状态-PROCESSING,DONE,CANCEL
+		// 4.任务状态-PROCESSING,DONE,CANCEL
 		router.post("/updatestatus").blockingHandler(commonTaskHandler::updateTaskStatus, false);
-		// 4.任务状态-MODIFY
+		// 5.任务状态-MODIFY
 		router.post("/modify").blockingHandler(commonTaskHandler::modifyTask, false);
-		// 5.任务图片上传
+		// 6.任务图片上传
 		router.post("/uploadfile").blockingHandler(uploadHandler::uploadTaskFile, false);
 		return router;
 	}
@@ -195,7 +197,7 @@ public class ItosRouter {
 		router.post("/password").blockingHandler(userHandler::updatePassword, false);
 		// 9.在线用户
 		router.post("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
-		return router; 
+		return router;
 	}
 
 	/**

@@ -1,10 +1,8 @@
 package nbct.com.cn.itos;
 
 import java.net.InetAddress;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,14 +22,15 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import nbct.com.cn.itos.config.Configer;
-import nbct.com.cn.itos.config.CycleEnum;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
+import nbct.com.cn.itos.handler.SystemTaskHandler;
 import nbct.com.cn.itos.model.AppInfo;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.TimerTaskModel;
 import util.ConvertUtil;
 import util.DateUtil;
+import util.ModelUtil;
 import util.MsgUtil;
 
 /**
@@ -49,6 +48,7 @@ public class TimerVerticle extends AbstractVerticle {
 	 */
 	private void task() {
 		SQLClient client = Configer.client;
+		LocalDateTime curDt = LocalDateTime.now();
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
@@ -67,34 +67,7 @@ public class TimerVerticle extends AbstractVerticle {
 										return null;
 									}
 								}).filter(model -> {
-									boolean valid = model != null;
-									valid = (!model.getCycle().eq("NONE")) && model.getScanDate() == null;
-									if (model.getScanDate() != null) {
-										LocalDateTime ct = LocalDateTime.now();
-										LocalDate cd = ct.toLocalDate();
-										LocalDateTime mt = model.getScanDate();
-										LocalDate md = mt.toLocalDate();
-										CycleEnum mc = model.getCycle();
-										// 1.扫描每日任务,当前日期>标记时间的日期，就需要生成新任务。
-										valid = valid || (mc == CycleEnum.PERDAY && md.isBefore(cd));
-										// 2.扫描每周任务，当前日期的年+第几周>标记时间的年+第几周，就需要生成新任务。
-										int cw = cd.getYear() + cd.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-										int rw = md.getYear() + md.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-										valid = valid || (mc == CycleEnum.PERWEEK && cw > rw);
-										// 3.扫描每月任务，当前日期的年+第几月>标记时间的年+第几月，就需要生成新任务。
-										int cm = cd.getYear() + cd.getMonthValue();
-										int rm = md.getYear() + md.getMonthValue();
-										valid = valid || (mc == CycleEnum.PERMONTH && cm > rm);
-										// 4.扫描循环任务，当前时间-间隔时间(秒)>标记时间，就需要生成新任务。
-										valid = valid || (mc == CycleEnum.CIRCULAR && mt
-												.isBefore(ct.minusSeconds(Integer.parseInt(model.getPlanDates()))));
-									}
-									// 5.循环任务不能超过开始时间
-									if (valid && model.getCycle() == CycleEnum.CIRCULAR) {
-										valid = Objects.isNull(model.getStartDate())
-												|| model.getStartDate().isBefore(LocalDateTime.now());
-									}
-									return valid;
+									return (model != null) && ModelUtil.couldCreateTask(model, curDt);
 								}).collect(Collectors.toList());
 								promise.complete(models);
 							} else {
@@ -111,7 +84,7 @@ public class TimerVerticle extends AbstractVerticle {
 						String sql = "update itos_taskmodel set scandate = ? where modelId = ?";
 						List<JsonArray> params = models.stream().map(model -> {
 							return new JsonArray()//
-									.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
+									.add(DateUtil.localToUtcStr(curDt))//
 									.add(model.getModelId());//
 						}).collect(Collectors.toList());
 						conn.batchWithParams(sql, params, r -> {
@@ -131,7 +104,7 @@ public class TimerVerticle extends AbstractVerticle {
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						List<CommonTask> tasks = new ArrayList<CommonTask>();
 						models.forEach(model -> {
-							tasks.addAll(CommonTask.from(model));
+							tasks.addAll(CommonTask.fromCur(model,curDt));
 						});
 						tasks.forEach(task -> {
 							params.add(new JsonArray()//
@@ -144,7 +117,7 @@ public class TimerVerticle extends AbstractVerticle {
 									.add("N")//
 									.add(task.getTaskIcon())//
 									.add("SYS")//
-									.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
+									.add(DateUtil.localToUtcStr(curDt))//
 									.add(DateUtil.localToUtcStr(task.getExpiredTime()))//
 									.add(Objects.nonNull(task.getCallback()) ? task.getCallback().getValue() : "")//
 									.add(Objects.nonNull(task.getNotify()) ? task.getNotify().stream().map(item -> {
@@ -190,7 +163,7 @@ public class TimerVerticle extends AbstractVerticle {
 									.add(task.getModelId())//
 									.add(task.getAbs())//
 									.add("SYS")//
-									.add(DateUtil.localToUtcStr(LocalDateTime.now())));//
+									.add(DateUtil.localToUtcStr(curDt)));//
 						});
 						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
 								+ " handler,oldcontent,newcontent,modelId,abstract,oper,opdate) "//
@@ -441,147 +414,16 @@ public class TimerVerticle extends AbstractVerticle {
 
 	}
 
-	/**
-	 * 执行系统延时任务
-	 */
-	private void systemTask() {
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
-			if (cr.succeeded()) {
-				SQLConnection conn = cr.result();
-				// 1.读系统延时任务
-				Supplier<Future<List<CommonTask>>> loadf = () -> {
-					Future<List<CommonTask>> f = Future.future(promise -> {
-						String sql = "select * from itos_task where status = 'CHECKIN' " + //
-						"and category = 'SYSTEM' and invalid = 'N'";
-						conn.query(sql, r -> {
-							if (r.succeeded()) {
-								CommonTask ct = new CommonTask();
-								List<CommonTask> list = r.result().getRows().stream().map(item -> {
-									return ct.from(item);
-								}).filter(item -> {
-									JsonObject jo = new JsonObject(item.getContent());
-									boolean valid = "TIMER".equals(jo.getString("header"));
-									LocalDateTime doneTime = item.getPlanDt().plusSeconds(jo.getInteger("length"));
-									valid = valid && doneTime.isBefore(LocalDateTime.now());
-									return valid;
-								}).collect(Collectors.toList());
-								promise.complete(list);
-							} else {
-								promise.fail("访问数据库出错");
-							}
-						});
-					});
-					return f;
-				};
-				// 2.更新状态
-				Function<List<CommonTask>, Future<List<CommonTask>>> uf = list -> {
-					Future<List<CommonTask>> f = Future.future(promise -> {
-						String sql = "update itos_task set status = 'DONE' where taskId = ? ";
-						List<JsonArray> params = list.stream().map(item -> {
-							return new JsonArray().add(item.getTaskId());
-						}).collect(Collectors.toList());
-						conn.batchWithParams(sql, params, r -> {
-							if (r.succeeded()) {
-								promise.complete(list);
-							} else {
-								r.cause().printStackTrace();
-								promise.fail("延时任务更新状态出错。");
-							}
-						});
-					});
-					return f;
-				};
-				// 3.记录日志
-				Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
-					Future<List<CommonTask>> f = Future.future(promise -> {
-						List<JsonArray> params = tasks.stream().map(task -> {
-							return new JsonArray()//
-									.add(UUID.randomUUID().toString())//
-									.add(task.getTaskId())//
-									.add(task.getModelId())//
-									.add("DONE")//
-									.add("时间到期，系统将任务状态置为DONE")//
-									.add(ConvertUtil.listToStr(task.getHandler()))//
-									.add(task.getAbs())//
-									.add("")// remark
-									.add("SYS")//
-									.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						}).collect(Collectors.toList());
-						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
-								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
-						conn.batchWithParams(sql, params, r -> {
-							if (r.succeeded()) {
-								promise.complete(tasks);
-							} else {
-								r.cause().printStackTrace();
-								promise.fail("保存系统任务日志出错。");
-							}
-						});
-					});
-					return f;
-				};
-				// 4.组合任务
-				Function<List<CommonTask>, Future<String>> composef = (tasks) -> {
-					Future<String> f = Future.future(promise -> {
-						String param = tasks.stream().filter(item -> {
-							return Objects.nonNull(item.getComposeId());
-						}).map(item -> {
-							return item.getTaskId() + "^" + "SYS";
-						}).collect(Collectors.joining(","));
-						if (ConvertUtil.emptyOrNull(param)) {
-							promise.complete();
-						} else {
-							JsonArray params = new JsonArray().add(param);// c传入参数
-							JsonArray outputs = new JsonArray()//
-									.addNull()// c传入
-									.add("VARCHAR")// flag
-									.add("VARCHAR")// errMsg
-									.add("VARCHAR");// outMsg
-							conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
-								if (r.succeeded()) {
-									JsonArray j = r.result().getOutput();
-									Boolean flag = "0".equals(j.getString(1));// flag
-									String newTask = j.getString(3);// c新建下阶段任务数量
-									if (flag) {
-										MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
-										promise.complete();
-									} else {
-										promise.fail("组合任务过程内部出错:" + j.getString(2));
-									}
-								} else {
-									r.cause().printStackTrace();
-									promise.fail("调用组合任务的出错。");
-								}
-							});
-						}
-					});
-					return f;
-				};
-				// 5.执行
-				loadf.get().compose(r -> {
-					return uf.apply(r);
-				}).compose(r -> {
-					return logf.apply(r);
-				}).compose(r -> {
-					return composef.apply(r);
-				}).onComplete(r -> {
-					if (r.failed())
-						r.cause().printStackTrace();
-					conn.close();
-				});
-			}
-		});
-	}
-
 	@Override
 	public void start() throws Exception {
+		SystemTaskHandler systemTaskHandler = new SystemTaskHandler(vertx);
 		vertx.setPeriodic(5000, timerId -> {
 			expired();
 			task();
 			registe();
 			newAppInfo();
-			systemTask();
+			systemTaskHandler.timerTask();
+			systemTaskHandler.announceTask();
 		});
 	}
 

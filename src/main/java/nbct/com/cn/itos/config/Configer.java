@@ -21,9 +21,14 @@ public class Configer {
 	public static String loginServer;
 
 	/**
-	 * ITOP服务URL
+	 * ITOP服务
 	 */
 	public static String itopServer;
+	
+	/**
+	 * 工作联系单服务
+	 */
+	public static String itafServer;	
 	
 	/**
 	 * 短信服务
@@ -57,7 +62,7 @@ public class Configer {
 	
 	private static JsonObject getConfig(Vertx vertx) {
 		FileSystem fs = vertx.fileSystem();
-		Buffer buf = fs.readFileBlocking("./itos.json");
+		Buffer buf = fs.readFileBlocking("d:/itos.json");
 		return new JsonObject(buf);
 	}
 
@@ -69,6 +74,7 @@ public class Configer {
 		registerUrl = config.getJsonObject("registerUrl");
 		loginServer = config.getString("loginServer");
 		itopServer = config.getString("itopServer");
+		itafServer = config.getString("itafServer");
 		smsServer = config.getJsonObject("smsServer");
 		provider = config.getJsonObject("provider");
 		uploadDir = config.getString("uploadDir");
