@@ -17,7 +17,7 @@ public class ModelUtil {
 	/**
 	 * 判断是否可以生成新任务
 	 */
-	public static boolean couldCreateTask(TimerTaskModel model,LocalDateTime at) {
+	public static boolean couldCreateTask(TimerTaskModel model, LocalDateTime at) {
 		// 1.未扫描过的有周期模版
 		boolean valid = (!model.getCycle().eq("NONE")) && (model.getScanDate() == null);
 		// 2.已有扫描时间，检查模版是否符合生成新任务条件
@@ -36,9 +36,9 @@ public class ModelUtil {
 			int cm = cd.getYear() + cd.getMonthValue();
 			int rm = md.getYear() + md.getMonthValue();
 			valid = valid || (mc == CycleEnum.PERMONTH && cm > rm);
-			// 2.4扫描循环任务，当前时间-间隔时间(秒)>标记时间，就需要生成新任务。
+			// 2.4扫描循环任务，当前时间-间隔时间(秒)>=标记时间，就需要生成新任务。
 			valid = valid || (mc == CycleEnum.CIRCULAR
-					&& mt.isBefore(at.minusSeconds(Integer.parseInt(model.getPlanDates()))));
+					&& mt.isBefore(at.minusSeconds(Integer.parseInt(model.getPlanDates()) - 1)));
 		}
 		// 3.循环任务不能超过开始时间
 		if (valid && model.getCycle() == CycleEnum.CIRCULAR) {

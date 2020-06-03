@@ -110,7 +110,7 @@ public class ItosRouter {
 		// 1.生成临时任务
 		router.post("/once").blockingHandler(commonTaskHandler::saveOnceTask, false);
 		// 2.在时间周期内生成任务
-		router.post("/period").blockingHandler(commonTaskHandler::savePeriodTask, false);
+		router.post("/period").blockingHandler(commonTaskHandler::savePeriodTask);
 		// 3.任务日志
 		router.post("/log").blockingHandler(commonTaskHandler::getTaskLog, false);
 		// 4.任务状态-PROCESSING,DONE,CANCEL

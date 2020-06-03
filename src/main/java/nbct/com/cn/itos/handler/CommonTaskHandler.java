@@ -478,9 +478,13 @@ public class CommonTaskHandler {
 				Function<TimerTaskModel, Future<List<CommonTask>>> loopf = (model) -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						List<CommonTask> tasks = new ArrayList<CommonTask>();
+						// 1.清除模版扫描时间
+						model.setScanDate(null);
+						// 2.模拟时间流逝
 						LocalDateTime at = LocalDateTime.from(bgDt);
 						while (at.isBefore(edDt)) {
 							if (ModelUtil.couldCreateTask(model, at)) {
+								model.setScanDate(at);
 								tasks.addAll(CommonTask.fromAt(model, at));
 							}
 							at = at.plusSeconds(1);
