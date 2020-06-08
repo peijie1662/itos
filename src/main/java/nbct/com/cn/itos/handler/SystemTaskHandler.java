@@ -267,7 +267,7 @@ public class SystemTaskHandler {
 									.add(task.getTaskId())//
 									.add(task.getModelId())//
 									.add("DONE")//
-									.add("时间到期，系统将任务状态置为DONE")//
+									.add("公告完成，系统将任务状态置为DONE")//
 									.add(ConvertUtil.listToStr(task.getHandler()))//
 									.add(task.getAbs())//
 									.add("")// remark
@@ -287,13 +287,52 @@ public class SystemTaskHandler {
 					});
 					return f;
 				};
-				// 5.执行
+				// 5.组合任务
+				Function<List<CommonTask>, Future<String>> composef = (tasks) -> {
+					Future<String> f = Future.future(promise -> {
+						String param = tasks.stream().filter(item -> {
+							return Objects.nonNull(item.getComposeId());
+						}).map(item -> {
+							return item.getTaskId() + "^" + "SYS";
+						}).collect(Collectors.joining(","));
+						if (ConvertUtil.emptyOrNull(param)) {
+							promise.complete();
+						} else {
+							JsonArray params = new JsonArray().add(param);// c传入参数
+							JsonArray outputs = new JsonArray()//
+									.addNull()// c传入
+									.add("VARCHAR")// flag
+									.add("VARCHAR")// errMsg
+									.add("VARCHAR");// outMsg
+							conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
+								if (r.succeeded()) {
+									JsonArray j = r.result().getOutput();
+									Boolean flag = "0".equals(j.getString(1));// flag
+									String newTask = j.getString(3);// c新建下阶段任务数量
+									if (flag) {
+										MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
+										promise.complete();
+									} else {
+										promise.fail("组合任务过程内部出错:" + j.getString(2));
+									}
+								} else {
+									r.cause().printStackTrace();
+									promise.fail("调用组合任务的出错。");
+								}
+							});
+						}
+					});
+					return f;
+				};				
+				// 6.执行
 				loadf.get().compose(r -> {
 					return announcef.apply(r);
 				}).compose(r -> {
 					return uf.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
+				}).compose(r -> {
+					return composef.apply(r);
 				}).onComplete(r -> {
 					if (r.failed())
 						r.cause().printStackTrace();

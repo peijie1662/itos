@@ -7,12 +7,26 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 /**
  * @author PJ
  * @version 创建时间：2019年12月31日 下午6:21:52
  */
 public class ConvertUtil {
+	
+	/**
+	 * String => JsonObject
+	 * 
+	 * @param str
+	 */
+	public static JsonObject strToJsonObject(String str) {
+		try {
+			return new JsonObject(str);
+		}catch(Exception e) {
+			return null;
+		}
+	}
 
 	/**
 	 * String => List

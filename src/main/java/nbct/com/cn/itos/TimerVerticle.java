@@ -104,7 +104,7 @@ public class TimerVerticle extends AbstractVerticle {
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						List<CommonTask> tasks = new ArrayList<CommonTask>();
 						models.forEach(model -> {
-							tasks.addAll(CommonTask.fromCur(model,curDt));
+							tasks.addAll(CommonTask.fromAt(model,curDt));
 						});
 						tasks.forEach(task -> {
 							params.add(new JsonArray()//

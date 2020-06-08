@@ -9,19 +9,23 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.ExpiredCallbackEnum;
 import nbct.com.cn.itos.config.NotifyEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.RowMapper;
+import util.CommonUtil;
 import util.ConvertUtil;
 import util.DateUtil;
 
@@ -117,35 +121,51 @@ public class CommonTask implements RowMapper<CommonTask> {
 	/**
 	 * 临时生成新任务
 	 */
-	public static CommonTask from(TimerTaskModel model, LocalDateTime planDt) {
+	public static List<CommonTask> from(TimerTaskModel model, LocalDateTime planDt) {
 		if (model.isInvalid())
 			throw new RuntimeException("模版处于无效状态，不能生成任务。");
-		CommonTask task = new CommonTask();
-		task.setTaskId(UUID.randomUUID().toString());
-		task.setCategory(model.getCategory());
-		task.setStatus(TaskStatusEnum.CHECKIN);
-		task.setAbs(model.getAbs());
-		task.setContent(model.getComments());
-		task.setCustomer("SYS");
-		task.setModelId(model.getModelId());
-		task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
-		task.setPlanDt(planDt);
-		task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));// c这里肯定有planDt
-		task.setCallback(model.getCallback());
-		task.setNotify(model.getNotify());
-		task.setExecutedCallback(false);
-		task.setExecutedNotify(false);
-		return task;
-	}
-
-	/**
-	 * 指定时间生成新任务
-	 */
-	public static List<CommonTask> fromAt(TimerTaskModel model, LocalDateTime appointedTime) {
-		if (model.isInvalid())
-			throw new RuntimeException("模版处于无效状态，不能生成任务。");
-		// 1.初始化
-		Supplier<CommonTask> createTask = () -> {
+		List<CommonTask> tasks = new ArrayList<CommonTask>();
+		List<String> cons = new ArrayList<String>();
+		JsonObject conObj = ConvertUtil.strToJsonObject(model.getComments());
+		if (conObj != null) {
+			if (!CommonUtil.isEmpty(conObj.getString("cycleParam"))) {
+				// 1.1.需要拆分的参数
+				List<String> cycleParams = Arrays.asList(conObj.getString("cycleParam").split(";"));
+				// 1.2.生成参数表
+				int cycleCount = 0;
+				Map<String, String[]> paramMap = new HashMap<String, String[]>();
+				JsonArray params = conObj.getJsonArray("parameter");
+				for (int i = 0; i < params.size(); i++) {
+					JsonObject param = params.getJsonObject(i);
+					String paramName = param.getString("paramName");
+					if (cycleParams.contains(paramName)) {
+						String[] pArr = param.getString("paramValue").split(";");
+						cycleCount = pArr.length;
+						paramMap.put(paramName, pArr);
+					}
+				}
+				// 1.3.拼写参数
+				conObj.remove("cycleParam");
+				for (int i = 0; i < cycleCount; i++) {
+					JsonObject newObj = JsonObject.mapFrom(conObj);
+					JsonArray newParams = newObj.getJsonArray("parameter");
+					for (int n = 0; n < newParams.size(); n++) {
+						JsonObject newParam = newParams.getJsonObject(n);
+						String newParamName = newParam.getString("paramName");
+						if (cycleParams.contains(newParamName)) {
+							newParam.put("paramValue", paramMap.get(newParamName)[i]);
+						}
+					}
+					cons.add(newObj.encodePrettily());
+				}
+			} else {
+				cons.add(model.getComments());
+			}
+		} else {
+			cons.add(model.getComments());
+		}
+		// 1.4按照内容列表生成任务
+		cons.forEach(con -> {
 			CommonTask task = new CommonTask();
 			task.setTaskId(UUID.randomUUID().toString());
 			task.setCategory(model.getCategory());
@@ -155,15 +175,87 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
+			task.setPlanDt(planDt);
+			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));// c这里肯定有planDt
 			task.setCallback(model.getCallback());
 			task.setNotify(model.getNotify());
 			task.setExecutedCallback(false);
 			task.setExecutedNotify(false);
-			return task;
+			tasks.add(task);
+		});
+		return tasks;
+	}
+
+	/**
+	 * 指定时间生成新任务
+	 */
+	public static List<CommonTask> fromAt(TimerTaskModel model, LocalDateTime appointedTime) {
+		if (model.isInvalid())
+			throw new RuntimeException("模版处于无效状态，不能生成任务。");
+		// 1.初始化
+		Supplier<List<CommonTask>> createTask = () -> {
+			List<CommonTask> tasks = new ArrayList<CommonTask>();
+			List<String> cons = new ArrayList<String>();
+			JsonObject conObj = ConvertUtil.strToJsonObject(model.getComments());
+			if (conObj != null) {
+				if (!CommonUtil.isEmpty(conObj.getString("cycleParam"))) {
+					// 1.1.需要拆分的参数
+					List<String> cycleParams = Arrays.asList(conObj.getString("cycleParam").split(";"));
+					// 1.2.生成参数表
+					int cycleCount = 0;
+					Map<String, String[]> paramMap = new HashMap<String, String[]>();
+					JsonArray params = conObj.getJsonArray("parameter");
+					for (int i = 0; i < params.size(); i++) {
+						JsonObject param = params.getJsonObject(i);
+						String paramName = param.getString("paramName");
+						if (cycleParams.contains(paramName)) {
+							String[] pArr = param.getString("paramValue").split(";");
+							cycleCount = pArr.length;
+							paramMap.put(paramName, pArr);
+						}
+					}
+					// 1.3.拼写参数
+					conObj.remove("cycleParam");
+					for (int i = 0; i < cycleCount; i++) {
+						JsonObject newObj = JsonObject.mapFrom(conObj);
+						JsonArray newParams = newObj.getJsonArray("parameter");
+						for (int n = 0; n < newParams.size(); n++) {
+							JsonObject newParam = newParams.getJsonObject(n);
+							String newParamName = newParam.getString("paramName");
+							if (cycleParams.contains(newParamName)) {
+								newParam.put("paramValue", paramMap.get(newParamName)[i]);
+							}
+						}
+						cons.add(newObj.encodePrettily());
+					}
+				} else {
+					cons.add(model.getComments());
+				}
+			} else {
+				cons.add(model.getComments());
+			}
+			// 1.4按照内容列表生成任务
+			cons.forEach(con -> {
+				CommonTask task = new CommonTask();
+				task.setTaskId(UUID.randomUUID().toString());
+				task.setCategory(model.getCategory());
+				task.setStatus(TaskStatusEnum.CHECKIN);
+				task.setAbs(model.getAbs());
+				task.setContent(con);
+				task.setCustomer("SYS");
+				task.setModelId(model.getModelId());
+				task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
+				task.setCallback(model.getCallback());
+				task.setNotify(model.getNotify());
+				task.setExecutedCallback(false);
+				task.setExecutedNotify(false);
+				tasks.add(task);
+			});
+			return tasks;
 		};
 		// 2.创建
 		List<CommonTask> tasks = new ArrayList<CommonTask>();
-		if (DateUtil.isEmpty(model.getPlanDates())) {
+		if (CommonUtil.isEmpty(model.getPlanDates())) {
 			// TODO
 			System.out.println("ERROR: " + model.getAbs());
 			System.out.println("ERROR: " + model.getModelId());
@@ -173,13 +265,15 @@ public class CommonTask implements RowMapper<CommonTask> {
 		switch (model.getCycle()) {
 		case PERDAY:
 			Arrays.asList(model.getPlanDates().split(",")).forEach(dt -> {
-				CommonTask task = createTask.get();
-				// 1.自定义每日格式 HHMM
-				int hour = Integer.parseInt(dt.substring(0, 2));
-				int min = Integer.parseInt(dt.substring(2));
-				task.setPlanDt(LocalDateTime.of(LocalDate.from(appointedTime), LocalTime.of(hour, min)));
-				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-				tasks.add(task);
+				List<CommonTask> ts = createTask.get();
+				ts.forEach(task -> {
+					// 1.自定义每日格式 HHMM
+					int hour = Integer.parseInt(dt.substring(0, 2));
+					int min = Integer.parseInt(dt.substring(2));
+					task.setPlanDt(LocalDateTime.of(LocalDate.from(appointedTime), LocalTime.of(hour, min)));
+					task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+					tasks.add(task);
+				});
 			});
 			break;
 		case PERWEEK:
@@ -196,10 +290,12 @@ public class CommonTask implements RowMapper<CommonTask> {
 				int min = Integer.parseInt(dts[i * 2 + 1].substring(2));
 				LocalTime pt = LocalTime.of(hour, min);
 				// 3.组合
-				CommonTask task = createTask.get();
-				task.setPlanDt(LocalDateTime.of(pd, pt));
-				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-				tasks.add(task);
+				List<CommonTask> ts = createTask.get();
+				ts.forEach(task -> {
+					task.setPlanDt(LocalDateTime.of(pd, pt));
+					task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+					tasks.add(task);
+				});
 			});
 			break;
 		case PERMONTH:
@@ -217,121 +313,24 @@ public class CommonTask implements RowMapper<CommonTask> {
 				int min = Integer.parseInt(dts[i * 3 + 2].substring(2));
 				LocalTime pt = LocalTime.of(hour, min);
 				// 3.组合
-				CommonTask task = createTask.get();
-				task.setPlanDt(LocalDateTime.of(pd, pt));
-				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-				tasks.add(task);
+				List<CommonTask> ts = createTask.get();
+				ts.forEach(task -> {
+					task.setPlanDt(LocalDateTime.of(pd, pt));
+					task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
+					tasks.add(task);
+				});
 			});
 			break;
 		case CIRCULAR:
 			if (dts.length > 1) {
 				throw new RuntimeException("循环计划的计划时间格式出错，无法生成计划任务。");
 			}
-			CommonTask task = createTask.get();
-			task.setPlanDt(appointedTime);
-			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-			tasks.add(task);
-			break;
-		default:
-			System.out.println("find some strange cycle.");
-			break;
-		}
-		return tasks;
-	}
-
-	/**
-	 * 扫描生成新任务
-	 */
-	public static List<CommonTask> fromCur(TimerTaskModel model, LocalDateTime curDt) {
-		if (model.isInvalid())
-			throw new RuntimeException("模版处于无效状态，不能生成任务。");
-		// 1.初始化
-		Supplier<CommonTask> createTask = () -> {
-			CommonTask task = new CommonTask();
-			task.setTaskId(UUID.randomUUID().toString());
-			task.setCategory(model.getCategory());
-			task.setStatus(TaskStatusEnum.CHECKIN);
-			task.setAbs(model.getAbs());
-			task.setContent(model.getComments());
-			task.setCustomer("SYS");
-			task.setModelId(model.getModelId());
-			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
-			task.setCallback(model.getCallback());
-			task.setNotify(model.getNotify());
-			task.setExecutedCallback(false);
-			task.setExecutedNotify(false);
-			return task;
-		};
-		// 2.创建
-		List<CommonTask> tasks = new ArrayList<CommonTask>();
-		if (DateUtil.isEmpty(model.getPlanDates())) {
-
-			System.out.println("ERROR: " + model.getAbs());
-			System.out.println("ERROR: " + model.getModelId());
-
-			throw new RuntimeException("未发现计划时间，无法生成计划任务。");
-		}
-		String[] dts = model.getPlanDates().split(",");
-		switch (model.getCycle()) {
-		case PERDAY:
-			Arrays.asList(model.getPlanDates().split(",")).forEach(dt -> {
-				CommonTask task = createTask.get();
-				// 1.自定义每日格式 HHMM
-				int hour = Integer.parseInt(dt.substring(0, 2));
-				int min = Integer.parseInt(dt.substring(2));
-				task.setPlanDt(LocalDateTime.of(LocalDate.from(curDt), LocalTime.of(hour, min)));
+			List<CommonTask> ts = createTask.get();
+			ts.forEach(task -> {
+				task.setPlanDt(appointedTime);
 				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
 				tasks.add(task);
 			});
-			break;
-		case PERWEEK:
-			if (dts.length % 2 != 0) {
-				throw new RuntimeException("周计划的计划时间格式出错，无法生成计划任务。");
-			}
-			IntStream.range(0, dts.length / 2).forEach(i -> {
-				// 1.日期
-				int weekDay = Integer.parseInt(dts[i * 2]);// c每周第几天
-				LocalDate pd = DateUtil.getDateByYearAndWeekNumAndDayOfWeek(curDt.getYear(),
-						curDt.get(ChronoField.ALIGNED_WEEK_OF_YEAR), weekDay);
-				// 2.时间
-				int hour = Integer.parseInt(dts[i * 2 + 1].substring(0, 2));
-				int min = Integer.parseInt(dts[i * 2 + 1].substring(2));
-				LocalTime pt = LocalTime.of(hour, min);
-				// 3.组合
-				CommonTask task = createTask.get();
-				task.setPlanDt(LocalDateTime.of(pd, pt));
-				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-				tasks.add(task);
-			});
-			break;
-		case PERMONTH:
-			if (dts.length % 3 != 0) {
-				throw new RuntimeException("月计划的计划时间格式出错，无法生成计划任务。");
-			}
-			IntStream.range(0, dts.length / 3).forEach(i -> {
-				// 1.日期
-				int week = Integer.parseInt(dts[i * 3]);// c每月第几周
-				int day = Integer.parseInt(dts[i * 3 + 1]);// c周几
-				LocalDate pd = LocalDate.from(curDt).with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
-				// 2.时间
-				int hour = Integer.parseInt(dts[i * 3 + 2].substring(0, 2));
-				int min = Integer.parseInt(dts[i * 3 + 2].substring(2));
-				LocalTime pt = LocalTime.of(hour, min);
-				// 3.组合
-				CommonTask task = createTask.get();
-				task.setPlanDt(LocalDateTime.of(pd, pt));
-				task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-				tasks.add(task);
-			});
-			break;
-		case CIRCULAR:
-			if (dts.length > 1) {
-				throw new RuntimeException("循环计划的计划时间格式出错，无法生成计划任务。");
-			}
-			CommonTask task = createTask.get();
-			task.setPlanDt(curDt);
-			task.setExpiredTime(task.getPlanDt().minusSeconds(-model.getExpired()));
-			tasks.add(task);
 			break;
 		default:
 			System.out.println("find some strange cycle.");

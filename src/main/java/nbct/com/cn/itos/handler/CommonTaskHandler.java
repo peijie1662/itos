@@ -308,7 +308,6 @@ public class CommonTaskHandler {
 				});
 			}
 		});
-
 	}
 
 	/**
@@ -324,8 +323,8 @@ public class CommonTaskHandler {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读取模版信息
-				Supplier<Future<CommonTask>> crtf = () -> {
-					Future<CommonTask> f = Future.future(promise -> {
+				Supplier<Future<List<CommonTask>>> crtf = () -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
 						JsonArray params = new JsonArray().add(rp.getString("modelId"));
 						String sql = "select * from itos_taskmodel where modelId = ?";
 						conn.queryWithParams(sql, params, r -> {
@@ -334,9 +333,9 @@ public class CommonTaskHandler {
 								if (rs.size() > 0) {
 									try {
 										TimerTaskModel model = new TimerTaskModel().from(rs.get(0));
-										CommonTask task = CommonTask.from(model,
+										List<CommonTask> tasks = CommonTask.from(model,
 												DateUtil.utcToLocalEx(rp.getString("planDt")));
-										promise.complete(task);
+										promise.complete(tasks);
 									} catch (Exception e) {
 										promise.fail(e.getMessage());
 									}
@@ -351,34 +350,37 @@ public class CommonTaskHandler {
 					return f;
 				};
 				// 2.保存任务信息
-				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
-					Future<CommonTask> f = Future.future(promise -> {
+				Function<List<CommonTask>, Future<List<CommonTask>>> savef = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						List<JsonArray> params = new ArrayList<JsonArray>();
+						tasks.forEach(task -> {
+							params.add(new JsonArray()//
+									.add(task.getTaskId())//
+									.add(task.getCategory().getValue())//
+									.add(task.getAbs())//
+									.add(task.getModelId())// 通过modelId关联到dispatchClient
+									.add("CHECKIN")//
+									.add(task.getContent())//
+									.add(DateUtil.localToUtcStr(task.getPlanDt()))//
+									.add("N")//
+									.add(task.getTaskIcon())//
+									.add(rp.getString("userId"))//
+									.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
+									.add(DateUtil.localToUtcStr(task.getExpiredTime()))//
+									.add(Objects.nonNull(task.getCallback()) ? task.getCallback().getValue() : "")//
+									.add(Objects.nonNull(task.getNotify()) ? task.getNotify().stream().map(item -> {
+										return item.getValue();
+									}).collect(Collectors.joining(",")) : "")//
+									.add("N")//
+									.add("N"));
+						});
 						String sql = "insert into itos_task(taskId,category,abstract,modelId," + //
 						" status,content,planDt,invalid,taskicon,oper,opdate," + //
 						" expiredTime,expiredcallback,expirednotify,executedcallback,executednotify) " + //
 						" values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-						JsonArray params = new JsonArray()//
-								.add(task.getTaskId())//
-								.add(task.getCategory().getValue())//
-								.add(task.getAbs())//
-								.add(task.getModelId())// 通过modelId关联到dispatchClient
-								.add("CHECKIN")//
-								.add(task.getContent())//
-								.add(DateUtil.localToUtcStr(task.getPlanDt()))//
-								.add("N")//
-								.add(task.getTaskIcon())//
-								.add(rp.getString("userId"))//
-								.add(DateUtil.localToUtcStr(LocalDateTime.now()))//
-								.add(DateUtil.localToUtcStr(task.getExpiredTime()))//
-								.add(Objects.nonNull(task.getCallback()) ? task.getCallback().getValue() : "")//
-								.add(Objects.nonNull(task.getNotify()) ? task.getNotify().stream().map(item -> {
-									return item.getValue();
-								}).collect(Collectors.joining(",")) : "")//
-								.add("N")//
-								.add("N");
-						conn.updateWithParams(sql, params, r -> {
+						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
-								promise.complete(task);
+								promise.complete(tasks);
 							} else {
 								r.cause().printStackTrace();
 								promise.fail("保存任务出错。");
@@ -388,23 +390,26 @@ public class CommonTaskHandler {
 					return f;
 				};
 				// 3.保存日志
-				Function<CommonTask, Future<CommonTask>> logf = (task) -> {
-					Future<CommonTask> f = Future.future(promise -> {
-						JsonArray params = new JsonArray()//
-								.add(UUID.randomUUID().toString())//
-								.add(task.getTaskId())//
-								.add(task.getModelId())//
-								.add(task.getStatus().getValue())//
-								.add("用户" + rp.getString("userId") + "临时从模版生成新任务'" + task.getAbs() + "'")//
-								.add(ConvertUtil.listToStr(task.getHandler()))//
-								.add(task.getAbs())//
-								.add(rp.getString("userId"))//
-								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						List<JsonArray> params = new ArrayList<JsonArray>();
+						tasks.forEach(task -> {
+							params.add(new JsonArray()//
+									.add(UUID.randomUUID().toString())//
+									.add(task.getTaskId())//
+									.add(task.getModelId())//
+									.add(task.getStatus().getValue())//
+									.add("用户" + rp.getString("userId") + "临时从模版生成新任务'" + task.getAbs() + "'")//
+									.add(ConvertUtil.listToStr(task.getHandler()))//
+									.add(task.getAbs())//
+									.add(rp.getString("userId"))//
+									.add(DateUtil.localToUtcStr(LocalDateTime.now())));
+						});
 						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
 								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
-						conn.updateWithParams(sql, params, r -> {
+						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
-								promise.complete(task);
+								promise.complete(tasks);
 							} else {
 								r.cause().printStackTrace();
 								promise.fail("保存临时从模版生成新任务日志出错。");
@@ -420,9 +425,11 @@ public class CommonTaskHandler {
 					return logf.apply(r);
 				}).onComplete(r -> {
 					if (r.succeeded()) {
-						String msg = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
-								+ r.result().getAbs() + "'";
-						MsgUtil.mixLC(ctx, msg, r.result().getComposeId());
+						r.result().forEach(task -> {
+							String msg = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
+									+ task.getAbs() + "'";
+							MsgUtil.mixLC(ctx, msg, task.getComposeId());
+						});
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -431,7 +438,6 @@ public class CommonTaskHandler {
 				});
 			}
 		});
-
 	}
 
 	/**
