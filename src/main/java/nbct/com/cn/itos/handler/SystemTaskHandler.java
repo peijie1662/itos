@@ -50,22 +50,28 @@ public class SystemTaskHandler {
 						"and category = 'SYSTEM' and invalid = 'N'";
 						conn.query(sql, r -> {
 							if (r.succeeded()) {
-								CommonTask ct = new CommonTask();
-								List<CommonTask> list = r.result().getRows().stream().map(item -> {
-									return ct.from(item);
-								}).filter(item -> {
-									JsonObject jo = new JsonObject(item.getContent());
-									if ("DELAY".equals(jo.getString("header"))) {
-										LocalDateTime doneTime = item.getPlanDt().plusSeconds(jo.getInteger("length"));
-										return doneTime.isBefore(LocalDateTime.now());
-									} else if ("APPOINTED".equals(jo.getString("header"))) {
-										LocalDateTime appointedTime = DateUtil.strToLocal(jo.getString("time"));
-										return appointedTime.isBefore(LocalDateTime.now());
-									} else {
-										return false;
-									}
-								}).collect(Collectors.toList());
-								promise.complete(list);
+								try {
+									CommonTask ct = new CommonTask();
+									List<CommonTask> list = r.result().getRows().stream().map(item -> {
+										return ct.from(item);
+									}).filter(item -> {
+										JsonObject jo = new JsonObject(item.getContent());
+										if ("DELAY".equals(jo.getString("header"))) {
+											LocalDateTime doneTime = item.getPlanDt()
+													.plusSeconds(jo.getInteger("length"));
+											return doneTime.isBefore(LocalDateTime.now());
+										} else if ("APPOINTED".equals(jo.getString("header"))) {
+											LocalDateTime appointedTime = DateUtil.strToLocal(jo.getString("time"));
+											return appointedTime.isBefore(LocalDateTime.now());
+										} else {
+											return false;
+										}
+									}).collect(Collectors.toList());
+									promise.complete(list);
+								} catch (Exception e) {
+									e.printStackTrace();
+									promise.fail(e.getMessage());
+								}
 							} else {
 								promise.fail("访问数据库出错");
 							}
@@ -229,7 +235,7 @@ public class SystemTaskHandler {
 										param.put("valid", "Y");
 										webClient.postAbs(announceUrl).sendJsonObject(param, h -> {
 											if (h.succeeded()) {
-												System.out.println("announce");
+												System.out.println("announce success.");
 											}
 										});
 									});
@@ -323,7 +329,7 @@ public class SystemTaskHandler {
 						}
 					});
 					return f;
-				};				
+				};
 				// 6.执行
 				loadf.get().compose(r -> {
 					return announcef.apply(r);

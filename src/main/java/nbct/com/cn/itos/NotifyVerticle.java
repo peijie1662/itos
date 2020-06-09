@@ -3,7 +3,8 @@ package nbct.com.cn.itos;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.alibaba.fastjson.JSON;
 
@@ -26,7 +27,7 @@ import util.ConvertUtil;
  */
 public class NotifyVerticle extends AbstractVerticle {
 
-	public static Logger logger = Logger.getLogger(NotifyVerticle.class);
+	public static Logger logger = LogManager.getLogger(NotifyVerticle.class);
 
 	@Override
 	public void start() throws Exception {

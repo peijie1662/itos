@@ -1,6 +1,8 @@
 package nbct.com.cn.itos;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
@@ -26,7 +28,7 @@ import nbct.com.cn.itos.handler.UserHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
-	public static Logger logger = Logger.getLogger(MainVerticle.class);
+	public static Logger logger = LogManager.getLogger(MainVerticle.class);
 
 	@Override
 	public void start() throws Exception {

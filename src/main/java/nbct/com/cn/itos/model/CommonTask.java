@@ -171,7 +171,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setCategory(model.getCategory());
 			task.setStatus(TaskStatusEnum.CHECKIN);
 			task.setAbs(model.getAbs());
-			task.setContent(model.getComments());
+			task.setContent(con);
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务

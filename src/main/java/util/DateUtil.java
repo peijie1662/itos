@@ -17,13 +17,21 @@ import java.util.TimeZone;
  * @version 创建时间：2019年12月24日 下午4:05:31 类说明
  */
 public class DateUtil {
-	
+
 	/**
 	 * 字符串转LocalDateTime
 	 */
 	public static LocalDateTime strToLocal(String str) {
+		String dateTimeStr = "";
+		// 1.如果只有时间值，没有明确指定日期时间，补上当前日期，
+		if (str.length() == 8) {
+			String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			dateTimeStr = dateStr + " " + str;
+		} else {
+			dateTimeStr = str;
+		}
 		DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		return LocalDateTime.parse(str, df);
+		return LocalDateTime.parse(dateTimeStr, df);
 	}
 
 	/**
