@@ -8,9 +8,9 @@
     <Property name="LOG_WARN_FILE" value="./itos-logs/itos-warn.log"/>
     <Property name="LOG_ERROR_FILE" value="./itos-logs/itos-error.log"/>
     <Property name="CONSOLE_LAYOUT"
-              value="%style{%d{yyyy-MM-dd HH:mm:ss.SSS}}{Blue,Bright} %highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=grey, TRACE=blue} %style{%pid}{magenta} --- %style{[%15.15t] %-40.40c{1.}}{cyan,Bright} : %m%n%ex"/>
+              value="%style{%d{yyyy-MM-dd HH:mm:ss.SSS}}{Blue,Bright} %highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=grey, TRACE=blue} %style{[%15.15t] %-40.40c{1.}}{cyan,Bright} : %m%n%ex"/>
     <Property name="FILE_LAYOUT"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} %pid --- [%15.15t] %-40.40c{1.} : %m%n%ex"/>
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%15.15t] %-40.40c{1.} : %m%n%ex"/>
   </Properties>
 
   <Appenders>
@@ -46,9 +46,6 @@
     </RollingFile>
   </Appenders>
   <Loggers>
-    <Logger name="nbct.com.cn" level="info" additivity="false">
-      <AppenderRef ref="Console"/>
-    </Logger>
     <Root level="info">
       <AppenderRef ref="Console"/>
       <AppenderRef ref="RollingFileInfo"/>

@@ -3,8 +3,7 @@ package nbct.com.cn.itos;
 import io.vertx.core.Vertx;
 
 /**
- * Hello world!
- *
+ * ITOS SERVER
  */
 public class App 
 {

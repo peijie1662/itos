@@ -1,17 +1,15 @@
 package nbct.com.cn.itos.handler;
 
 import static nbct.com.cn.itos.model.CallResult.Err;
-import static nbct.com.cn.itos.model.CallResult.OK;
 
-import java.io.File;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.file.CopyOptions;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
@@ -22,82 +20,8 @@ import nbct.com.cn.itos.model.CallResult;
  * @version 创建时间：2020年1月12日 下午5:08:05
  */
 public class UploadHandler {
-
-	/**
-	 * 文档文件列表
-	 */
-	public void getDocumentFileList(RoutingContext ctx) {
-		HttpServerResponse res = ctx.response();
-		res.putHeader("content-type", "application/json");
-		try {
-			String documentPath = Configer.uploadDir + "pdf/document/";
-			FileSystem fs = ctx.vertx().fileSystem();
-			List<String> files = fs.readDirBlocking(documentPath);
-			// 1.文件夹 [{group:"",files:["",""]},...]
-			List<JsonObject> fr = files.stream().filter(item -> {
-				return new File(item).isDirectory();
-			}).map(item -> {
-				return new JsonObject().put("group", item);
-			}).collect(Collectors.toList());
-			// 2.文件夹内文件
-			fr.forEach(item -> {
-				String group = item.getString("group");
-				List<String> docs = fs.readDirBlocking(group);
-				item.put("group", group.substring(group.lastIndexOf("\\") + 1));
-				List<String> fns = docs.stream().map(doc -> {
-					return doc.substring(doc.lastIndexOf("\\") + 1);
-				}).collect(Collectors.toList());
-				item.put("fns", fns);
-			});
-			// 3.根目录下未分类文件
-			List<String> rfs = files.stream().filter(item -> {
-				return new File(item).isFile();
-			}).map(item -> {
-				return item.substring(item.lastIndexOf("\\") + 1);
-			}).collect(Collectors.toList());
-			fr.add(new JsonObject().put("group", "root_files").put("fns", rfs));
-			res.end(OK(fr));
-		} catch (Exception e) {
-			e.printStackTrace();
-			res.end(Err(e.getMessage()));
-		}
-	}
-
-	/**
-	 * 移动文件
-	 */
-	public void moveDocumentFile(RoutingContext ctx) {
-		JsonObject rp = ctx.getBodyAsJson();
-		HttpServerResponse res = ctx.response();
-		res.putHeader("content-type", "application/json");
-		try {
-			String item = rp.getString("item");
-			// 1.源路径
-			String from = rp.getString("from");
-			if ("root".equals(from)) {
-				from = Configer.uploadDir + "pdf/document/";
-			} else {
-				from = Configer.uploadDir + "pdf/document/" + from + "/";
-			}
-			from += item;
-			// 2.目的路径
-			String to = rp.getString("to");
-			if ("root".equals(to)) {
-				to = Configer.uploadDir + "pdf/document/";
-			} else {
-				to = Configer.uploadDir + "pdf/document/" + to + "/";
-			}
-			to += item;
-			// 3.移动
-			FileSystem fs = ctx.vertx().fileSystem();
-			fs.moveBlocking(from, to);
-			res.end(OK());
-		} catch (Exception e) {
-			e.printStackTrace();
-			res.end(Err(e.getMessage()));
-		}
-
-	}
+	
+	public static Logger log = LogManager.getLogger(UploadHandler.class);
 
 	/**
 	 * 文档文件上传

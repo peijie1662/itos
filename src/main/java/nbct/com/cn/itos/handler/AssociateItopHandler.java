@@ -21,7 +21,7 @@ import nbct.com.cn.itos.config.Configer;
  * @version 创建时间：2020年1月20日 上午10:52:19
  */
 public class AssociateItopHandler {
-	
+
 	/**
 	 * 测试
 	 */
@@ -56,7 +56,7 @@ public class AssociateItopHandler {
 	 * IP
 	 */
 	private String getIp(JSONArray ips) {
-		if (Objects.nonNull(ips)) {
+		if (Objects.nonNull(ips) && ips.size() > 0) {
 			return JsonObject.mapFrom(ips.get(0)).getString("name");
 		} else {
 			return "";
@@ -89,24 +89,30 @@ public class AssociateItopHandler {
 								if (h.result().bodyAsString().startsWith("{}")) {
 									res.end(Err());
 								} else {
-									JSONObject lr = h.result().bodyAsJson(JSONObject.class);
-									JsonObject j = new JsonObject();
-									if (machineName.startsWith("H") || machineName.startsWith("F-H")
-											|| machineName.startsWith("D") || machineName.startsWith("F-D")
-											|| machineName.startsWith("P") || machineName.startsWith("F-P")) {
-										j.put("machineName", machineName);
-										j.put("userName", getUsers(lr.getJSONArray("contacts_list")));
-										j.put("location", lr.getString("detailaddr"));
-										j.put("modelName", lr.getString("model_name"));
-										j.put("ip", getIp(lr.getJSONArray("physicalinterface_list")));
-									} else {
-										j.put("machineName", lr.getString("name"));
-										j.put("driverName", lr.getString("drivername"));
-										j.put("driverPhone", lr.getString("driverphone"));
-										j.put("machineIp", lr.getString("machineryip"));
-										j.put("machineNo", lr.getString("machinerypc"));
+									try {
+										JSONObject lr = h.result().bodyAsJson(JSONObject.class);
+										JsonObject j = new JsonObject();
+										if ((machineName.startsWith("H") || machineName.startsWith("F-H")
+												|| machineName.startsWith("D") || machineName.startsWith("F-D")
+												|| machineName.startsWith("P") || machineName.startsWith("F-P"))
+												&& (!machineName.startsWith("DGJ"))) {
+											j.put("machineName", machineName);
+											j.put("userName", getUsers(lr.getJSONArray("contacts_list")));
+											j.put("location", lr.getString("detailaddr"));
+											j.put("modelName", lr.getString("model_name"));
+											j.put("ip", getIp(lr.getJSONArray("physicalinterface_list")));
+										} else {
+											j.put("machineName", lr.getString("name"));
+											j.put("driverName", lr.getString("drivername"));
+											j.put("driverPhone", lr.getString("driverphone"));
+											j.put("machineIp", lr.getString("machineryip"));
+											j.put("machineNo", lr.getString("machinerypc"));
+										}
+										res.end(OK(j));
+									} catch (Exception e) {
+										e.printStackTrace();
+										res.end(Err());
 									}
-									res.end(OK(j));
 								}
 							} else {
 								res.end(Err("无法访问ITOP服务:" + h.cause().getMessage()));
@@ -115,6 +121,8 @@ public class AssociateItopHandler {
 					} else {
 						res.end(Err("访问注册出错:" + r.getString("errMsg")));
 					}
+				} else {
+					res.end(Err("访问注册出错:" + handle.cause()));
 				}
 			});
 		} catch (Exception e) {

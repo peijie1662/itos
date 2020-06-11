@@ -223,10 +223,7 @@ public class ItosRouter {
 		Router router = Router.router(vertx);
 		// 1.组合任务报告
 		router.post("/compose").blockingHandler(pdfHandler::getComposePdfReport, false);
-		// 2.文档文件列表
-		router.post("/document/list").blockingHandler(uploadHandler::getDocumentFileList, false);
-		// 3.移动文档
-		router.post("/document/move").blockingHandler(uploadHandler::moveDocumentFile, false);
+
 		return router;
 	}
 

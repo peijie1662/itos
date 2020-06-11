@@ -28,7 +28,7 @@ import nbct.com.cn.itos.handler.UserHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
-	public static Logger logger = LogManager.getLogger(MainVerticle.class);
+	public static Logger log = LogManager.getLogger(MainVerticle.class);
 
 	@Override
 	public void start() throws Exception {
@@ -87,13 +87,10 @@ public class MainVerticle extends AbstractVerticle {
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.deployVerticle(new NotifyVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
-
 		// 0.通讯
 		EventBus es = vertx.eventBus();
 		// 1.设置新服务信息
 		es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);
-
-		logger.info("ITOS server start");
-
+		log.info("ITOS server start");
 	}
 }

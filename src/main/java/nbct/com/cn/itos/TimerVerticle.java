@@ -42,7 +42,7 @@ import util.MsgUtil;
  */
 public class TimerVerticle extends AbstractVerticle {
 
-	public static Logger logger = LogManager.getLogger(TimerVerticle.class);
+	public static Logger log = LogManager.getLogger(TimerVerticle.class);
 
 	/**
 	 * 扫描模版，生成任务
@@ -64,7 +64,7 @@ public class TimerVerticle extends AbstractVerticle {
 									try {
 										return new TimerTaskModel().from(row);
 									} catch (Exception e) {
-										e.printStackTrace();
+										log.error("TASK-01::" + row.getString("ABSTRACT"), e);
 										return null;
 									}
 								}).filter(model -> {
@@ -92,7 +92,6 @@ public class TimerVerticle extends AbstractVerticle {
 							if (r.succeeded()) {
 								promise.complete(models);
 							} else {
-								r.cause().printStackTrace();
 								promise.fail("更新系统任务扫描时间出错。");
 							}
 						});
@@ -105,7 +104,7 @@ public class TimerVerticle extends AbstractVerticle {
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						List<CommonTask> tasks = new ArrayList<CommonTask>();
 						models.forEach(model -> {
-							tasks.addAll(CommonTask.fromAt(model,curDt));
+							tasks.addAll(CommonTask.fromAt(model, curDt));
 						});
 						tasks.forEach(task -> {
 							params.add(new JsonArray()//
@@ -134,7 +133,6 @@ public class TimerVerticle extends AbstractVerticle {
 							if (r.succeeded()) {
 								promise.complete(tasks);
 							} else {
-								r.cause().printStackTrace();
 								promise.fail("保存系统任务出错。");
 							}
 						});
@@ -142,8 +140,8 @@ public class TimerVerticle extends AbstractVerticle {
 					return f;
 				};
 				// 4.保存日志
-				Function<List<CommonTask>, Future<String>> logf = (List<CommonTask> tasks) -> {
-					Future<String> f = Future.future(promise -> {
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
 						tasks.forEach(task -> {
 							String msg = String.format("%s 系统按照任务模版%s生成任务，执行时间是%s", //
 									DateUtil.curDtStr(), //
@@ -171,9 +169,8 @@ public class TimerVerticle extends AbstractVerticle {
 								+ " values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
-								promise.complete("扫描任务模版完毕。");
+								promise.complete(tasks);
 							} else {
-								r.cause().printStackTrace();
 								promise.fail("保存系统任务日志出错。");
 							}
 						});
@@ -188,17 +185,17 @@ public class TimerVerticle extends AbstractVerticle {
 				}).compose(r -> {
 					return logf.apply(r);
 				}).onComplete(r -> {
-					if (r.succeeded()) {
-						// logger.info(r.result());
+					if (r.failed()) {
+						log.error("TASK-02::", r.cause());
 					} else {
-						logger.error(r.cause().getMessage());
-						r.cause().printStackTrace();
+						r.result().forEach(task -> {
+							log.info("TASK-03::" + task.getAbs() + "任务自动生成。");
+						});
 					}
 					conn.close();
 				});
 			}
 		});
-
 	}
 
 	/**
@@ -214,16 +211,17 @@ public class TimerVerticle extends AbstractVerticle {
 			wc.post(registerUrl.getInteger("port"), registerUrl.getString("ip"), registerUrl.getString("url"))
 					.timeout(1000).sendJsonObject(provider, ar -> {
 						if (!ar.succeeded()) {
-							// ar.cause().printStackTrace();
+							log.warn("REGISTE-01::", ar.cause());
 						}
 					});
 		} catch (Exception e) {
-			// e.printStackTrace();
+			log.warn("REGISTE-02::", e);
 		}
 	}
 
 	/**
-	 * 从注册获取服务信息-NEW
+	 * 从注册获取新服务列表信息-NEW<br>
+	 * 老服务信息由客户端推送过来
 	 */
 	public void newAppInfo() {
 		JsonObject provider = Configer.provider;
@@ -245,7 +243,7 @@ public class TimerVerticle extends AbstractVerticle {
 						}
 					});
 		} catch (Exception e) {
-			// e.printStackTrace();
+			log.warn("NEWAPPINFO-01::", e);
 		}
 	}
 
@@ -352,7 +350,6 @@ public class TimerVerticle extends AbstractVerticle {
 							if (r.succeeded()) {
 								promise.complete(tasks);
 							} else {
-								r.cause().printStackTrace();
 								promise.fail("保存系统任务日志出错。");
 							}
 						});
@@ -360,15 +357,15 @@ public class TimerVerticle extends AbstractVerticle {
 					return f;
 				};
 				// 5.组合任务
-				Function<List<CommonTask>, Future<String>> composef = (tasks) -> {
-					Future<String> f = Future.future(promise -> {
+				Function<List<CommonTask>, Future<List<CommonTask>>> composef = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
 						String param = tasks.stream().filter(item -> {
 							return Objects.nonNull(item.getComposeId());
 						}).map(item -> {
 							return item.getTaskId() + "^" + "SYS";
 						}).collect(Collectors.joining(","));
 						if (ConvertUtil.emptyOrNull(param)) {
-							promise.complete();
+							promise.complete(tasks);
 						} else {
 							JsonArray params = new JsonArray().add(param);// c传入参数
 							JsonArray outputs = new JsonArray()//
@@ -383,12 +380,11 @@ public class TimerVerticle extends AbstractVerticle {
 									String newTask = j.getString(3);// c新建下阶段任务数量
 									if (flag) {
 										MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
-										promise.complete();
+										promise.complete(tasks);
 									} else {
 										promise.fail("组合任务过程内部出错:" + j.getString(2));
 									}
 								} else {
-									r.cause().printStackTrace();
 									promise.fail("调用组合任务的出错。");
 								}
 							});
@@ -400,19 +396,23 @@ public class TimerVerticle extends AbstractVerticle {
 				loadf.get().compose(r -> {
 					return uf.apply(r);
 				}).compose(r -> {
-					return logf.apply(r);
-				}).compose(r -> {
 					return nf.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
 				}).compose(r -> {
 					return composef.apply(r);
 				}).onComplete(r -> {
-					if (r.failed())
-						r.cause().printStackTrace();
+					if (r.failed()) {
+						log.error("EXPIRED-01::", r.cause());
+					} else {
+						r.result().forEach(task -> {
+							log.info("EXPIRED-02::" + task.getAbs() + "任务自动过期处理。");
+						});
+					}
 					conn.close();
 				});
 			}
 		});
-
 	}
 
 	@Override

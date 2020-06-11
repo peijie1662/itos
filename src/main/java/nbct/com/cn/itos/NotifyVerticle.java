@@ -27,7 +27,7 @@ import util.ConvertUtil;
  */
 public class NotifyVerticle extends AbstractVerticle {
 
-	public static Logger logger = LogManager.getLogger(NotifyVerticle.class);
+	public static Logger log = LogManager.getLogger(NotifyVerticle.class);
 
 	@Override
 	public void start() throws Exception {
@@ -50,11 +50,13 @@ public class NotifyVerticle extends AbstractVerticle {
 					.addQueryParam("jsonStr", JSON.toJSONString(sqs))//
 					.send(r -> {
 						if (r.failed()) {
-							r.cause().printStackTrace();
+							log.error("CALLSMSSEND-01::", r.cause());
+						} else {
+							log.info("CALLSMSSEND-02::" + JSON.toJSONString(sqs));
 						}
 					});
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("CALLSMSSEND-03::", e);
 		}
 	}
 
@@ -64,9 +66,9 @@ public class NotifyVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	private void sendSms(Message<JsonObject> msg) {
-		System.out.println("SMS: " + msg.body());
-
+		log.info("需发送短信内容:" + msg.body());
 		SQLClient client = Configer.client;
+		// TODO 短信用户需维护
 		String sql = "select * from itos_user where userid in ('PJ','LSH','XZL','WMH')";
 		String content = String.format("计划%s执行的任务%s已超时,%s", //
 				msg.body().getString("planDt"), //
@@ -94,7 +96,6 @@ public class NotifyVerticle extends AbstractVerticle {
 				}
 			}
 		});
-
 	}
 
 	/**
@@ -103,7 +104,7 @@ public class NotifyVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	private void sendBigHorn(Message<JsonObject> msg) {
-		System.out.println(msg.body());
+		log.info("需喇叭广播内容:" + msg.body());
 	}
 
 }
