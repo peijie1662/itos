@@ -1,6 +1,5 @@
 package nbct.com.cn.itos;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,6 +17,7 @@ import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
+import nbct.com.cn.itos.handler.DocumentHandler;
 import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
@@ -52,7 +52,8 @@ public class MainVerticle extends AbstractVerticle {
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 		PdfHandler pdfHandler = new PdfHandler();
 		AppInfoHandler appInfoHandler = new AppInfoHandler(vertx);
-		
+		DocumentHandler documentHandler = new DocumentHandler();
+
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
 
@@ -82,6 +83,8 @@ public class MainVerticle extends AbstractVerticle {
 		router.mountSubRouter("/pdf", ItosRouter.pdfRouter(vertx, pdfHandler, uploadHandler));
 		// 13.APP
 		router.mountSubRouter("/appinfo", ItosRouter.appInfoRouter(vertx, appInfoHandler));
+		// 14.文档管理
+		router.mountSubRouter("/document", ItosRouter.documentRouter(vertx, documentHandler));
 
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());

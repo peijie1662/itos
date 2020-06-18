@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,6 +15,7 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.model.CallResult;
 
 /**
  * @author PJ
@@ -165,8 +167,8 @@ public class JdbcHelper {
 				if (connection != null) {
 					connection.queryWithParams(sql, params, qr -> {
 						if (qr.succeeded()) {
-							T t =  mapper.from(qr.result().getRows().get(0));
-							res.end(OK(JsonObject.mapFrom(t)));//需要转为JsonObject,普通Object不认
+							T t = mapper.from(qr.result().getRows().get(0));
+							res.end(OK(JsonObject.mapFrom(t)));// 需要转为JsonObject,普通Object不认
 						} else {
 							res.end(Err(qr.cause().getMessage()));
 						}
@@ -179,6 +181,39 @@ public class JdbcHelper {
 				res.end(Err("get DB connect err."));
 			}
 		});
+	}
+
+	/**
+	 * 修改记录
+	 * 
+	 * @param sql
+	 * @param params
+	 * @return
+	 */
+	public static Future<CallResult<String>> update(String sql, JsonArray params) {
+		Future<CallResult<String>> f = Future.future(promise -> {
+			SQLClient client = Configer.client;
+			client.getConnection(cr -> {
+				if (cr.succeeded()) {
+					SQLConnection connection = cr.result();
+					if (connection != null) {
+						connection.updateWithParams(sql, params, qr -> {
+							if (qr.succeeded()) {
+								promise.complete(new CallResult<String>().ok());
+							} else {
+								promise.fail(qr.cause().getMessage());
+							}
+							connection.close();
+						});
+					} else {
+						promise.fail("使用数据库连接出错");
+					}
+				} else {
+					promise.fail("无法获得数据库连接");
+				}
+			});
+		});
+		return f;
 	}
 
 	/**

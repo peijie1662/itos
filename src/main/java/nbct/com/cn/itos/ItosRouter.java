@@ -7,6 +7,7 @@ import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
+import nbct.com.cn.itos.handler.DocumentHandler;
 import nbct.com.cn.itos.handler.FirstPageHandler;
 import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
@@ -171,6 +172,34 @@ public class ItosRouter {
 		router.get("/test").blockingHandler(associateItopHandler::test, false);
 		// 2.ITOS设备号关联信息
 		router.post("/machinename").blockingHandler(associateItopHandler::machineNameAssociate, false);
+		return router;
+	}
+
+	/**
+	 * 文档维护路由
+	 */
+	public static Router documentRouter(Vertx vertx, DocumentHandler documentHandler) {
+		Router router = Router.router(vertx);
+		// 1.文档上传
+		router.post("/upload").blockingHandler(documentHandler::uploadDocument, false);
+		// 2.删除文档
+		router.post("/del").blockingHandler(documentHandler::delDocument, false);
+		// 3.修改文档
+		router.post("/update").blockingHandler(documentHandler::updateDocument, false);
+		// 4.文档列表
+		router.post("/list").blockingHandler(documentHandler::getDocumentList, false);
+		// 5.新建分组
+		router.post("/newgroup").blockingHandler(documentHandler::newGroup, false);
+		// 6.删除分组
+		router.post("/delgroup").blockingHandler(documentHandler::delGroup, false);
+		// 7.分组列表
+		router.post("/grouplist").blockingHandler(documentHandler::getGroupList, false);
+		// 8.新建分类
+		router.post("/newcategory").blockingHandler(documentHandler::newCategory, false);
+		// 9.删除分类
+		router.post("/delcategory").blockingHandler(documentHandler::delCategory, false);
+		// 10.分类列表
+		router.post("/categorylist").blockingHandler(documentHandler::getCategoryList, false);
 		return router;
 	}
 

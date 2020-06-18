@@ -1,7 +1,6 @@
 package nbct.com.cn.itos.handler;
 
 import static nbct.com.cn.itos.model.CallResult.Err;
-
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,38 +19,8 @@ import nbct.com.cn.itos.model.CallResult;
  * @version 创建时间：2020年1月12日 下午5:08:05
  */
 public class UploadHandler {
-	
-	public static Logger log = LogManager.getLogger(UploadHandler.class);
 
-	/**
-	 * 文档文件上传
-	 */
-	public void uploadDocumentFile(RoutingContext ctx) {
-		HttpServerResponse res = ctx.response();
-		res.putHeader("content-type", "application/json");
-		try {
-			FileSystem fs = ctx.vertx().fileSystem();
-			String savePath = Configer.uploadDir + "pdf/document/";
-			if (!fs.existsBlocking(savePath)) {
-				fs.mkdirsBlocking(savePath);
-			}
-			Set<FileUpload> uploads = ctx.fileUploads();
-			CallResult<String> result = new CallResult<String>().ok();
-			uploads.forEach(fileUpload -> {
-				String path = savePath + "/" + fileUpload.fileName();
-				fs.move(fileUpload.uploadedFileName(), path, new CopyOptions().setReplaceExisting(true), ar -> {
-					if (!ar.succeeded()) {
-						// fs.move is asynchronously,so not work...
-						result.err(ar.cause().getMessage());
-					}
-				});
-			});
-			res.end(result.toString());
-		} catch (Exception e) {
-			res.end(Err(e.getMessage()));
-			e.printStackTrace();
-		}
-	}
+	public static Logger log = LogManager.getLogger(UploadHandler.class);
 
 	/**
 	 * 任务文件上传
