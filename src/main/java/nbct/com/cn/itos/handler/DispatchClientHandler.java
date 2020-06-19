@@ -203,6 +203,7 @@ public class DispatchClientHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		String serviceName = rp.getString("serviceName");
 		Integer period = rp.getInteger("period");
+		String opt = rp.getString("opt");
 		// 1.更新在线状态
 		Optional<DispatchClient> o = CLIENTS.stream().filter(client -> {
 			return client.getServiceName().equals(serviceName);
@@ -213,10 +214,11 @@ public class DispatchClientHandler {
 			c.setActiveTime(LocalDateTime.now());
 		}
 		// 2.终端对应任务
+		String dt = "OPDT".equals(opt) ? "opdate" : "plandt";
 		String sql = "select * from itos_task where status = 'CHECKIN' and invalid = 'N'" + //
 				" and ((instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0) " + //
 				" or (category = 'BROADCAST' and executedcallback = 'N'))" + //
-				" and (sysdate - plandt)*24*60*60 <= ?";
+				" and (sysdate - " + dt + ")*24*60*60 <= ?";
 		JsonArray params = new JsonArray();
 		params.add(serviceName);
 		params.add(period);
