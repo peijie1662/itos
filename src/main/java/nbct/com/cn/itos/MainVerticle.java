@@ -15,6 +15,7 @@ import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.handler.AppInfoHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
+import nbct.com.cn.itos.handler.CompareHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
 import nbct.com.cn.itos.handler.DocumentHandler;
@@ -53,6 +54,7 @@ public class MainVerticle extends AbstractVerticle {
 		PdfHandler pdfHandler = new PdfHandler();
 		AppInfoHandler appInfoHandler = new AppInfoHandler(vertx);
 		DocumentHandler documentHandler = new DocumentHandler();
+		CompareHandler compareHandler = new CompareHandler();
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
@@ -85,6 +87,8 @@ public class MainVerticle extends AbstractVerticle {
 		router.mountSubRouter("/appinfo", ItosRouter.appInfoRouter(vertx, appInfoHandler));
 		// 14.文档管理
 		router.mountSubRouter("/document", ItosRouter.documentRouter(vertx, documentHandler));
+		// 15.文件比对
+		router.mountSubRouter("/compare", ItosRouter.compareRouter(vertx, compareHandler));
 
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());

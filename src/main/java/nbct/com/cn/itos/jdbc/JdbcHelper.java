@@ -98,6 +98,57 @@ public class JdbcHelper {
 	}
 
 	/**
+	 * 查询数据集
+	 * 
+	 * @param sql
+	 * @param mapper
+	 */
+	public static <T> Future<List<T>> rows(String sql, RowMapper<T> mapper) {
+		return rows(sql, null, mapper);
+	}
+
+	/**
+	 * 查询数据集
+	 * 
+	 * @param sql
+	 * @param params
+	 * @param mapper
+	 */
+	public static <T> Future<List<T>> rows(String sql, JsonArray params, RowMapper<T> mapper) {
+		Future<List<T>> f = Future.future(promise -> {
+			if (mapper == null) {
+				promise.fail("mapper can't be null.");
+				return;
+			}
+			SQLClient client = Configer.client;
+			client.getConnection(cr -> {
+				if (cr.succeeded()) {
+					SQLConnection connection = cr.result();
+					if (connection != null) {
+						connection.queryWithParams(sql, params, qr -> {
+							try {
+								if (qr.succeeded()) {
+									promise.complete(mapper.from(qr.result().getRows()));
+								} else {
+									promise.fail(qr.cause().getMessage());
+								}
+							} catch (Exception e) {
+								promise.fail(e.getMessage());
+							}
+							connection.close();
+						});
+					} else {
+						promise.fail("the DB connect is null.");
+					}
+				} else {
+					promise.fail("get DB connect err.");
+				}
+			});
+		});
+		return f;
+	}
+
+	/**
 	 * 查询数据集(MAP)
 	 * 
 	 * @param     <T>

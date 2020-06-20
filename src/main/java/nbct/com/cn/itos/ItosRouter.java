@@ -5,6 +5,7 @@ import io.vertx.ext.web.Router;
 import nbct.com.cn.itos.handler.AppInfoHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
+import nbct.com.cn.itos.handler.CompareHandler;
 import nbct.com.cn.itos.handler.ComposeHandler;
 import nbct.com.cn.itos.handler.DispatchClientHandler;
 import nbct.com.cn.itos.handler.DocumentHandler;
@@ -265,6 +266,26 @@ public class ItosRouter {
 		router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
 		// 2.服务信息列表
 		router.post("/list").blockingHandler(appInfoHandler::getAppInfoList, false);
+		return router;
+	}
+
+	/**
+	 * 比对路由
+	 */
+	public static Router compareRouter(Vertx vertx, CompareHandler compareHandler) {
+		Router router = Router.router(vertx);
+		// 1.页端访问列表
+		router.post("/pagecomparelist").blockingHandler(compareHandler::pageCompareList, false);
+		// 2.添加比对项
+		router.post("/add").blockingHandler(compareHandler::addCompareItem, false);
+		// 3.修改对比项
+		router.post("/update").blockingHandler(compareHandler::updateCompareItem, false);
+		// 4.删除对比项
+		router.post("/del").blockingHandler(compareHandler::delCompareItem, false);
+		// 5.客户端访问列表
+		router.post("/clientcomparelist").blockingHandler(compareHandler::clientCompareList, false);
+		// 6.客户端更新比对信息
+		router.post("/refresh").blockingHandler(compareHandler::clientRefresh, false);
 		return router;
 	}
 
