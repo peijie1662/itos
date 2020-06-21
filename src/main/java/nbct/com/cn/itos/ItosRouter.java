@@ -227,6 +227,10 @@ public class ItosRouter {
 		router.post("/password").blockingHandler(userHandler::updatePassword, false);
 		// 9.在线用户
 		router.post("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
+		//10.短信订阅
+		router.post("/subscription").blockingHandler(userHandler::updateSubscription, false);
+		//11.短信主题
+		router.post("/topiclist").blockingHandler(userHandler::smsTopicList, false);
 		return router;
 	}
 

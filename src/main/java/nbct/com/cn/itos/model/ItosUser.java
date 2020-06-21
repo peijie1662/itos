@@ -31,6 +31,8 @@ public class ItosUser implements RowMapper<ItosUser>{
 	
 	private String authority;
 	
+	private String subscription;
+	
 	private String firstPage;
 	
 	private ServerWebSocket ws;
@@ -46,6 +48,7 @@ public class ItosUser implements RowMapper<ItosUser>{
 		user.setWorkId(j.getString("WORKID"));
 		user.setDepartment(j.getString("DEPARTMENT"));
 		user.setAuthority(j.getString("AUTHORITY"));
+		user.setSubscription(j.getString("SUBSCRIPTION"));
 		user.setPhone(j.getString("PHONE"));
 		user.setShortPhone(j.getString("SHORTPHONE"));
 		user.setRole(j.getString("ROLE"));
@@ -158,11 +161,12 @@ public class ItosUser implements RowMapper<ItosUser>{
 		this.ip = ip;
 	}
 
-	@Override
-	public String toString() {
-		return "ItosUser [userName=" + userName + ", userId=" + userId + ", password=" + password + ", workId=" + workId
-				+ ", role=" + role + ", department=" + department + ", phone=" + phone + ", shortPhone=" + shortPhone
-				+ ", authority=" + authority + ", firstPage=" + firstPage + ", ws=" + ws + ", scene=" + scene + "]";
+	public String getSubscription() {
+		return subscription;
+	}
+
+	public void setSubscription(String subscription) {
+		this.subscription = subscription;
 	}
 	
 }

@@ -9,17 +9,18 @@ import org.apache.logging.log4j.Logger;
 import com.alibaba.fastjson.JSON;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
-import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
+import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.model.ItosUser;
 import nbct.com.cn.itos.model.TSmsQueue;
-import util.ConvertUtil;
 
 /**
  * @author PJ
@@ -66,35 +67,38 @@ public class NotifyVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	private void sendSms(Message<JsonObject> msg) {
-		log.info("需发送短信内容:" + msg.body());
-		SQLClient client = Configer.client;
-		// TODO 短信用户需维护
-		String sql = "select * from itos_user where userid in ('PJ','LSH','XZL','WMH')";
-		String content = String.format("计划%s执行的任务%s已超时,%s", //
-				msg.body().getString("planDt"), //
-				msg.body().getString("abs"), //
-				msg.body().getString("expiredDesc"));
-		client.getConnection(cr -> {
-			if (cr.succeeded()) {
-				SQLConnection connection = cr.result();
-				if (connection != null) {
-					connection.queryWithParams(sql, null, qr -> {
-						if (qr.succeeded()) {
-							List<TSmsQueue> sqs = qr.result().getRows().stream().filter(row -> {
-								return !ConvertUtil.emptyOrNull(row.getString("PHONE"));
-							}).map(row -> {
-								TSmsQueue sq = new TSmsQueue();
-								sq.setPhone(row.getString("PHONE"));
-								sq.setContent(content);
-								sq.setEnvironment("OFFICE");
-								return sq;
-							}).collect(Collectors.toList());
-							callSmsSend(sqs);
-						}
-						connection.close();
-					});
-				}
+		String category = msg.headers().get("CATEGORY");
+		// 1.读取短信用户
+		String sql = "select * from itos_smssetting where phone is not null and instr(subscription,?)>0";
+		JsonArray params = new JsonArray().add(category);
+		Future<List<ItosUser>> f = JdbcHelper.rows(sql, params, new ItosUser());
+		f.onSuccess(users -> {
+			String content = null;
+			// 2.超期信息
+			if ("EXPIRED".equals(category)) {
+				content = String.format("计划%s执行的任务%s已超时,%s", //
+						msg.body().getString("planDt"), //
+						msg.body().getString("abs"), //
+						msg.body().getString("expiredDesc"));
 			}
+			// 3.比对信息
+			if ("COMPARE".equals(category)) {
+				content = msg.body().getString("msg");
+			}
+			// 4.发短信
+			final String c = content;
+			if (content != null) {
+				List<TSmsQueue> sqs = users.stream().map(user -> {
+					TSmsQueue sq = new TSmsQueue();
+					sq.setPhone(user.getPhone());
+					sq.setContent(c);
+					sq.setEnvironment("OFFICE");
+					return sq;
+				}).collect(Collectors.toList());
+				callSmsSend(sqs);
+			}
+		}).onFailure(e -> {
+			log.error("SENDSMS-01::", e);
 		});
 	}
 

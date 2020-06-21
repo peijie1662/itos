@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
@@ -302,13 +303,15 @@ public class TimerVerticle extends AbstractVerticle {
 							task.getNotify().forEach(item -> {
 								switch (item) {
 								case SMS:
+									DeliveryOptions options = new DeliveryOptions();
+									options.addHeader("CATEGORY", "EXPIRED");
 									String planDt = task.getPlanDt()
 											.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 									vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
 											.put("abs", task.getAbs())//
 											.put("planDt", planDt)//
 											.put("expiredStatus", task.getCallback().getValue())//
-											.put("expiredDesc", task.getCallback().getDesc()));
+											.put("expiredDesc", task.getCallback().getDesc()), options);
 									break;
 								case BIGHORN:
 									break;
@@ -425,6 +428,7 @@ public class TimerVerticle extends AbstractVerticle {
 			newAppInfo();
 			systemTaskHandler.timerTask();
 			systemTaskHandler.announceTask();
+			systemTaskHandler.compareTask();
 		});
 	}
 

@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -18,12 +21,15 @@ import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosUser;
+import nbct.com.cn.itos.model.SysCode;
 
 /**
  * @author PJ
  * @version 创建时间：2020年1月30日 下午6:24:24
  */
 public class UserHandler {
+
+	public static Logger log = LogManager.getLogger(UserHandler.class);
 
 	/**
 	 * 在线用户
@@ -89,6 +95,24 @@ public class UserHandler {
 	}
 
 	/**
+	 * 修改短信订阅 
+	 */
+	public void updateSubscription(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "update itos_user set subscription = ? where userId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("subscription")).add(rp.getString("userId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 短信订阅主题
+	 */
+	public void smsTopicList(RoutingContext ctx) {
+		String sql = "select * from itos_syscode where sycategory = 'SMSSUBSCRIPTION' order by syid";
+		JdbcHelper.rows(ctx, sql, new SysCode());
+	}
+
+	/**
 	 * 修改首页
 	 */
 	public void updateFirstPage(RoutingContext ctx) {
@@ -136,6 +160,7 @@ public class UserHandler {
 						List<JsonObject> r = qr.result().getRows();
 						if (r.size() > 0) {
 							if (password.equals(r.get(0).getString("PASSWORD").toUpperCase())) {
+								log.info(String.format("HANDLELOGIN-01::%s登录成功。", userId));
 								res.end(OK(new ItosUser().from(r)));
 							} else {
 								res.end(Err("密码错误。"));

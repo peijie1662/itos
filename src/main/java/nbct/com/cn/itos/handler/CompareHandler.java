@@ -25,7 +25,7 @@ public class CompareHandler {
 
 	// key -> compareId@serviceName<br>
 	// value -> ComparingFile
-	private final static Map<String, CompareFile> CUR_COMPARES = new ConcurrentHashMap<String, CompareFile>();
+	public final static Map<String, CompareFile> CUR_COMPARES = new ConcurrentHashMap<String, CompareFile>();
 
 	/**
 	 * 页端访问列表
