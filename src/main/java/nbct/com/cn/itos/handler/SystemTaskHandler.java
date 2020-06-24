@@ -25,6 +25,7 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
+import nbct.com.cn.itos.model.CallResult;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.CompareFile;
 import util.ConvertUtil;
@@ -81,15 +82,34 @@ public class SystemTaskHandler {
 	 * @param msg
 	 */
 	private Function<List<CommonTask>, Future<List<CommonTask>>> taskLogFunction(SQLConnection conn, String msg) {
+		return taskLogFunction(conn, msg, null);
+	}
+
+	/**
+	 * 保存task的DONE日志
+	 * 
+	 * @param conn
+	 * @param msg
+	 */
+	private Function<List<CommonTask>, Future<List<CommonTask>>> taskLogFunction(SQLConnection conn, String msg,
+			CallResult<String> re) {
 		Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
 			Future<List<CommonTask>> f = Future.future(promise -> {
 				List<JsonArray> params = tasks.stream().map(task -> {
+					String status = "DONE";
+					String desc = msg;
+					if (re != null) {
+						if (!re.isFlag()) {
+							status = "FAIL";
+							desc = re.getErrMsg();
+						}
+					}
 					return new JsonArray()//
 							.add(UUID.randomUUID().toString())//
 							.add(task.getTaskId())//
 							.add(task.getModelId())//
-							.add("DONE")//
-							.add(msg)//
+							.add(status)//
+							.add(desc)//
 							.add(ConvertUtil.listToStr(task.getHandler()))//
 							.add(task.getAbs())//
 							.add("")// remark
@@ -161,6 +181,7 @@ public class SystemTaskHandler {
 	 * 执行系统比对任务
 	 */
 	public void compareTask() {
+		final CallResult<String> re = new CallResult<String>();// 客串下
 		SQLClient client = Configer.client;
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
@@ -199,40 +220,51 @@ public class SystemTaskHandler {
 				// 2.执行比对
 				Function<List<CommonTask>, Future<List<CommonTask>>> comparef = (tasks) -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
-						final List<String> compareResult = new ArrayList<String>();
+						re.setFlag(true);
+						// 2.1没有比对任务
+						if (tasks.size() == 0) {
+							promise.complete(tasks);
+							return;
+						}
 						Map<String, List<CompareFile>> cm = CUR_COMPARES.values().stream()
 								.collect(Collectors.groupingBy(CompareFile::getCompareGroup));
 						cm.forEach((k, v) -> {
-							// 1.比对文件长度
+							String compareResult = null;
+							// 2.2.比对文件长度
 							long fileSizeCount = v.stream().map(cf -> cf.getCurFileSize()).distinct().count();
 							if (fileSizeCount > 0) {
-								compareResult.add(String.format("分组[%s]文件长度比对不一致", k));
+								compareResult = String.format("ITOS:分组%s文件长度不一致", k);
 							}
-							// 2.比对文件修改时间
+							// 2.3比对文件修改时间
 							long fileModifyTimeCount = v.stream().map(cf -> cf.getCurFileModifyTime()).distinct()
 									.count();
 							if (fileModifyTimeCount > 0) {
-								compareResult.add(String.format("分组[%s]文件修改时间比对不一致", k));
+								if (compareResult == null) {
+									compareResult = String.format("ITOS:分组%s文件修改时间不一致", k);
+								} else {
+									compareResult += "文件修改时间也不一致";
+								}
+							}
+							// 2.4.短信
+							if (compareResult != null) {
+								DeliveryOptions options = new DeliveryOptions();
+								options.addHeader("CATEGORY", "COMPARE");
+								vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
+										.put("msg", compareResult), options);
+								re.setFlag(false);
+								re.setErrMsg(compareResult);
 							}
 						});
-						if (compareResult.size() > 0) {
-							// 3.短信
-							String compareStr = compareResult.stream().collect(Collectors.joining(","));
-							DeliveryOptions options = new DeliveryOptions();
-							options.addHeader("CATEGORY", "COMPARE");
-							vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
-									.put("msg", compareStr), options);
-							promise.fail(compareStr);
-						} else {
-							promise.complete(tasks);
-						}
+						// 2.5比对完成
+						promise.complete(tasks);
 					});
 					return f;
 				};
 				// 3.更新状态为DONE
 				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "比对任务更新状态出错。");
 				// 4.日志
-				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, "比对完成，系统将任务状态置为DONE");
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, "比对完成，系统将任务状态置为DONE",
+						re);
 				// 5.执行
 				loadf.get().compose(r -> {
 					return comparef.apply(r);

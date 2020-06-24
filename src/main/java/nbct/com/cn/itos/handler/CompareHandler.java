@@ -113,7 +113,7 @@ public class CompareHandler {
 		cf.setCompareGroup(rp.getString("compareGroup"));
 		cf.setServiceName(rp.getString("serviceName"));
 		cf.setCurFileSize(rp.getString("curFileSize"));
-		cf.setCurFileModifyTime(rp.getString("curModifyTime"));
+		cf.setCurFileModifyTime(rp.getString("curFileModifyTime"));
 		cf.setCurRefreshDate(LocalDateTime.now());
 		CUR_COMPARES.put(cf.key(), cf);
 		res.end(OK());

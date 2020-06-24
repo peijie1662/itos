@@ -418,17 +418,27 @@ public class TimerVerticle extends AbstractVerticle {
 		});
 	}
 
+	/**
+	 * 循环任务
+	 */
+	private void mainLoop() {
+		SystemTaskHandler systemTaskHandler = new SystemTaskHandler(vertx);
+		expired();
+		task();
+		registe();
+		newAppInfo();
+		systemTaskHandler.timerTask();
+		systemTaskHandler.announceTask();
+		systemTaskHandler.compareTask();
+	}
+
 	@Override
 	public void start() throws Exception {
-		SystemTaskHandler systemTaskHandler = new SystemTaskHandler(vertx);
 		vertx.setPeriodic(5000, timerId -> {
-			expired();
-			task();
-			registe();
-			newAppInfo();
-			systemTaskHandler.timerTask();
-			systemTaskHandler.announceTask();
-			systemTaskHandler.compareTask();
+			vertx.executeBlocking(future -> {
+				mainLoop();
+				future.complete();
+			}, false, null);
 		});
 	}
 

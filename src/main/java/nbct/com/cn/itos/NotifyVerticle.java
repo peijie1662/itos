@@ -69,7 +69,7 @@ public class NotifyVerticle extends AbstractVerticle {
 	private void sendSms(Message<JsonObject> msg) {
 		String category = msg.headers().get("CATEGORY");
 		// 1.读取短信用户
-		String sql = "select * from itos_smssetting where phone is not null and instr(subscription,?)>0";
+		String sql = "select * from itos_user where phone is not null and instr(subscription,?)>0";
 		JsonArray params = new JsonArray().add(category);
 		Future<List<ItosUser>> f = JdbcHelper.rows(sql, params, new ItosUser());
 		f.onSuccess(users -> {
