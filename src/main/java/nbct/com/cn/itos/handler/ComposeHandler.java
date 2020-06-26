@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -25,6 +28,8 @@ import nbct.com.cn.itos.model.ComposeTask;
  * @version 创建时间：2020年1月20日 上午8:35:15
  */
 public class ComposeHandler {
+
+	public static Logger log = LogManager.getLogger(ComposeHandler.class);
 
 	/**
 	 * 保存组合模版详细信息
@@ -85,8 +90,10 @@ public class ComposeHandler {
 					return savef.apply(r);
 				}).onComplete(r -> {
 					if (r.succeeded()) {
+						log.info(String.format("SAVECOMPOSEMODELDETAIL-01::组合任务脚本%s已保存", composeId));
 						res.end(OK());
 					} else {
+						log.error("SAVECOMPOSEMODELDETAIL-02::", r.cause());
 						res.end(Err(r.cause().getMessage()));
 					}
 					conn.close();
@@ -157,7 +164,7 @@ public class ComposeHandler {
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
 	}
-	
+
 	/**
 	 * 删除组合任务
 	 * 
@@ -169,6 +176,6 @@ public class ComposeHandler {
 		JsonArray params = new JsonArray().add(rp.getString("composeId"));
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
-	}	
+	}
 
 }

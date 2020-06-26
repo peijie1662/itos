@@ -227,9 +227,9 @@ public class ItosRouter {
 		router.post("/password").blockingHandler(userHandler::updatePassword, false);
 		// 9.在线用户
 		router.post("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
-		//10.短信订阅
+		// 10.短信订阅
 		router.post("/subscription").blockingHandler(userHandler::updateSubscription, false);
-		//11.短信主题
+		// 11.短信主题
 		router.post("/topiclist").blockingHandler(userHandler::smsTopicList, false);
 		return router;
 	}
@@ -270,6 +270,10 @@ public class ItosRouter {
 		router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
 		// 2.服务信息列表
 		router.post("/list").blockingHandler(appInfoHandler::getAppInfoList, false);
+		// 3.服务拓扑位置
+		router.post("/coordinatelist").blockingHandler(appInfoHandler::getTopologyCoordinate, false);
+		// 4.拓扑位置更新
+		router.post("/refreshcoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
 		return router;
 	}
 

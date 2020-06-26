@@ -1,7 +1,8 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.handler.CompareHandler.CUR_COMPARES;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,14 +26,11 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
-import nbct.com.cn.itos.model.CallResult;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.CompareFile;
 import util.ConvertUtil;
 import util.DateUtil;
 import util.MsgUtil;
-
-import static nbct.com.cn.itos.handler.CompareHandler.CUR_COMPARES;
 
 /**
  * @author PJ
@@ -46,6 +44,25 @@ public class SystemTaskHandler {
 
 	public SystemTaskHandler(Vertx vertx) {
 		this.vertx = vertx;
+	}
+
+	class BusinessResult {
+		public boolean flag;
+		public String errMsg;
+		public String sucMsg;
+
+		public BusinessResult() {
+
+		}
+
+		public BusinessResult(boolean flag, String msg) {
+			this.flag = flag;
+			if (flag) {
+				this.sucMsg = msg;
+			} else {
+				this.errMsg = msg;
+			}
+		}
 	}
 
 	/**
@@ -73,6 +90,7 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return uf;
+
 	}
 
 	/**
@@ -81,35 +99,17 @@ public class SystemTaskHandler {
 	 * @param conn
 	 * @param msg
 	 */
-	private Function<List<CommonTask>, Future<List<CommonTask>>> taskLogFunction(SQLConnection conn, String msg) {
-		return taskLogFunction(conn, msg, null);
-	}
-
-	/**
-	 * 保存task的DONE日志
-	 * 
-	 * @param conn
-	 * @param msg
-	 */
-	private Function<List<CommonTask>, Future<List<CommonTask>>> taskLogFunction(SQLConnection conn, String msg,
-			CallResult<String> re) {
+	private Function<List<CommonTask>, Future<List<CommonTask>>> taskLogFunction(SQLConnection conn,
+			BusinessResult br) {
 		Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
 			Future<List<CommonTask>> f = Future.future(promise -> {
 				List<JsonArray> params = tasks.stream().map(task -> {
-					String status = "DONE";
-					String desc = msg;
-					if (re != null) {
-						if (!re.isFlag()) {
-							status = "FAIL";
-							desc = re.getErrMsg();
-						}
-					}
 					return new JsonArray()//
 							.add(UUID.randomUUID().toString())//
 							.add(task.getTaskId())//
 							.add(task.getModelId())//
-							.add(status)//
-							.add(desc)//
+							.add("DONE")//
+							.add(br.flag ? br.sucMsg : br.errMsg)//
 							.add(ConvertUtil.listToStr(task.getHandler()))//
 							.add(task.getAbs())//
 							.add("")// remark
@@ -130,6 +130,7 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return logf;
+
 	}
 
 	/**
@@ -175,13 +176,14 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return composef;
+
 	}
 
 	/**
 	 * 执行系统比对任务
 	 */
 	public void compareTask() {
-		final CallResult<String> re = new CallResult<String>();// 客串下
+		final BusinessResult br = new BusinessResult();
 		SQLClient client = Configer.client;
 		client.getConnection(cr -> {
 			if (cr.succeeded()) {
@@ -220,7 +222,8 @@ public class SystemTaskHandler {
 				// 2.执行比对
 				Function<List<CommonTask>, Future<List<CommonTask>>> comparef = (tasks) -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
-						re.setFlag(true);
+						br.flag = true;
+						br.sucMsg = "比对完成，未发现问题";
 						// 2.1没有比对任务
 						if (tasks.size() == 0) {
 							promise.complete(tasks);
@@ -251,8 +254,8 @@ public class SystemTaskHandler {
 								options.addHeader("CATEGORY", "COMPARE");
 								vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
 										.put("msg", compareResult), options);
-								re.setFlag(false);
-								re.setErrMsg(compareResult);
+								br.flag = false;
+								br.errMsg = compareResult;
 							}
 						});
 						// 2.5比对完成
@@ -263,8 +266,7 @@ public class SystemTaskHandler {
 				// 3.更新状态为DONE
 				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "比对任务更新状态出错。");
 				// 4.日志
-				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, "比对完成，系统将任务状态置为DONE",
-						re);
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, br);
 				// 5.执行
 				loadf.get().compose(r -> {
 					return comparef.apply(r);
@@ -279,6 +281,7 @@ public class SystemTaskHandler {
 				});
 			}
 		});
+
 	}
 
 	/**
@@ -328,7 +331,8 @@ public class SystemTaskHandler {
 				// 2.更新状态
 				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "延时任务更新状态出错。");
 				// 3.记录日志
-				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, "时间到期，系统将任务状态置为DONE");
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn,
+						new BusinessResult(true, "时间到期，系统将任务状态置为DONE"));
 				// 4.组合任务
 				Function<List<CommonTask>, Future<String>> composef = taskComposeFunction(conn);
 				// 5.执行
@@ -345,6 +349,7 @@ public class SystemTaskHandler {
 				});
 			}
 		});
+
 	}
 
 	/**
@@ -403,7 +408,7 @@ public class SystemTaskHandler {
 										param.put("valid", "Y");
 										webClient.postAbs(announceUrl).sendJsonObject(param, h -> {
 											if (h.succeeded()) {
-												System.out.println("announce success.");
+												log.info("ANNOUNCETASK-01::" + task.getContent());
 											}
 										});
 									});
@@ -417,7 +422,8 @@ public class SystemTaskHandler {
 				// 3.更新状态
 				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "公告任务更新状态出错。");
 				// 4.记录日志
-				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, "公告完成，系统将任务状态置为DONE");
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn,
+						new BusinessResult(true, "公告完成，系统将任务状态置为DONE"));
 				// 5.组合任务
 				Function<List<CommonTask>, Future<String>> composef = taskComposeFunction(conn);
 				// 6.执行
@@ -431,7 +437,7 @@ public class SystemTaskHandler {
 					return composef.apply(r);
 				}).onComplete(r -> {
 					if (r.failed())
-						log.error("ANNOUNCETASK-01::", r.cause());
+						log.error("ANNOUNCETASK-02::", r.cause());
 					conn.close();
 				});
 			}

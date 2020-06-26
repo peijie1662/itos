@@ -32,7 +32,7 @@ public class DispatchClientHandler {
 	private static List<DispatchClient> CLIENTS = new ArrayList<DispatchClient>();
 
 	/**
-	 * 终端数据载入(页面来刷新)
+	 * 页端终端数据载入
 	 */
 	public void loadData(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
@@ -144,7 +144,7 @@ public class DispatchClientHandler {
 	}
 
 	/**
-	 * 查找终端信息（终端访问）<br>
+	 * 客户端查找终端信息<br>
 	 * 终端访问参数 {serviceName:"..."}
 	 */
 	public void getClient(RoutingContext ctx) {
@@ -173,7 +173,7 @@ public class DispatchClientHandler {
 	}
 
 	/**
-	 * 所有终端任务列表(页面访问)
+	 * 页端所有终端任务列表
 	 */
 	public void getDispatchAllTask(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -196,7 +196,7 @@ public class DispatchClientHandler {
 	}
 
 	/**
-	 * 终端任务列表(终端访问)<br>
+	 * 客户端终端任务列表<br>
 	 * 终端参数 {serviceName:"...",ip:"...",period:xxx}
 	 */
 	public void getDispatchTaskList(RoutingContext ctx) {

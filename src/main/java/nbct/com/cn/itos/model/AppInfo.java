@@ -21,6 +21,10 @@ public class AppInfo {
 	
 	private String type;
 	
+	private Integer x;
+	
+	private Integer y;
+	
 	public static AppInfo from(JsonObject jo) {
 		AppInfo app = new AppInfo();
 		app.setServerName(jo.getString("serverName"));
@@ -79,4 +83,20 @@ public class AppInfo {
 		this.type = type;
 	}
 
+	public Integer getX() {
+		return x;
+	}
+
+	public void setX(Integer x) {
+		this.x = x;
+	}
+
+	public Integer getY() {
+		return y;
+	}
+
+	public void setY(Integer y) {
+		this.y = y;
+	}
+	
 }
