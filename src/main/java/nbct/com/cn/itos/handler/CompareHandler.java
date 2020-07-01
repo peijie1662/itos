@@ -37,7 +37,7 @@ public class CompareHandler {
 		f.onSuccess(r -> {
 			// 1.补上缓存数据
 			r.forEach(item -> {
-				CompareFile cur = CUR_COMPARES.get(item.key());
+				CompareFile cur = CUR_COMPARES.get(item.getCompareId());
 				if (cur != null) {
 					item.setCurFileSize(cur.getCurFileSize());
 					item.setCurFileModifyTime(cur.getCurFileModifyTime());
@@ -110,12 +110,13 @@ public class CompareHandler {
 		HttpServerResponse res = ctx.response();
 		JsonObject rp = ctx.getBodyAsJson();
 		CompareFile cf = new CompareFile();
+		cf.setCompareId(rp.getString("compareId"));
 		cf.setCompareGroup(rp.getString("compareGroup"));
 		cf.setServiceName(rp.getString("serviceName"));
 		cf.setCurFileSize(rp.getString("curFileSize"));
 		cf.setCurFileModifyTime(rp.getString("curFileModifyTime"));
 		cf.setCurRefreshDate(LocalDateTime.now());
-		CUR_COMPARES.put(cf.key(), cf);
+		CUR_COMPARES.put(cf.getCompareId(), cf);
 		res.end(OK());
 	}
 

@@ -219,12 +219,43 @@ public class SystemTaskHandler {
 					});
 					return f;
 				};
-				// 2.执行比对
+				// 2.读取比对表，删除无效内存数据
+				Function<List<CommonTask>, Future<List<CommonTask>>> readf = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "select * from itos_filecompare";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								try {
+									// 2.1数据库记录
+									List<String> cfs = r.result().getRows().stream().map(item -> {
+										return new CompareFile().from(item).getCompareId();
+									}).collect(Collectors.toList());
+									// 2.2内存差集
+									List<String> difs = CUR_COMPARES.keySet().stream().filter(k -> {
+										return !cfs.contains(k);
+									}).collect(Collectors.toList());
+									// 2.3删除差集
+									difs.forEach(k -> {
+										CUR_COMPARES.remove(k);
+									});
+									promise.complete(tasks);
+								} catch (Exception e) {
+									e.printStackTrace();
+									promise.fail(e.getMessage());
+								}
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.执行比对
 				Function<List<CommonTask>, Future<List<CommonTask>>> comparef = (tasks) -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						br.flag = true;
 						br.sucMsg = "比对完成，未发现问题";
-						// 2.1没有比对任务
+						// 3.1没有比对任务
 						if (tasks.size() == 0) {
 							promise.complete(tasks);
 							return;
@@ -233,12 +264,12 @@ public class SystemTaskHandler {
 								.collect(Collectors.groupingBy(CompareFile::getCompareGroup));
 						cm.forEach((k, v) -> {
 							String compareResult = null;
-							// 2.2.比对文件长度
+							// 3.2.比对文件长度
 							long fileSizeCount = v.stream().map(cf -> cf.getCurFileSize()).distinct().count();
 							if (fileSizeCount > 0) {
 								compareResult = String.format("ITOS:分组%s文件长度不一致", k);
 							}
-							// 2.3比对文件修改时间
+							// 3.3比对文件修改时间
 							long fileModifyTimeCount = v.stream().map(cf -> cf.getCurFileModifyTime()).distinct()
 									.count();
 							if (fileModifyTimeCount > 0) {
@@ -248,7 +279,7 @@ public class SystemTaskHandler {
 									compareResult += "文件修改时间也不一致";
 								}
 							}
-							// 2.4.短信
+							// 3.4.短信
 							if (compareResult != null) {
 								DeliveryOptions options = new DeliveryOptions();
 								options.addHeader("CATEGORY", "COMPARE");
@@ -258,17 +289,19 @@ public class SystemTaskHandler {
 								br.errMsg = compareResult;
 							}
 						});
-						// 2.5比对完成
+						// 3.5比对完成
 						promise.complete(tasks);
 					});
 					return f;
 				};
-				// 3.更新状态为DONE
+				// 4.更新状态为DONE
 				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "比对任务更新状态出错。");
-				// 4.日志
+				// 5.日志
 				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, br);
-				// 5.执行
+				// 6.执行
 				loadf.get().compose(r -> {
+					return readf.apply(r);
+				}).compose(r -> {
 					return comparef.apply(r);
 				}).compose(r -> {
 					return uf.apply(r);

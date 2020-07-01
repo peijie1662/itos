@@ -29,10 +29,6 @@ public class CompareFile implements RowMapper<CompareFile> {
 
 	private LocalDateTime curRefreshDate;// 刷新时间
 
-	public String key() {
-		return this.compareGroup + "@" + this.serviceName;
-	}
-
 	@Override
 	public CompareFile from(JsonObject row) {
 		CompareFile cf = new CompareFile();

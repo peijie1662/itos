@@ -156,8 +156,8 @@ public class AppInfoHandler {
 						List<JsonArray> batch = new ArrayList<>();
 						details.stream().forEach(item -> {
 							JsonObject j = JsonObject.mapFrom(item);
-							batch.add(new JsonArray().add(j.getString("serverName")).add(j.getInteger("ip"))
-									.add(j.getString("x")).add(j.getInteger("y")));
+							batch.add(new JsonArray().add(j.getString("serverName")).add(j.getString("ip"))
+									.add(j.getInteger("x")).add(j.getInteger("y")));
 						});
 						conn.batchWithParams(sql, batch, r -> {
 							if (r.succeeded()) {
