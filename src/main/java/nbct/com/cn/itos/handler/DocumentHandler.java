@@ -39,66 +39,6 @@ public class DocumentHandler {
 	}
 
 	/**
-	 * 分组列表
-	 */
-	public void getGroupList(RoutingContext ctx) {
-		String sql = "select * from itos_syscode where sycategory = 'DOCUMENTGROUP' order by syid";
-		JdbcHelper.rows(ctx, sql, new SysCode());
-	}
-
-	/**
-	 * 新建分组
-	 */
-	public void newGroup(RoutingContext ctx) {
-		JsonObject rp = ctx.getBodyAsJson();
-		String func = "{call itos.p_syscode(?,?,?,?)}";
-		JsonArray params = new JsonArray().add("ADD" + "^" + "DOCUMENTGROUP" + "^" + rp.getString("groupName"));
-		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
-		JdbcHelper.call(ctx, func, params, outputs);
-	}
-
-	/**
-	 * 删除分组
-	 */
-	public void delGroup(RoutingContext ctx) {
-		JsonObject rp = ctx.getBodyAsJson();
-		String func = "{call itos.p_syscode(?,?,?,?)}";
-		JsonArray params = new JsonArray().add("DEL" + "^" + "DOCUMENTGROUP" + "^" + rp.getString("groupName"));
-		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
-		JdbcHelper.call(ctx, func, params, outputs);
-	}
-
-	/**
-	 * 分类列表
-	 */
-	public void getCategoryList(RoutingContext ctx) {
-		String sql = "select * from itos_syscode where sycategory = 'DOCUMENTCATEGORY' order by syid";
-		JdbcHelper.rows(ctx, sql, new SysCode());
-	}
-
-	/**
-	 * 新建分类
-	 */
-	public void newCategory(RoutingContext ctx) {
-		JsonObject rp = ctx.getBodyAsJson();
-		String func = "{call itos.p_syscode(?,?,?,?)}";
-		JsonArray params = new JsonArray().add("ADD" + "^" + "DOCUMENTCATEGORY" + "^" + rp.getString("category"));
-		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
-		JdbcHelper.call(ctx, func, params, outputs);
-	}
-
-	/**
-	 * 删除分类
-	 */
-	public void delCategory(RoutingContext ctx) {
-		JsonObject rp = ctx.getBodyAsJson();
-		String func = "{call itos.p_syscode(?,?,?,?)}";
-		JsonArray params = new JsonArray().add("DEL" + "^" + "DOCUMENTCATEGORY" + "^" + rp.getString("category"));
-		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
-		JdbcHelper.call(ctx, func, params, outputs);
-	}
-
-	/**
 	 * 文档文件删除
 	 */
 	public void delDocument(RoutingContext ctx) {

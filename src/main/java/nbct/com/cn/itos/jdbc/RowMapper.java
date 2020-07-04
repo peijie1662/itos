@@ -24,6 +24,7 @@ public interface RowMapper<T> {
 			try {
 				return from(row);
 			} catch (Exception e) {
+				e.printStackTrace();
 				throw new RuntimeException("DB模版转换错误。");
 			}
 		}).collect(Collectors.toList());

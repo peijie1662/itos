@@ -24,10 +24,11 @@ import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.PdfHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
+import nbct.com.cn.itos.handler.SysCodeHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 import nbct.com.cn.itos.handler.UserHandler;
 
-public class MainVerticle extends AbstractVerticle {
+public class MainVerticle extends AbstractVerticle { 
 
 	public static Logger log = LogManager.getLogger(MainVerticle.class);
 
@@ -52,9 +53,10 @@ public class MainVerticle extends AbstractVerticle {
 		UserHandler userHandler = new UserHandler();
 		FirstPageHandler firstPageHandler = new FirstPageHandler();
 		PdfHandler pdfHandler = new PdfHandler();
-		AppInfoHandler appInfoHandler = new AppInfoHandler(vertx);
+		AppInfoHandler appInfoHandler = new AppInfoHandler();
 		DocumentHandler documentHandler = new DocumentHandler();
 		CompareHandler compareHandler = new CompareHandler();
+		SysCodeHandler sysCodeHandler = new SysCodeHandler();
 
 		Configer.initDbPool(vertx);
 		dispatchClientHandler.loadData();// 初始化DispatchClient数据
@@ -89,6 +91,8 @@ public class MainVerticle extends AbstractVerticle {
 		router.mountSubRouter("/document", ItosRouter.documentRouter(vertx, documentHandler));
 		// 15.文件比对
 		router.mountSubRouter("/compare", ItosRouter.compareRouter(vertx, compareHandler));
+		// 16.系统代码
+		router.mountSubRouter("/syscode", ItosRouter.sysCodeRouter(vertx, sysCodeHandler));
 
 		vertx.deployVerticle(new TimerVerticle());
 		vertx.deployVerticle(new WebsocketVerticle());
@@ -97,7 +101,7 @@ public class MainVerticle extends AbstractVerticle {
 		// 0.通讯
 		EventBus es = vertx.eventBus();
 		// 1.设置新服务信息
-		es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);
+		//es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);
 		log.info("ITOS server start");
 	}
 }

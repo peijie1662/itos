@@ -105,14 +105,6 @@ public class UserHandler {
 	}
 
 	/**
-	 * 短信订阅主题
-	 */
-	public void smsTopicList(RoutingContext ctx) {
-		String sql = "select * from itos_syscode where sycategory = 'SMSSUBSCRIPTION' order by syid";
-		JdbcHelper.rows(ctx, sql, new SysCode());
-	}
-
-	/**
 	 * 修改首页
 	 */
 	public void updateFirstPage(RoutingContext ctx) {

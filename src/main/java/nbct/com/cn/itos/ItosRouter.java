@@ -14,6 +14,7 @@ import nbct.com.cn.itos.handler.ManualTaskHandler;
 import nbct.com.cn.itos.handler.ModelHandler;
 import nbct.com.cn.itos.handler.PdfHandler;
 import nbct.com.cn.itos.handler.SettingsHandler;
+import nbct.com.cn.itos.handler.SysCodeHandler;
 import nbct.com.cn.itos.handler.UploadHandler;
 import nbct.com.cn.itos.handler.UserHandler;
 
@@ -189,18 +190,6 @@ public class ItosRouter {
 		router.post("/update").blockingHandler(documentHandler::updateDocument, false);
 		// 4.文档列表
 		router.post("/list").blockingHandler(documentHandler::getDocumentList, false);
-		// 5.新建分组
-		router.post("/newgroup").blockingHandler(documentHandler::newGroup, false);
-		// 6.删除分组
-		router.post("/delgroup").blockingHandler(documentHandler::delGroup, false);
-		// 7.分组列表
-		router.post("/grouplist").blockingHandler(documentHandler::getGroupList, false);
-		// 8.新建分类
-		router.post("/newcategory").blockingHandler(documentHandler::newCategory, false);
-		// 9.删除分类
-		router.post("/delcategory").blockingHandler(documentHandler::delCategory, false);
-		// 10.分类列表
-		router.post("/categorylist").blockingHandler(documentHandler::getCategoryList, false);
 		return router;
 	}
 
@@ -229,8 +218,6 @@ public class ItosRouter {
 		router.post("/onlineusers").blockingHandler(userHandler::onlineUsers, false);
 		// 10.短信订阅
 		router.post("/subscription").blockingHandler(userHandler::updateSubscription, false);
-		// 11.短信主题
-		router.post("/topiclist").blockingHandler(userHandler::smsTopicList, false);
 		return router;
 	}
 
@@ -266,14 +253,24 @@ public class ItosRouter {
 	 */
 	public static Router appInfoRouter(Vertx vertx, AppInfoHandler appInfoHandler) {
 		Router router = Router.router(vertx);
+		//1.添加服务信息
+		router.post("/add").blockingHandler(appInfoHandler::addAppInfo, false);
+		//2.修改服务信息
+		router.post("/upd").blockingHandler(appInfoHandler::updAppInfo, false);
+		//3.删除服务信息
+		router.post("/del").blockingHandler(appInfoHandler::delAppInfo, false);
+		//4.服务信息列表
+		router.post("/list").blockingHandler(appInfoHandler::listAppInfo, false);
+		
+		
 		// 1.设置遗产服务信息
-		router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
+		//router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
 		// 2.服务信息列表
-		router.post("/list").blockingHandler(appInfoHandler::getAppInfoList, false);
+		//router.post("/list").blockingHandler(appInfoHandler::getAppInfoList, false);
 		// 3.服务拓扑位置
-		router.post("/coordinatelist").blockingHandler(appInfoHandler::getTopologyCoordinate, false);
+		//router.post("/coordinatelist").blockingHandler(appInfoHandler::getTopologyCoordinate, false);
 		// 4.拓扑位置更新
-		router.post("/refreshcoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
+		//router.post("/refreshcoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
 		return router;
 	}
 
@@ -294,6 +291,22 @@ public class ItosRouter {
 		router.post("/clientcomparelist").blockingHandler(compareHandler::clientCompareList, false);
 		// 6.客户端更新比对信息
 		router.post("/refresh").blockingHandler(compareHandler::clientRefresh, false);
+		return router;
+	}
+
+	/**
+	 *系统代码 
+	 */
+	public static Router sysCodeRouter(Vertx vertx, SysCodeHandler sysCodeHandler) {
+		Router router = Router.router(vertx);
+		//1.添加代码
+		router.post("/add").blockingHandler(sysCodeHandler::addSysCode, false);
+		//2.修改代码
+		router.post("/upd").blockingHandler(sysCodeHandler::updSysCode, false);
+		//3.删除代码
+		router.post("/del").blockingHandler(sysCodeHandler::delSysCode, false);
+		//4.列表
+		router.post("/list").blockingHandler(sysCodeHandler::listSysCode, false);
 		return router;
 	}
 

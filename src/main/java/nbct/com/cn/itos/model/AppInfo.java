@@ -1,17 +1,22 @@
 package nbct.com.cn.itos.model;
 
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.jdbc.RowMapper;
 import util.ConvertUtil;
 
 /**
 * @author PJ 
 * @version 创建时间：2020年4月16日 上午8:40:25
 */
-public class AppInfo {
+public class AppInfo implements RowMapper<AppInfo>{
 	
-	private String serverName;
+	private String serviceId;
 	
-	private String serverDesc;
+	private String serviceName;
+	
+	private String serviceDesc;
+	
+	private String serviceAbs;
 	
 	private String ip;
 	
@@ -19,36 +24,65 @@ public class AppInfo {
 	
 	private boolean valid;
 	
-	private String type;
+	private String serviceType;
+	
+	private String version;
+	
+	private String domain;
+	
+	private String remark;
 	
 	private Integer x;
 	
 	private Integer y;
 	
-	public static AppInfo from(JsonObject jo) {
+	@Override
+	public AppInfo from(JsonObject row) {
 		AppInfo app = new AppInfo();
-		app.setServerName(jo.getString("serverName"));
-		app.setServerDesc(jo.getString("desc"));
-		app.setIp(jo.getString("ip"));
-		app.setPort(jo.getInteger("port"));
-		app.setValid(ConvertUtil.strToBool(jo.getString("valid")));
+		app.setServiceId(row.getString("SERVICEID"));
+		app.setServiceName(row.getString("SERVICENAME"));
+		app.setServiceDesc(row.getString("SERVICEDESC"));
+		app.setServiceAbs(row.getString("SERVICEABS"));
+		app.setServiceType(row.getString("SERVICETYPE"));
+		app.setIp(row.getString("IP"));
+		app.setPort(row.getInteger("PORT"));
+		app.setVersion(row.getString("VERSION"));
+		app.setRemark(row.getString("REMARK"));
+		app.setValid(ConvertUtil.strToBool(row.getString("VALID")));
+		app.setDomain(row.getString("DOMAIN"));
 		return app;
 	}
 
-	public String getServerName() {
-		return serverName;
+	public String getServiceId() {
+		return serviceId;
 	}
 
-	public void setServerName(String serverName) {
-		this.serverName = serverName;
+	public void setServiceId(String serviceId) {
+		this.serviceId = serviceId;
 	}
 
-	public String getServerDesc() {
-		return serverDesc;
+	public String getServiceName() {
+		return serviceName;
 	}
 
-	public void setServerDesc(String serverDesc) {
-		this.serverDesc = serverDesc;
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public String getServiceDesc() {
+		return serviceDesc;
+	}
+
+	public void setServiceDesc(String serviceDesc) {
+		this.serviceDesc = serviceDesc;
+	}
+
+	public String getServiceAbs() {
+		return serviceAbs;
+	}
+
+	public void setServiceAbs(String serviceAbs) {
+		this.serviceAbs = serviceAbs;
 	}
 
 	public String getIp() {
@@ -75,12 +109,28 @@ public class AppInfo {
 		this.valid = valid;
 	}
 
-	public String getType() {
-		return type;
+	public String getServiceType() {
+		return serviceType;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
 	}
 
 	public Integer getX() {
@@ -98,5 +148,13 @@ public class AppInfo {
 	public void setY(Integer y) {
 		this.y = y;
 	}
-	
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
+	}
+
 }

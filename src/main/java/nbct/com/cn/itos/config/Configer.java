@@ -9,7 +9,7 @@ import io.vertx.ext.sql.SQLClient;
 
 /**
  * @author PJ
- * @version 创建时间：2019年12月23日 上午9:03:04 类说明
+ * @version 创建时间：2019年12月23日 上午9:03:04 
  */
 public class Configer {
 
@@ -62,7 +62,7 @@ public class Configer {
 	
 	private static JsonObject getConfig(Vertx vertx) {
 		FileSystem fs = vertx.fileSystem();
-		Buffer buf = fs.readFileBlocking("./itos.json");
+		Buffer buf = fs.readFileBlocking("d:/itos.json");
 		return new JsonObject(buf);
 	}
 

@@ -133,6 +133,7 @@ public class JdbcHelper {
 									promise.fail(qr.cause().getMessage());
 								}
 							} catch (Exception e) {
+								e.printStackTrace();
 								promise.fail(e.getMessage());
 							}
 							connection.close();
