@@ -19,7 +19,6 @@ import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosDocument;
-import nbct.com.cn.itos.model.SysCode;
 import util.DateUtil;
 
 /**

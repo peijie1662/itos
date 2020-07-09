@@ -50,6 +50,10 @@ public class AppInfoHandler {
 	public void updAppInfo(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String func = "{call itos.p_appinfo_upd(?,?,?,?)}";
+		
+		
+		System.out.println(rp.encodePrettily());
+		
 		JsonArray params = new JsonArray().add(rp.encodePrettily());
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
@@ -67,11 +71,11 @@ public class AppInfoHandler {
 	}
 
 	/**
-	 * 服务列表<br>
+	 * 定义服务列表<br>
 	 * 从表中读取定义数据，不包含其它数据。
 	 */
 	public void listAppInfo(RoutingContext ctx) {
-		String sql = "select * from itos_appinfo";
+		String sql = "select * from itos_appinfo order by domain,serviceType,ip";
 		JdbcHelper.rows(ctx, sql, new AppInfo());
 	}
 
@@ -91,8 +95,42 @@ public class AppInfoHandler {
 			res.end(Err(e.getMessage()));
 		}
 	}
+
+	/**
+	 * 添加服务到场景中
+	 */
+	public void addSceneApp(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String func = "{call itos.p_scene_app_add(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}
+
+	/**
+	 * 场景服务列表<br>
+	 * 1.读取定义表与定位表关联数据<br>
+	 * 2.注入实时信息
+	 */
+	public void listSceneApp(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		HttpServerResponse res = ctx.response();
+		JsonArray params = new JsonArray().add(rp.getString("scene"));
+		String sql = "select b.*, a.x, a.y from itos_topology_loc a, itos_appinfo b " + //
+				" where a.scene = ? and a.serviceId = b.serviceId ";
+		JdbcHelper.rows(sql, params, new AppInfo()).onSuccess(list -> {
+			// TODO
+			res.end(OK(list));
+		}).onFailure(e -> {
+			log.error("LISTSCENEAPP-01::", e);
+			res.end(Err(e.getMessage()));
+		});
+	}
 	
 	
+	/**
+	 * 删除场景服务
+	 */
 
 	/**
 	 * 场景服务列表<br>

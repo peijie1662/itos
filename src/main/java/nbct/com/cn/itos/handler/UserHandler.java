@@ -21,7 +21,6 @@ import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosUser;
-import nbct.com.cn.itos.model.SysCode;
 
 /**
  * @author PJ

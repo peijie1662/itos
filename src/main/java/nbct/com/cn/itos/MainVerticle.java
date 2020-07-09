@@ -4,14 +4,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import nbct.com.cn.itos.config.Configer;
-import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.handler.AppInfoHandler;
 import nbct.com.cn.itos.handler.AssociateItopHandler;
 import nbct.com.cn.itos.handler.CommonTaskHandler;
@@ -98,10 +96,6 @@ public class MainVerticle extends AbstractVerticle {
 		vertx.deployVerticle(new WebsocketVerticle());
 		vertx.deployVerticle(new NotifyVerticle());
 		vertx.createHttpServer().requestHandler(router).listen(Configer.getHttpPort());
-		// 0.通讯
-		EventBus es = vertx.eventBus();
-		// 1.设置新服务信息
-		//es.consumer(SceneEnum.NEWAPPINFO.addr(), appInfoHandler::setNewAppInfo);
 		log.info("ITOS server start");
 	}
 }

@@ -5,37 +5,39 @@ import nbct.com.cn.itos.jdbc.RowMapper;
 import util.ConvertUtil;
 
 /**
-* @author PJ 
-* @version 创建时间：2020年4月16日 上午8:40:25
-*/
-public class AppInfo implements RowMapper<AppInfo>{
-	
+ * @author PJ
+ * @version 创建时间：2020年4月16日 上午8:40:25
+ */
+public class AppInfo implements RowMapper<AppInfo> {
+
 	private String serviceId;
-	
+
 	private String serviceName;
-	
+
 	private String serviceDesc;
-	
+
 	private String serviceAbs;
 	
+	private String serviceObj;
+
 	private String ip;
-	
+
 	private Integer port;
-	
+
 	private boolean valid;
-	
+
 	private String serviceType;
-	
+
 	private String version;
-	
+
 	private String domain;
-	
+
 	private String remark;
-	
+
 	private Integer x;
-	
+
 	private Integer y;
-	
+
 	@Override
 	public AppInfo from(JsonObject row) {
 		AppInfo app = new AppInfo();
@@ -44,12 +46,15 @@ public class AppInfo implements RowMapper<AppInfo>{
 		app.setServiceDesc(row.getString("SERVICEDESC"));
 		app.setServiceAbs(row.getString("SERVICEABS"));
 		app.setServiceType(row.getString("SERVICETYPE"));
+		app.setServiceObj(row.getString("SERVICEOBJ"));
 		app.setIp(row.getString("IP"));
 		app.setPort(row.getInteger("PORT"));
 		app.setVersion(row.getString("VERSION"));
 		app.setRemark(row.getString("REMARK"));
 		app.setValid(ConvertUtil.strToBool(row.getString("VALID")));
 		app.setDomain(row.getString("DOMAIN"));
+		app.setX(row.getInteger("X", 0));
+		app.setY(row.getInteger("Y", 0));
 		return app;
 	}
 
@@ -155,6 +160,14 @@ public class AppInfo implements RowMapper<AppInfo>{
 
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+
+	public String getServiceObj() {
+		return serviceObj;
+	}
+
+	public void setServiceObj(String serviceObj) {
+		this.serviceObj = serviceObj;
 	}
 
 }

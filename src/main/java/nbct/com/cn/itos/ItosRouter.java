@@ -261,7 +261,10 @@ public class ItosRouter {
 		router.post("/del").blockingHandler(appInfoHandler::delAppInfo, false);
 		//4.服务信息列表
 		router.post("/list").blockingHandler(appInfoHandler::listAppInfo, false);
-		
+		//5.场景添加服务
+		router.post("/addsceneapp").blockingHandler(appInfoHandler::addSceneApp, false);
+		//6.场景服务列表  
+		router.post("/listsceneapp").blockingHandler(appInfoHandler::listSceneApp, false);
 		
 		// 1.设置遗产服务信息
 		//router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
