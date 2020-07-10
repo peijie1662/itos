@@ -9,9 +9,9 @@ import nbct.com.cn.itos.jdbc.RowMapper;
 */
 public class TopologyCoordinate implements RowMapper<TopologyCoordinate>{
 	
-	private String serverName;
+	private String scene;
 	
-	private String ip;
+	private String serviceId;
 	
 	private Integer  x;
 	
@@ -20,27 +20,11 @@ public class TopologyCoordinate implements RowMapper<TopologyCoordinate>{
 	@Override
 	public TopologyCoordinate from(JsonObject row) {
 		TopologyCoordinate tc = new TopologyCoordinate();
-		tc.setServerName(row.getString("SERVERNAME"));
-		tc.setIp(row.getString("IP"));
+		tc.setScene(row.getString("SCENE"));
+		tc.setServiceId(row.getString("SERVICEID"));
 		tc.setX(row.getInteger("X"));
 		tc.setY(row.getInteger("Y"));
 		return tc;
-	}
-
-	public String getServerName() {
-		return serverName;
-	}
-
-	public void setServerName(String serverName) {
-		this.serverName = serverName;
-	}
-
-	public String getIp() {
-		return ip;
-	}
-
-	public void setIp(String ip) {
-		this.ip = ip;
 	}
 
 	public Integer getX() {
@@ -57,6 +41,22 @@ public class TopologyCoordinate implements RowMapper<TopologyCoordinate>{
 
 	public void setY(Integer y) {
 		this.y = y;
+	}
+
+	public String getScene() {
+		return scene;
+	}
+
+	public void setScene(String scene) {
+		this.scene = scene;
+	}
+
+	public String getServiceId() {
+		return serviceId;
+	}
+
+	public void setServiceId(String serviceId) {
+		this.serviceId = serviceId;
 	}
 
 }

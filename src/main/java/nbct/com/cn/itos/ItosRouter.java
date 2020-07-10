@@ -253,27 +253,28 @@ public class ItosRouter {
 	 */
 	public static Router appInfoRouter(Vertx vertx, AppInfoHandler appInfoHandler) {
 		Router router = Router.router(vertx);
-		//1.添加服务信息
+		// 1.添加服务信息
 		router.post("/add").blockingHandler(appInfoHandler::addAppInfo, false);
-		//2.修改服务信息
+		// 2.修改服务信息
 		router.post("/upd").blockingHandler(appInfoHandler::updAppInfo, false);
-		//3.删除服务信息
+		// 3.删除服务信息
 		router.post("/del").blockingHandler(appInfoHandler::delAppInfo, false);
-		//4.服务信息列表
+		// 4.服务信息列表
 		router.post("/list").blockingHandler(appInfoHandler::listAppInfo, false);
-		//5.场景添加服务
+		// 5.场景添加服务
 		router.post("/addsceneapp").blockingHandler(appInfoHandler::addSceneApp, false);
-		//6.场景服务列表  
+		// 6.场景服务列表
 		router.post("/listsceneapp").blockingHandler(appInfoHandler::listSceneApp, false);
-		
-		// 1.设置遗产服务信息
-		//router.post("/setlegacy").blockingHandler(appInfoHandler::setLegacyAppInfo, false);
-		// 2.服务信息列表
-		//router.post("/list").blockingHandler(appInfoHandler::getAppInfoList, false);
-		// 3.服务拓扑位置
-		//router.post("/coordinatelist").blockingHandler(appInfoHandler::getTopologyCoordinate, false);
-		// 4.拓扑位置更新
-		//router.post("/refreshcoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
+		// 7.删除场景服务
+		router.post("/delsceneapp").blockingHandler(appInfoHandler::delSceneApp, false);
+		// 8.场景连接列表
+		router.post("/listscenecon").blockingHandler(appInfoHandler::listSceneCon, false);
+		// 9.添加场景连接
+		router.post("/addscenecon").blockingHandler(appInfoHandler::addSceneCon, false);
+		// 10.删除场景连接
+		router.post("/delscenecon").blockingHandler(appInfoHandler::delSceneCon, false);
+		// 11.拓扑位置更新
+		router.post("/savecoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
 		return router;
 	}
 
@@ -298,17 +299,17 @@ public class ItosRouter {
 	}
 
 	/**
-	 *系统代码 
+	 * 系统代码
 	 */
 	public static Router sysCodeRouter(Vertx vertx, SysCodeHandler sysCodeHandler) {
 		Router router = Router.router(vertx);
-		//1.添加代码
+		// 1.添加代码
 		router.post("/add").blockingHandler(sysCodeHandler::addSysCode, false);
-		//2.修改代码
+		// 2.修改代码
 		router.post("/upd").blockingHandler(sysCodeHandler::updSysCode, false);
-		//3.删除代码
+		// 3.删除代码
 		router.post("/del").blockingHandler(sysCodeHandler::delSysCode, false);
-		//4.列表
+		// 4.列表
 		router.post("/list").blockingHandler(sysCodeHandler::listSysCode, false);
 		return router;
 	}

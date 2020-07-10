@@ -9,7 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.AppInfo;
-
+import nbct.com.cn.itos.model.TopologyConnector;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -50,10 +50,6 @@ public class AppInfoHandler {
 	public void updAppInfo(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String func = "{call itos.p_appinfo_upd(?,?,?,?)}";
-		
-		
-		System.out.println(rp.encodePrettily());
-		
 		JsonArray params = new JsonArray().add(rp.encodePrettily());
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
@@ -87,7 +83,7 @@ public class AppInfoHandler {
 		try {
 			ctx.getBodyAsJsonArray().forEach(item -> {
 				JsonObject jo = JsonObject.mapFrom(item);
-				String key = jo.getString("serviceName") + "@" + jo.getString("ip");
+				String key = jo.getString("serviceObj") + "@" + jo.getString("ip");
 				APPS.put(key, jo);
 			});
 			res.end(OK());
@@ -126,73 +122,61 @@ public class AppInfoHandler {
 			res.end(Err(e.getMessage()));
 		});
 	}
-	
-	
+
 	/**
 	 * 删除场景服务
 	 */
+	public void delSceneApp(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String func = "{call itos.p_scene_app_del(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}
 
 	/**
-	 * 场景服务列表<br>
-	 * 1.读取定义表与定位表关联数据<br>
-	 * 2.注入实时信息
+	 * 场景连接列表
 	 */
-//	public void sceneAppInfoList(RoutingContext ctx) {
-//		HttpServerResponse res = ctx.response();
-//		res.putHeader("content-type", "application/json");
-//		ArrayList<AppInfo> apps = new ArrayList<AppInfo>();
-//		apps.addAll(LEGACY_APPS);
-//		apps.addAll(NEW_APPS);
-//		String sql = "select * from itos_topology";
-//		JdbcHelper.rows(sql, new TopologyCoordinate()).onSuccess(coordinates -> {
-//			apps.forEach(app -> {
-//				Optional<TopologyCoordinate> c = coordinates.stream()
-//						.filter(coordinate -> coordinate.getServerName().equals(app.getServerName())
-//								&& coordinate.getIp().equals(app.getIp()))
-//						.findAny();
-//				if (c.isPresent()) {
-//					app.setX(c.get().getX());
-//					app.setY(c.get().getY());
-//				}
-//			});
-//			res.end(OK(apps));
-//		}).onFailure(e -> {
-//			res.end(Err(e.getCause().getMessage()));
-//		});
-//	}
+	public void listSceneCon(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select a.*, b.servicename as sourcename, c.servicename as targetname " + //
+				"  from itos_topology_con a, itos_appinfo b, itos_appinfo c " + //
+				" where scene = ? and a.sourceid = b.serviceid and a.targetid = c.serviceid";
+		JsonArray params = new JsonArray().add(rp.getString("scene"));
+		JdbcHelper.rows(ctx, sql, params, new TopologyConnector());
+	}
 
 	/**
-	 * 服务拓扑位置
-	 * 
-	 * public void getTopologyCoordinate(RoutingContext ctx) { String sql = "select
-	 * * from itos_topology"; JdbcHelper.rows(ctx, sql, new TopologyCoordinate()); }
+	 * 添加场景连接
 	 */
+	public void addSceneCon(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String func = "{call itos.p_scene_con_add(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}
+
+	/**
+	 * 删除场景连接
+	 */
+	public void delSceneCon(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "delete from itos_topology_con where scene = ? and sourceid = ? and targetid = ?";
+		JsonArray params = new JsonArray().add(rp.getString("scene")).add(rp.getString("sourceId"))
+				.add(rp.getString("targetId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
 
 	/**
 	 * 按照场景更新拓扑位置
-	 * 
-	 * public void updTopologyCoordinate(RoutingContext ctx) { JsonArray details =
-	 * ctx.getBodyAsJsonArray(); HttpServerResponse res = ctx.response();
-	 * res.putHeader("content-type", "application/json"); SQLClient client =
-	 * Configer.client; client.getConnection(cr -> { if (cr.succeeded()) {
-	 * SQLConnection conn = cr.result(); // 1.删除原坐标 Supplier<Future<Void>> delf = ()
-	 * -> { Future<Void> f = Future.future(promise -> { String sql = "delete from
-	 * itos_topology"; conn.update(sql, r -> { if (r.succeeded()) {
-	 * promise.complete(); } else { promise.fail(r.cause().getMessage()); } }); });
-	 * return f; }; // 2.保存新位置 Function<Void, Future<Void>> savef = (task) -> {
-	 * Future<Void> f = Future.future(promise -> { String sql = "insert into
-	 * itos_topology(serverName,ip,x,y) values(?,?,?,?)"; List<JsonArray> batch =
-	 * new ArrayList<>(); details.stream().forEach(item -> { JsonObject j =
-	 * JsonObject.mapFrom(item); batch.add(new
-	 * JsonArray().add(j.getString("serverName")).add(j.getString("ip"))
-	 * .add(j.getInteger("x")).add(j.getInteger("y"))); });
-	 * conn.batchWithParams(sql, batch, r -> { if (r.succeeded()) {
-	 * promise.complete(); } else { promise.fail(r.cause().getMessage()); } }); });
-	 * return f; }; // 3.执行 delf.get().compose(r -> { return savef.apply(r);
-	 * }).onComplete(r -> { if (r.succeeded()) {
-	 * log.info(String.format("UPDTOPOLOGYCOORDINATE-01::更新拓扑图信息")); res.end(OK());
-	 * } else { log.error("UPDTOPOLOGYCOORDINATE-02::", r.cause());
-	 * res.end(Err(r.cause().getMessage())); } conn.close(); }); } }); }
 	 */
+	public void updTopologyCoordinate(RoutingContext ctx) {
+		JsonArray cons = ctx.getBodyAsJsonArray();
+		String func = "{call itos.p_scene_loc_save(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(cons.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}
 
 }
