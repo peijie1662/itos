@@ -10,6 +10,8 @@ import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.AppInfo;
 import nbct.com.cn.itos.model.TopologyConnector;
+import nbct.com.cn.itos.model.TopologyLabel;
+
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -179,4 +181,46 @@ public class AppInfoHandler {
 		JdbcHelper.call(ctx, func, params, outputs);
 	}
 
+	/**
+	 * 场景标签列表
+	 */
+	public void listSceneLab(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_topology_lab where scene = ?";
+		JsonArray params = new JsonArray().add(rp.getString("scene"));
+		JdbcHelper.rows(ctx, sql, params, new TopologyLabel());
+	}
+
+	/**
+	 * 添加场景标签
+	 */
+	public void addSceneLab(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "insert into itos_topology_lab(labId,scene,x,y,text,width) values(?,?,?,?,?,?)";
+		JsonArray params = new JsonArray().add(UUID.randomUUID().toString()) //
+				.add(rp.getString("scene")).add(rp.getInteger("x")).add(rp.getInteger("y"))//
+				.add(rp.getString("text")).add(999);
+		JdbcHelper.update(ctx, sql, params);
+	}
+
+	/**
+	 * 删除场景标签
+	 */
+	public void delSceneLab(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "delete from itos_topology_lab where scene = ? and labId = ?";
+		JsonArray params = new JsonArray().add(rp.getString("scene")).add(rp.getString("labId"));
+		JdbcHelper.update(ctx, sql, params);
+	}
+	
+	/**
+	 * 按照场景更新标签位置
+	 */
+	public void updTopologyLabCoordinate(RoutingContext ctx) {
+		JsonArray cons = ctx.getBodyAsJsonArray();
+		String func = "{call itos.p_scenelab_loc_save(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(cons.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+	}
 }

@@ -275,6 +275,14 @@ public class ItosRouter {
 		router.post("/delscenecon").blockingHandler(appInfoHandler::delSceneCon, false);
 		// 11.拓扑位置更新
 		router.post("/savecoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
+		//12.场景标签列表
+		router.post("/listscenelab").blockingHandler(appInfoHandler::listSceneLab, false);
+		//13.添加场景标签
+		router.post("/addscenelab").blockingHandler(appInfoHandler::addSceneLab, false);
+		//14.删除场景标签
+		router.post("/delscenelab").blockingHandler(appInfoHandler::delSceneLab, false);
+		// 15.标签位置更新
+		router.post("/savelabcoordinate").blockingHandler(appInfoHandler::updTopologyLabCoordinate, false);		
 		return router;
 	}
 
