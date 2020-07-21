@@ -44,5 +44,9 @@ public enum CategoryEnum {
 			return item.eq(s);
 		}).findAny();
 	}
+	
+	public String toString() {
+		return value;
+	}
 
 }

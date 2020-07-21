@@ -21,6 +21,7 @@ import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.DispatchClient;
+import util.CommonUtil;
 import util.DateUtil;
 
 /**
@@ -193,6 +194,91 @@ public class DispatchClientHandler {
 		params.add(CategoryEnum.APPSERVER.getValue());
 		params.add(CategoryEnum.SYSTEM.getValue());
 		JdbcHelper.rows(ctx, sql, params, new CommonTask());
+	}
+
+	/**
+	 * 页端终端任务列表分页
+	 */
+	public void getDispatchPageTask(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_task where invalid = 'N' and composeId is null";
+		// 1.类型范围，固定
+		sql += String.format(" and category in ('%s','%s','%s','%s','%s')", CategoryEnum.CMD, CategoryEnum.PROCEDURE,
+				CategoryEnum.CUSTOM, CategoryEnum.APPSERVER, CategoryEnum.SYSTEM);
+		// 2.时间范围
+		JsonArray dateRange = rp.getJsonArray("dateRange");
+		boolean paramValid = (dateRange != null) && dateRange.size() == 2;
+		String startDt = paramValid ? DateUtil.getDBDateBeginStr(dateRange.getString(0))
+				: DateUtil.getDBDateBeginStr(null);
+		String endDt = paramValid ? DateUtil.getDBDateEndStr(dateRange.getString(1)) : DateUtil.getDBDateEndStr(null);
+		sql += " and planDt >=" + startDt + " and planDt <=" + endDt;
+		// 3.终端范围
+		String clients = rp.getString("clients");
+		if (!CommonUtil.isEmpty(clients)) {
+			String modelKeys = "select * from table(split((select listagg(modelkey, ',') within " + //
+					" group(order by servicename) from itos_service where servicename in (" + clients + "))))";
+			sql += " and modelid in (" + modelKeys + ")";
+		}
+		// 4.状态范围
+		String statuss = rp.getString("statuss");
+		if (!CommonUtil.isEmpty(statuss)) {
+			sql += " and status in (" + statuss + ")";
+		}
+		// 5.简介范围
+		String abss = rp.getString("abss");
+		if (!CommonUtil.isEmpty(abss)) {
+			sql += " and abstract in (" + abss + ")";
+		}
+		// 6.顺序，默认按计划执行时间倒序
+		String order = rp.getString("order");
+		if (order != null) {
+			sql += " order by " + order + " desc";
+		} else {
+			sql += " order by planDt desc";
+		}
+		// 4.分页
+		int curPage = rp.getInteger("curPage", 0);
+		int pageSize = rp.getInteger("pageSize", 0);
+		sql = "select * from (select rownum as rn, t.* from (" + sql + ") t where rownum <= " //
+				+ curPage * pageSize + ") where rn > " + (curPage - 1) * pageSize;
+		System.out.println(sql);
+		JdbcHelper.rows(ctx, sql, new CommonTask());
+	}
+
+	/**
+	 * 页端终端任务列表总数
+	 */
+	public void getDispatchTaskCount(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select count(*) as count from itos_task where invalid = 'N' and composeId is null";
+		// 1.类型范围，固定
+		sql += String.format(" and category in ('%s','%s','%s','%s','%s')", CategoryEnum.CMD, CategoryEnum.PROCEDURE,
+				CategoryEnum.CUSTOM, CategoryEnum.APPSERVER, CategoryEnum.SYSTEM);
+		// 2.时间范围
+		JsonArray dateRange = rp.getJsonArray("dateRange");
+		boolean paramValid = (dateRange != null) && dateRange.size() == 2;
+		String startDt = paramValid ? DateUtil.getDBDateBeginStr(dateRange.getString(0))
+				: DateUtil.getDBDateBeginStr(null);
+		String endDt = paramValid ? DateUtil.getDBDateEndStr(dateRange.getString(1)) : DateUtil.getDBDateEndStr(null);
+		sql += " and planDt >=" + startDt + " and planDt <=" + endDt;
+		// 3.终端范围
+		String clients = rp.getString("clients");
+		if (!CommonUtil.isEmpty(clients)) {
+			String modelKeys = "select * from table(split((select listagg(modelkey, ',') within " + //
+					" group(order by servicename) from itos_service where servicename in (" + clients + "))))";
+			sql += " and modelid in (" + modelKeys + ")";
+		}
+		// 4.状态范围
+		String statuss = rp.getString("statuss");
+		if (!CommonUtil.isEmpty(statuss)) {
+			sql += " and status in (" + statuss + ")";
+		}
+		// 5.简介范围
+		String abss = rp.getString("abss");
+		if (!CommonUtil.isEmpty(abss)) {
+			sql += " and abstract in (" + abss + ")";
+		}
+		JdbcHelper.rows(ctx, sql);
 	}
 
 	/**

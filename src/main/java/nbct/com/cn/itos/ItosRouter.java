@@ -162,6 +162,10 @@ public class ItosRouter {
 		router.post("/clienttask").blockingHandler(dispatchClientHandler::getDispatchTaskList, false);
 		// 8.所有任务列表
 		router.post("/alltask").blockingHandler(dispatchClientHandler::getDispatchAllTask, false);
+		// 9.所有任务列表（分页）
+		router.post("/pagetask").blockingHandler(dispatchClientHandler::getDispatchPageTask, false);
+		// 10.所有任务列表总数
+		router.post("/taskcount").blockingHandler(dispatchClientHandler::getDispatchTaskCount, false);
 		return router;
 	}
 
@@ -275,14 +279,16 @@ public class ItosRouter {
 		router.post("/delscenecon").blockingHandler(appInfoHandler::delSceneCon, false);
 		// 11.拓扑位置更新
 		router.post("/savecoordinate").blockingHandler(appInfoHandler::updTopologyCoordinate, false);
-		//12.场景标签列表
+		// 12.场景标签列表
 		router.post("/listscenelab").blockingHandler(appInfoHandler::listSceneLab, false);
-		//13.添加场景标签
+		// 13.添加场景标签
 		router.post("/addscenelab").blockingHandler(appInfoHandler::addSceneLab, false);
-		//14.删除场景标签
+		// 14.删除场景标签
 		router.post("/delscenelab").blockingHandler(appInfoHandler::delSceneLab, false);
 		// 15.标签位置更新
-		router.post("/savelabcoordinate").blockingHandler(appInfoHandler::updTopologyLabCoordinate, false);		
+		router.post("/savelabcoordinate").blockingHandler(appInfoHandler::updTopologyLabCoordinate, false);
+		// 16.客户端信息
+		router.post("/heartbeat").blockingHandler(appInfoHandler::actualAppInfo, false);
 		return router;
 	}
 
