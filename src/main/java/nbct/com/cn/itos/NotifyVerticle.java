@@ -16,7 +16,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import nbct.com.cn.itos.config.Configer;
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosUser;
@@ -41,7 +41,7 @@ public class NotifyVerticle extends AbstractVerticle {
 	 * 调用短信服务
 	 */
 	private void callSmsSend(List<TSmsQueue> sqs) {
-		JsonObject smsServer = Configer.smsServer;
+		JsonObject smsServer = CONFIG.getJsonObject("smsServer");
 		WebClient wc = WebClient.create(vertx,
 				new WebClientOptions().setIdleTimeout(2).setConnectTimeout(2000).setMaxWaitQueueSize(5));
 		try {

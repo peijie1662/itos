@@ -99,6 +99,10 @@ public class ItosRouter {
 		router.post("/deletedr").blockingHandler(manualTaskHandler::deleteDeliverRepair, false);
 		// 7.任务委外列表
 		router.post("/drlist").blockingHandler(manualTaskHandler::getDeliverRepair, false);
+		// 8.人工任务分页
+		router.post("/page").blockingHandler(manualTaskHandler::getManualTaskPage, false);
+		// 9.人工任务总数
+		router.post("/count").blockingHandler(manualTaskHandler::getManualTaskCount, false);
 		return router;
 	}
 
@@ -166,6 +170,8 @@ public class ItosRouter {
 		router.post("/pagetask").blockingHandler(dispatchClientHandler::getDispatchPageTask, false);
 		// 10.所有任务列表总数
 		router.post("/taskcount").blockingHandler(dispatchClientHandler::getDispatchTaskCount, false);
+		// 11.查询项-简介
+		router.post("/abss").blockingHandler(dispatchClientHandler::getAbsList, false);
 		return router;
 	}
 
@@ -289,6 +295,8 @@ public class ItosRouter {
 		router.post("/savelabcoordinate").blockingHandler(appInfoHandler::updTopologyLabCoordinate, false);
 		// 16.客户端信息
 		router.post("/heartbeat").blockingHandler(appInfoHandler::actualAppInfo, false);
+		// 17.客户端发来信息
+		router.get("/actuallist").blockingHandler(appInfoHandler::actualAppList, false);
 		return router;
 	}
 

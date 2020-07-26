@@ -7,10 +7,11 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
-import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.ConfigVerticle;
 
 import static nbct.com.cn.itos.model.CallResult.OK;
 import static nbct.com.cn.itos.model.CallResult.Err;
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 
 /**
  * 登录
@@ -30,7 +31,7 @@ public class LoginHandler {
 		// 1.寻找登录服务
 		try {
 			WebClient webClient = WebClient.create(vertx);
-			String regUrl = Configer.getRegisterUrl() + "/provider/" + Configer.loginServer;
+			String regUrl = ConfigVerticle.getRegisterUrl() + "/provider/" + CONFIG.getString("loginServer");
 			webClient.getAbs(regUrl).send(handle -> {
 				if (handle.succeeded()) {
 					JSONObject r = handle.result().bodyAsJson(JSONObject.class);

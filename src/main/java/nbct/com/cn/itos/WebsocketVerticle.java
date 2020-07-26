@@ -1,5 +1,7 @@
 package nbct.com.cn.itos;
 
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +15,6 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.model.ItosUser;
 
@@ -33,7 +34,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 			routingContext.response().sendFile("html/ws.html");
 		});
 		websocketMethod(server);
-		server.requestHandler(router).listen(Configer.getWebsocketPort());
+		server.requestHandler(router).listen(CONFIG.getJsonObject("provider").getInteger("wsport"));
 		EventBus es = vertx.eventBus();
 		// 1.系统日志场景
 		es.consumer(SceneEnum.SYSLOG.addr(), this::pushSysLog);

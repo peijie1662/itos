@@ -2,6 +2,7 @@ package nbct.com.cn.itos.handler;
 
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -14,7 +15,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
-import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.ConfigVerticle;
 
 /**
  * @author PJ
@@ -75,7 +76,7 @@ public class AssociateItopHandler {
 			// 1.寻找ITOP服务
 			String machineName = rp.getString("machineName").toUpperCase();
 			WebClient webClient = WebClient.create(vertx);
-			String regUrl = Configer.getRegisterUrl() + "/provider/" + Configer.itopServer;
+			String regUrl = ConfigVerticle.getRegisterUrl() + "/provider/" + CONFIG.getString("itopServer");
 			webClient.getAbs(regUrl).send(handle -> {
 				if (handle.succeeded()) {
 					JSONObject r = handle.result().bodyAsJson(JSONObject.class);

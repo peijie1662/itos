@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -16,7 +17,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosDocument;
 import util.DateUtil;
@@ -45,7 +45,7 @@ public class DocumentHandler {
 		String fileName = rp.getString("fileName");
 		// 1.删除对应文件
 		try {
-			String path = Configer.uploadDir + "pdf/document/" + fileName;
+			String path = CONFIG.getString("uploadDir") + "pdf/document/" + fileName;
 			FileSystem fs = ctx.vertx().fileSystem();
 			if (fs.existsBlocking(path)) {
 				fs.deleteBlocking(path);
@@ -74,7 +74,7 @@ public class DocumentHandler {
 			String groupId = ctx.request().getFormAttribute("groupId");
 			// 2.保存路径
 			FileSystem fs = ctx.vertx().fileSystem();
-			String savePath = Configer.uploadDir + "pdf/document/";
+			String savePath = CONFIG.getString("uploadDir") + "pdf/document/";
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}

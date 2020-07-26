@@ -1,5 +1,7 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.handler.CompareHandler.CUR_COMPARES;
 
 import java.time.LocalDateTime;
@@ -21,10 +23,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
-import nbct.com.cn.itos.config.Configer;
+import nbct.com.cn.itos.ConfigVerticle;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.CompareFile;
@@ -90,7 +91,6 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return uf;
-
 	}
 
 	/**
@@ -130,7 +130,6 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return logf;
-
 	}
 
 	/**
@@ -184,8 +183,7 @@ public class SystemTaskHandler {
 	 */
 	public void compareTask() {
 		final BusinessResult br = new BusinessResult();
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读系统比对任务
@@ -266,13 +264,13 @@ public class SystemTaskHandler {
 							String compareResult = null;
 							// 3.2.比对文件长度
 							long fileSizeCount = v.stream().map(cf -> cf.getCurFileSize()).distinct().count();
-							if (fileSizeCount > 0) {
+							if (fileSizeCount > 1) {
 								compareResult = String.format("ITOS:分组%s文件长度不一致", k);
 							}
 							// 3.3比对文件修改时间
 							long fileModifyTimeCount = v.stream().map(cf -> cf.getCurFileModifyTime()).distinct()
 									.count();
-							if (fileModifyTimeCount > 0) {
+							if (fileModifyTimeCount > 1) {
 								if (compareResult == null) {
 									compareResult = String.format("ITOS:分组%s文件修改时间不一致", k);
 								} else {
@@ -321,8 +319,7 @@ public class SystemTaskHandler {
 	 * 执行系统延时任务
 	 */
 	public void timerTask() {
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读系统延时任务
@@ -389,8 +386,7 @@ public class SystemTaskHandler {
 	 * 执行系统公告任务
 	 */
 	public void announceTask() {
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读系统公告任务
@@ -423,7 +419,7 @@ public class SystemTaskHandler {
 				Function<List<CommonTask>, Future<List<CommonTask>>> announcef = list -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						WebClient webClient = WebClient.create(vertx);
-						String regUrl = Configer.getRegisterUrl() + "/provider/" + Configer.itafServer;
+						String regUrl = ConfigVerticle.getRegisterUrl() + "/provider/" + CONFIG.getString("itafServer");
 						webClient.getAbs(regUrl).send(handle -> {
 							if (handle.succeeded()) {
 								JSONObject r = handle.result().bodyAsJson(JSONObject.class);

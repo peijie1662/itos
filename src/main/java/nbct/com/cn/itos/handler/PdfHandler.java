@@ -17,10 +17,10 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.Configer;
 
 import static nbct.com.cn.itos.model.CallResult.OK;
 import static nbct.com.cn.itos.model.CallResult.Err;
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 
 /**
  * @author PJ
@@ -40,7 +40,7 @@ public class PdfHandler {
 		Document doc = new Document();
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
-			String path = Configer.uploadDir + "pdf/compose/";
+			String path = CONFIG.getString("uploadDir") + "pdf/compose/";
 			if (!fs.existsBlocking(path)) {
 				fs.mkdirsBlocking(path);
 			}

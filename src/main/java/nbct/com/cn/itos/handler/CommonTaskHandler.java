@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -16,11 +17,9 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.CategoryEnum;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
@@ -65,8 +64,7 @@ public class CommonTaskHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.找到对应Task
@@ -177,8 +175,7 @@ public class CommonTaskHandler {
 			res.end(Err("传入参数Json格式错误"));
 			return;
 		}
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.找到对应Task
@@ -318,8 +315,7 @@ public class CommonTaskHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读取模版信息
@@ -450,8 +446,7 @@ public class CommonTaskHandler {
 		final String modelId = rp.getString("modelId");
 		final LocalDateTime bgDt = DateUtil.utcToLocalExNoExp(rp.getString("bgDt"));
 		final LocalDateTime edDt = DateUtil.utcToLocalExNoExp(rp.getString("edDt"));
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读取模版信息

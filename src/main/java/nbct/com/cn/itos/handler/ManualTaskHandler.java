@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -14,15 +15,14 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.CategoryEnum;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.DeliverRepair;
+import util.CommonUtil;
 import util.ConvertUtil;
 import util.DateUtil;
 import util.MsgUtil;
@@ -53,14 +53,64 @@ public class ManualTaskHandler {
 	}
 
 	/**
+	 * 人工执行任务分页
+	 */
+	public void getManualTaskPage(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select * from itos_task where invalid = 'N' and composeId is null";
+		// 1.类型范围，固定
+		sql += String.format(" and category in ('%s')", CategoryEnum.COMMON);
+		// 2.时间范围
+		JsonArray dateRange = rp.getJsonArray("dateRange");
+		boolean paramValid = (dateRange != null) && dateRange.size() == 2;
+		String startDt = paramValid ? DateUtil.getDBDateBeginStr(dateRange.getString(0))
+				: DateUtil.getDBDateBeginStr(null);
+		String endDt = paramValid ? DateUtil.getDBDateEndStr(dateRange.getString(1)) : DateUtil.getDBDateEndStr(null);
+		sql += " and planDt >=" + startDt + " and planDt <=" + endDt;
+		// 4.状态范围
+		String statuss = rp.getString("statuss");
+		if (!CommonUtil.isEmpty(statuss)) {
+			sql += " and status in (" + statuss + ")";
+		}
+		// 5.分页
+		int curPage = rp.getInteger("curPage", 0);
+		int pageSize = rp.getInteger("pageSize", 0);
+		sql = "select * from (select rownum as rn, t.* from (" + sql + ") t where rownum <= " //
+				+ curPage * pageSize + ") where rn > " + (curPage - 1) * pageSize;
+		JdbcHelper.rows(ctx, sql, new CommonTask());
+	}
+
+	/**
+	 * 人工执行任务总数
+	 */
+	public void getManualTaskCount(RoutingContext ctx) {
+		JsonObject rp = ctx.getBodyAsJson();
+		String sql = "select count(*) as count from itos_task where invalid = 'N' and composeId is null";
+		// 1.类型范围，固定
+		sql += String.format(" and category in ('%s')", CategoryEnum.COMMON);
+		// 2.时间范围
+		JsonArray dateRange = rp.getJsonArray("dateRange");
+		boolean paramValid = (dateRange != null) && dateRange.size() == 2;
+		String startDt = paramValid ? DateUtil.getDBDateBeginStr(dateRange.getString(0))
+				: DateUtil.getDBDateBeginStr(null);
+		String endDt = paramValid ? DateUtil.getDBDateEndStr(dateRange.getString(1)) : DateUtil.getDBDateEndStr(null);
+		sql += " and planDt >=" + startDt + " and planDt <=" + endDt;
+		// 4.状态范围
+		String statuss = rp.getString("statuss");
+		if (!CommonUtil.isEmpty(statuss)) {
+			sql += " and status in (" + statuss + ")";
+		}
+		JdbcHelper.rows(ctx, sql);
+	}
+
+	/**
 	 * 保存人工任务
 	 */
 	public void saveManualTask(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.保存任务
@@ -149,8 +199,7 @@ public class ManualTaskHandler {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.找到对应Task
@@ -280,7 +329,7 @@ public class ManualTaskHandler {
 				"invoiceNumber = ?,amount = ?,remark = ? where drId = ?";
 		JdbcHelper.update(ctx, sql, params);
 	}
-	
+
 	/**
 	 * 删除委外记录
 	 */
@@ -289,9 +338,9 @@ public class ManualTaskHandler {
 		JsonArray params = new JsonArray()//
 				.add(rp.getString("drId"));
 		String sql = "delete itos_deliver_repair where drId = ?";
-		JdbcHelper.update(ctx, sql, params);		
+		JdbcHelper.update(ctx, sql, params);
 	}
-	
+
 	/**
 	 * 任务委外列表
 	 */

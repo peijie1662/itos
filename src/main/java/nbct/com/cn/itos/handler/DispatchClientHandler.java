@@ -1,5 +1,7 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -13,12 +15,11 @@ import java.util.stream.Collectors;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.CategoryEnum;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
+import nbct.com.cn.itos.model.AbsOption;
 import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.DispatchClient;
 import util.CommonUtil;
@@ -38,8 +39,7 @@ public class DispatchClientHandler {
 	public void loadData(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				conn.query("select * from itos_service order by domain,serviceName", r -> {
@@ -72,8 +72,7 @@ public class DispatchClientHandler {
 	 * 终端数据载入
 	 */
 	public void loadData() {
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				conn.query("select * from itos_service order by domain,serviceName", r -> {
@@ -164,13 +163,24 @@ public class DispatchClientHandler {
 		LocalDateTime now = LocalDateTime.now();
 		try {
 			CLIENTS.forEach(client -> {
-				client.setOnLine(now.minusSeconds(Configer.heartbeatThreshold).isBefore(client.getActiveTime()));
+				Integer heartbeatThreshold = CONFIG.getJsonObject("dispatchClient").getInteger("heartbeatThreshold");
+				client.setOnLine(now.minusSeconds(heartbeatThreshold).isBefore(client.getActiveTime()));
 			});
 			JsonArray cs = new JsonArray(CLIENTS);
 			res.end(OK(cs));
 		} catch (Exception e) {
 			res.end(Err(e.getMessage()));
 		}
+	}
+
+	/**
+	 * 查询项-简介
+	 */
+	public void getAbsList(RoutingContext ctx) {
+		String sql = "select a.modelid,a.abstract as abs,b.groupname,b.groupdesc from itos_taskmodel a," + //
+				" itos_taskmodelgroup b where a.groupid = b.groupid and groupname in " + //
+				" ('EDI-AUTORUN','NBCT-AUTORUN','OFFICE-AUTORUN') order by groupname,abstract";
+		JdbcHelper.rows(ctx, sql, new AbsOption());
 	}
 
 	/**
@@ -227,7 +237,7 @@ public class DispatchClientHandler {
 		// 5.简介范围
 		String abss = rp.getString("abss");
 		if (!CommonUtil.isEmpty(abss)) {
-			sql += " and abstract in (" + abss + ")";
+			sql += " and modelid in (" + abss + ")";
 		}
 		// 6.顺序，默认按计划执行时间倒序
 		String order = rp.getString("order");
@@ -236,12 +246,11 @@ public class DispatchClientHandler {
 		} else {
 			sql += " order by planDt desc";
 		}
-		// 4.分页
+		// 7.分页
 		int curPage = rp.getInteger("curPage", 0);
 		int pageSize = rp.getInteger("pageSize", 0);
 		sql = "select * from (select rownum as rn, t.* from (" + sql + ") t where rownum <= " //
 				+ curPage * pageSize + ") where rn > " + (curPage - 1) * pageSize;
-		System.out.println(sql);
 		JdbcHelper.rows(ctx, sql, new CommonTask());
 	}
 
@@ -276,7 +285,7 @@ public class DispatchClientHandler {
 		// 5.简介范围
 		String abss = rp.getString("abss");
 		if (!CommonUtil.isEmpty(abss)) {
-			sql += " and abstract in (" + abss + ")";
+			sql += " and modelid in (" + abss + ")";
 		}
 		JdbcHelper.rows(ctx, sql);
 	}

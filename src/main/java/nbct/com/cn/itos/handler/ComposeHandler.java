@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -15,10 +16,8 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ComposeDetail;
 import nbct.com.cn.itos.model.ComposeTask;
@@ -43,8 +42,7 @@ public class ComposeHandler {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
 		// 1.删除原有内容
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.删除原数据

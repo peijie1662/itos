@@ -1,5 +1,8 @@
 package nbct.com.cn.itos;
 
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
+import static nbct.com.cn.itos.ConfigVerticle.SC;
+
 import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,11 +22,9 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.handler.SystemTaskHandler;
@@ -48,9 +49,8 @@ public class TimerVerticle extends AbstractVerticle {
 	 * 扫描模版，生成任务
 	 */
 	private void task() {
-		SQLClient client = Configer.client;
 		LocalDateTime curDt = LocalDateTime.now();
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读数据
@@ -202,8 +202,8 @@ public class TimerVerticle extends AbstractVerticle {
 	 * 定时注册
 	 */
 	private void registe() {
-		JsonObject provider = Configer.provider;
-		JsonObject registerUrl = Configer.registerUrl;
+		JsonObject provider = CONFIG.getJsonObject("provider");
+		JsonObject registerUrl = CONFIG.getJsonObject("registerUrl");
 		WebClient wc = WebClient.create(vertx,
 				new WebClientOptions().setIdleTimeout(2).setConnectTimeout(2000).setMaxWaitQueueSize(5));
 		try {
@@ -223,8 +223,7 @@ public class TimerVerticle extends AbstractVerticle {
 	 * 扫描所有未完成任务，并执行超期回调<br>
 	 */
 	private void expired() {
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.读数据

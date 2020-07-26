@@ -1,5 +1,13 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.model.CallResult.Err;
+import static nbct.com.cn.itos.model.CallResult.OK;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,12 +19,6 @@ import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.AppInfo;
 import nbct.com.cn.itos.model.TopologyConnector;
 import nbct.com.cn.itos.model.TopologyLabel;
-
-import static nbct.com.cn.itos.model.CallResult.Err;
-import static nbct.com.cn.itos.model.CallResult.OK;
-
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author PJ
@@ -92,6 +94,15 @@ public class AppInfoHandler {
 		} catch (Exception e) {
 			res.end(Err(e.getMessage()));
 		}
+	}
+	
+	/**
+	 * 客户端上传服务信息列表
+	 */
+	public void actualAppList(RoutingContext ctx) {
+		HttpServerResponse res = ctx.response();
+		List<JsonObject> list = APPS.values().stream().collect(Collectors.toList());
+		res.end(OK(list));
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.handler;
 
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -14,10 +15,8 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosUser;
@@ -94,7 +93,7 @@ public class UserHandler {
 	}
 
 	/**
-	 * 修改短信订阅 
+	 * 修改短信订阅
 	 */
 	public void updateSubscription(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
@@ -140,8 +139,7 @@ public class UserHandler {
 		String password = rp.getString("password").toUpperCase();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				String sql = "select * from itos_user where upper(userId) = ?";
 				JsonArray params = new JsonArray().add(userId);
@@ -179,8 +177,7 @@ public class UserHandler {
 		String oldPass = rp.getString("oldPass").toUpperCase();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
 				// 1.检查旧密码

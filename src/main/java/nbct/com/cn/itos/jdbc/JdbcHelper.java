@@ -1,5 +1,6 @@
 package nbct.com.cn.itos.jdbc;
 
+import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
@@ -11,10 +12,8 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.model.CallResult;
 
 /**
@@ -67,8 +66,7 @@ public class JdbcHelper {
 	public static <T> void rows(RoutingContext ctx, String sql, JsonArray params, RowMapper<T> mapper) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
@@ -120,8 +118,7 @@ public class JdbcHelper {
 				promise.fail("mapper can't be null.");
 				return;
 			}
-			SQLClient client = Configer.client;
-			client.getConnection(cr -> {
+			SC.getConnection(cr -> {
 				if (cr.succeeded()) {
 					SQLConnection connection = cr.result();
 					if (connection != null) {
@@ -171,8 +168,7 @@ public class JdbcHelper {
 	public static <T> void entrys(RoutingContext ctx, String sql, JsonArray params, RowMapper<T> mapper, String key) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
@@ -212,8 +208,7 @@ public class JdbcHelper {
 	public static <T> void oneRow(RoutingContext ctx, String sql, JsonArray params, RowMapper<T> mapper) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
@@ -244,8 +239,7 @@ public class JdbcHelper {
 	 */
 	public static Future<CallResult<String>> update(String sql, JsonArray params) {
 		Future<CallResult<String>> f = Future.future(promise -> {
-			SQLClient client = Configer.client;
-			client.getConnection(cr -> {
+			SC.getConnection(cr -> {
 				if (cr.succeeded()) {
 					SQLConnection connection = cr.result();
 					if (connection != null) {
@@ -279,8 +273,7 @@ public class JdbcHelper {
 	public static void update(RoutingContext ctx, String sql, JsonArray params) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
@@ -312,8 +305,7 @@ public class JdbcHelper {
 	public static void batchUpdate(RoutingContext ctx, List<String> sqls) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection connection = cr.result();
 				if (connection != null) {
@@ -345,8 +337,7 @@ public class JdbcHelper {
 	public static void call(RoutingContext ctx, String func, JsonArray params, JsonArray outputs) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
-		SQLClient client = Configer.client;
-		client.getConnection(cr -> {
+		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection connection = cr.result();
 				if (connection != null) {

@@ -11,8 +11,9 @@ import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.Configer;
 import nbct.com.cn.itos.model.CallResult;
+
+import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 
 /**
  * @author PJ
@@ -31,7 +32,7 @@ public class UploadHandler {
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
 			String taskId = ctx.request().getFormAttribute("taskId");
-			String savePath = Configer.uploadDir + "task_file/" + taskId;
+			String savePath = CONFIG.getString("uploadDir") + "task_file/" + taskId;
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}
@@ -62,7 +63,7 @@ public class UploadHandler {
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
 			String modelId = ctx.request().getFormAttribute("modelId");
-			String savePath = Configer.uploadDir + "model_file/" + modelId;
+			String savePath = CONFIG.getString("uploadDir") + "model_file/" + modelId;
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}
@@ -93,7 +94,7 @@ public class UploadHandler {
 		try {
 			FileSystem fs = ctx.vertx().fileSystem();
 			String userId = ctx.request().getFormAttribute("userId");
-			String savePath = Configer.uploadDir + "user_face";
+			String savePath = CONFIG.getString("uploadDir") + "user_face";
 			if (!fs.existsBlocking(savePath)) {
 				fs.mkdirsBlocking(savePath);
 			}
