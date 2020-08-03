@@ -1,8 +1,9 @@
 package nbct.com.cn.itos.model;
 
+import java.time.LocalDateTime;
+
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.jdbc.RowMapper;
-import util.ConvertUtil;
 
 /**
  * @author PJ
@@ -17,14 +18,14 @@ public class AppInfo implements RowMapper<AppInfo> {
 	private String serviceDesc;
 
 	private String serviceAbs;
-	
+
 	private String serviceObj;
 
 	private String ip;
 
 	private Integer port;
 
-	private boolean valid;
+	private String visible;
 
 	private String serviceType;
 
@@ -37,6 +38,10 @@ public class AppInfo implements RowMapper<AppInfo> {
 	private Integer x;
 
 	private Integer y;
+
+	private LocalDateTime active;//实时信息
+	
+	private String actualStatus;//实时状态 "VALID","INVALID","UNKNOW"
 
 	@Override
 	public AppInfo from(JsonObject row) {
@@ -51,10 +56,20 @@ public class AppInfo implements RowMapper<AppInfo> {
 		app.setPort(row.getInteger("PORT"));
 		app.setVersion(row.getString("VERSION"));
 		app.setRemark(row.getString("REMARK"));
-		app.setValid(ConvertUtil.strToBool(row.getString("VALID")));
+		app.setVisible(row.getString("VISIBLE"));
 		app.setDomain(row.getString("DOMAIN"));
 		app.setX(row.getInteger("X", 0));
 		app.setY(row.getInteger("Y", 0));
+		return app;
+	}
+
+	/**
+	 * 从客户端信息生成
+	 */
+	public static AppInfo fromClient(JsonObject jo) {
+		AppInfo app = new AppInfo();
+		app.setServiceObj(jo.getString("serviceObj"));
+		app.setIp(jo.getString("ip"));
 		return app;
 	}
 
@@ -104,14 +119,6 @@ public class AppInfo implements RowMapper<AppInfo> {
 
 	public void setPort(Integer port) {
 		this.port = port;
-	}
-
-	public boolean isValid() {
-		return valid;
-	}
-
-	public void setValid(boolean valid) {
-		this.valid = valid;
 	}
 
 	public String getServiceType() {
@@ -168,6 +175,30 @@ public class AppInfo implements RowMapper<AppInfo> {
 
 	public void setServiceObj(String serviceObj) {
 		this.serviceObj = serviceObj;
+	}
+
+	public String getVisible() {
+		return visible;
+	}
+
+	public void setVisible(String visible) {
+		this.visible = visible;
+	}
+
+	public LocalDateTime getActive() {
+		return active;
+	}
+
+	public void setActive(LocalDateTime active) {
+		this.active = active;
+	}
+
+	public String getActualStatus() {
+		return actualStatus;
+	}
+
+	public void setActualStatus(String actualStatus) {
+		this.actualStatus = actualStatus;
 	}
 
 }

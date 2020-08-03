@@ -154,16 +154,18 @@ public class ManualTaskHandler {
 				// 2.保存日志
 				Function<JsonObject, Future<JsonObject>> logf = (JsonObject j) -> {
 					Future<JsonObject> f = Future.future(promise -> {
-						JsonArray params = new JsonArray().add(UUID.randomUUID().toString())//
+						JsonArray params = new JsonArray()//
+								.add(UUID.randomUUID().toString())//
 								.add(j.getString("taskId"))//
+								.add("COMMON")//
 								.add(TaskStatusEnum.CHECKIN.getValue())//
 								.add("用户" + j.getString("oper") + "登记了该任务。")//
 								.add(j.getString("handler"))//
 								.add(j.getString("abstract"))//
 								.add(j.getString("oper"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,category,status,statusdesc,"//
+								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(j);
@@ -252,6 +254,7 @@ public class ManualTaskHandler {
 						JsonArray params = new JsonArray()//
 								.add(UUID.randomUUID().toString())//
 								.add(task.getTaskId())//
+								.add("COMMON")//
 								.add(task.getStatus().getValue())//
 								.add("用户" + rp.getString("oper") + "修改了任务处理人员。")//
 								.add(rp.getString("handler"))//
@@ -261,8 +264,8 @@ public class ManualTaskHandler {
 								.add(rp.getString("remark"))//
 								.add(rp.getString("oper"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,oldcontent,newcontent,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,category,status,statusdesc,"//
+								+ "handler,oldcontent,newcontent,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);

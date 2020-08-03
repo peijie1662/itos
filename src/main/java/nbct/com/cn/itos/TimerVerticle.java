@@ -154,6 +154,7 @@ public class TimerVerticle extends AbstractVerticle {
 							params.add(new JsonArray()//
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
+									.add(task.getCategory().getValue())//
 									.add(TaskStatusEnum.CHECKIN.getValue())//
 									.add(String.format("系统按照任务模版%s生成任务。", task.getAbs()))//
 									.add("")// 待认领
@@ -164,9 +165,9 @@ public class TimerVerticle extends AbstractVerticle {
 									.add("SYS")//
 									.add(DateUtil.localToUtcStr(curDt)));//
 						});
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
+						String sql = "insert into itos_tasklog(logId,taskId,category,status,statusdesc,"//
 								+ " handler,oldcontent,newcontent,modelId,abstract,oper,opdate) "//
-								+ " values(?,?,?,?,?,?,?,?,?,?,?)";
+								+ " values(?,?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(tasks);
@@ -300,8 +301,8 @@ public class TimerVerticle extends AbstractVerticle {
 				Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						tasks.forEach(task -> {
-							String msg = DateUtil.curDtStr() + " " + "系统检测到任务'" + task.getAbs() + "'超期," + //
-							"任务状态自动转为'" + task.getCallback().getValue() + "'";
+							String msg = DateUtil.curDtStr() + " 系统检测到任务'" + task.getAbs() + "超期," + //
+							"任务状态自动转为'" + task.getCallback().getValue();
 							MsgUtil.mixLC(vertx, msg, task.getComposeId());
 						});
 						List<JsonArray> params = tasks.stream().map(task -> {

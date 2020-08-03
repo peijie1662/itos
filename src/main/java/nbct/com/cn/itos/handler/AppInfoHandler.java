@@ -3,6 +3,7 @@ package nbct.com.cn.itos.handler;
 import static nbct.com.cn.itos.model.CallResult.Err;
 import static nbct.com.cn.itos.model.CallResult.OK;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +33,7 @@ public class AppInfoHandler {
 	 * 客户端实时数据<br>
 	 * key serviceName@IP
 	 */
-	private final static ConcurrentHashMap<String, JsonObject> APPS = new ConcurrentHashMap<String, JsonObject>();
+	private final static ConcurrentHashMap<String, AppInfo> APPS = new ConcurrentHashMap<String, AppInfo>();
 
 	/**
 	 * 添加服务信息 <br>
@@ -86,22 +87,23 @@ public class AppInfoHandler {
 		HttpServerResponse res = ctx.response();
 		try {
 			ctx.getBodyAsJsonArray().forEach(item -> {
-				JsonObject jo = JsonObject.mapFrom(item);
-				String key = jo.getString("serviceObj") + "@" + jo.getString("ip");
-				APPS.put(key, jo);
+				AppInfo app = AppInfo.fromClient(JsonObject.mapFrom(item));
+				app.setActive(LocalDateTime.now());
+				String key = app.getServiceObj() + "@" + app.getIp();
+				APPS.put(key, app);
 			});
 			res.end(OK());
 		} catch (Exception e) {
 			res.end(Err(e.getMessage()));
 		}
 	}
-	
+
 	/**
 	 * 客户端上传服务信息列表
 	 */
 	public void actualAppList(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
-		List<JsonObject> list = APPS.values().stream().collect(Collectors.toList());
+		List<AppInfo> list = APPS.values().stream().collect(Collectors.toList());
 		res.end(OK(list));
 	}
 
@@ -120,15 +122,30 @@ public class AppInfoHandler {
 	 * 场景服务列表<br>
 	 * 1.读取定义表与定位表关联数据<br>
 	 * 2.注入实时信息
+	 * 3.如果发生变化，推送页端  //TODO
 	 */
 	public void listSceneApp(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		JsonArray params = new JsonArray().add(rp.getString("scene"));
 		String sql = "select b.*, a.x, a.y from itos_topology_loc a, itos_appinfo b " + //
-				" where a.scene = ? and a.serviceId = b.serviceId ";
+				" where a.scene = ? and a.serviceId = b.serviceId and b.visible = 'Y'";
 		JdbcHelper.rows(sql, params, new AppInfo()).onSuccess(list -> {
-			// TODO
+			list.forEach(app -> {
+				String key = app.getServiceObj() + "@" + app.getIp();
+				AppInfo actualApp = APPS.get(key);
+				app.setActualStatus("INVALID");
+				// 1.活动时间在30秒内，状态视为有效
+				if (actualApp != null) {
+					if (actualApp.getActive().isAfter(LocalDateTime.now().minusSeconds(30))) {
+						app.setActualStatus("VALID");
+					}
+				}
+				//2.目前未加入监控的服务
+				if ("NGINX".equals(app.getServiceType()) || "DATABASE".equals(app.getServiceType())) {
+					app.setActualStatus("UNKNOW");
+				}
+			});
 			res.end(OK(list));
 		}).onFailure(e -> {
 			log.error("LISTSCENEAPP-01::", e);
@@ -223,7 +240,7 @@ public class AppInfoHandler {
 		JsonArray params = new JsonArray().add(rp.getString("scene")).add(rp.getString("labId"));
 		JdbcHelper.update(ctx, sql, params);
 	}
-	
+
 	/**
 	 * 按照场景更新标签位置
 	 */

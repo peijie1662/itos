@@ -171,7 +171,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setCategory(model.getCategory());
 			task.setStatus(TaskStatusEnum.CHECKIN);
 			task.setAbs(model.getAbs());
-			task.setContent(con);
+			task.setContent(con.replace(" ", ""));
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
@@ -241,7 +241,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 				task.setCategory(model.getCategory());
 				task.setStatus(TaskStatusEnum.CHECKIN);
 				task.setAbs(model.getAbs());
-				task.setContent(con);
+				task.setContent(con.replace(" ", ""));
 				task.setCustomer("SYS");
 				task.setModelId(model.getModelId());
 				task.setTaskIcon("AUTO");// c机器人，代表系统生成任务

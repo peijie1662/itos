@@ -77,7 +77,7 @@ public class ModelHandler {
 		String sql = "update itos_taskmodel set comments = ?,planDates = ?,expired = ?, " + //
 				" expiredCallback = ?,expiredNotify = ?,startDate = ? where modelId = ? ";
 		JsonArray params = new JsonArray();
-		params.add(rp.getString("comments"));
+		params.add(rp.getString("comments").replace(" ", ""));
 		params.add(rp.getString("planDates"));
 		params.add(ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
 		params.add(rp.getString("callback"));
@@ -111,7 +111,7 @@ public class ModelHandler {
 		res.putHeader("content-type", "application/json");
 		String category = rp.getString("category");
 		String abs = rp.getString("abs");
-		String comments = rp.getString("comments");
+		String comments = rp.getString("comments").replace(" ", "");
 		String cycle = rp.getString("cycle");
 		String planDates = rp.getString("planDates");
 		if (category == null) {

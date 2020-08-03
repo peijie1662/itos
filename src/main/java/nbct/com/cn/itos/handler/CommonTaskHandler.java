@@ -117,6 +117,7 @@ public class CommonTaskHandler {
 						JsonArray params = new JsonArray()//
 								.add(UUID.randomUUID().toString())//
 								.add(task.getTaskId())//
+								.add(task.getCategory().getValue())//
 								.add(task.getStatus().getValue())//
 								.add("用户" + rp.getString("oper") + "修改了任务内容。")//
 								.add(ConvertUtil.listToStr(task.getHandler()))//
@@ -126,8 +127,9 @@ public class CommonTaskHandler {
 								.add(rp.getString("remark"))//
 								.add(rp.getString("oper"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
-								+ "handler,oldcontent,newcontent,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,category,status,statusdesc," + //
+						"handler,oldcontent,newcontent,abstract,remark,oper,opDate) " + //
+						"values(?,?,?,?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);
@@ -232,6 +234,7 @@ public class CommonTaskHandler {
 						JsonArray params = new JsonArray()//
 								.add(UUID.randomUUID().toString())//
 								.add(task.getTaskId())//
+								.add(task.getCategory().getValue())//
 								.add(task.getModelId())//
 								.add(task.getStatus().getValue())//
 								.add("用户" + rp.getString("oper") + "将任务状态置为" + rp.getString("status"))//
@@ -240,8 +243,8 @@ public class CommonTaskHandler {
 								.add(rp.getString("remark"))//
 								.add(rp.getString("oper"))//
 								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
-								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,category,modelId,status,statusdesc,"//
+								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.updateWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(task);
@@ -393,6 +396,7 @@ public class CommonTaskHandler {
 							params.add(new JsonArray()//
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
+									.add(task.getCategory().getValue())//
 									.add(task.getModelId())//
 									.add(task.getStatus().getValue())//
 									.add("用户" + rp.getString("userId") + "临时从模版生成新任务'" + task.getAbs() + "'")//
@@ -401,8 +405,8 @@ public class CommonTaskHandler {
 									.add(rp.getString("userId"))//
 									.add(DateUtil.localToUtcStr(LocalDateTime.now())));
 						});
-						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
-								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,category,modelId,status,statusdesc,"//
+								+ "handler,abstract,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(tasks);
@@ -540,6 +544,7 @@ public class CommonTaskHandler {
 							params.add(new JsonArray()//
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
+									.add(task.getCategory().getValue())//
 									.add(TaskStatusEnum.CHECKIN.getValue())//
 									.add(String.format("系统按照任务模版%s生成任务。", task.getAbs()))//
 									.add("")// 待认领
@@ -550,9 +555,9 @@ public class CommonTaskHandler {
 									.add("SYS")//
 									.add(DateUtil.localToUtcStr(LocalDateTime.now())));//
 						});
-						String sql = "insert into itos_tasklog(logId,taskId,status,statusdesc,"//
+						String sql = "insert into itos_tasklog(logId,taskId,category,status,statusdesc,"//
 								+ " handler,oldcontent,newcontent,modelId,abstract,oper,opdate) "//
-								+ " values(?,?,?,?,?,?,?,?,?,?,?)";
+								+ " values(?,?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete("扫描任务模版完毕。");

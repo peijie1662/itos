@@ -92,7 +92,7 @@ public class MainVerticle extends AbstractVerticle {
 				});
 			});
 		}).onSuccess(r -> {
-			// 初始化DispatchClient数据
+			// 0.初始化DispatchClient数据
 			dispatchClientHandler.loadData();
 			// 1.静态文件
 			router.route("/itosfile/*").handler(StaticHandler.create(CONFIG.getString("uploadDir")));
@@ -131,7 +131,6 @@ public class MainVerticle extends AbstractVerticle {
 			vertx.createHttpServer().requestHandler(router).listen(port);
 			log.info("ITOS服务启动成功");
 		}).onFailure(r -> {
-			System.out.println(r.getMessage());
 			log.error("ITOS服务启动失败", r.getCause());
 		});
 

@@ -107,6 +107,7 @@ public class SystemTaskHandler {
 					return new JsonArray()//
 							.add(UUID.randomUUID().toString())//
 							.add(task.getTaskId())//
+							.add(task.getCategory().getValue())//
 							.add(task.getModelId())//
 							.add("DONE")//
 							.add(br.flag ? br.sucMsg : br.errMsg)//
@@ -116,8 +117,8 @@ public class SystemTaskHandler {
 							.add("SYS")//
 							.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 				}).collect(Collectors.toList());
-				String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
-						+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
+				String sql = "insert into itos_tasklog(logId,taskId,category,modelId,status,statusdesc,"//
+						+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
 				conn.batchWithParams(sql, params, r -> {
 					if (r.succeeded()) {
 						promise.complete(tasks);
