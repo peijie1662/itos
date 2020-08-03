@@ -3,7 +3,6 @@ package nbct.com.cn.itos.handler;
 import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.handler.CompareHandler.CUR_COMPARES;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -472,6 +471,88 @@ public class SystemTaskHandler {
 				});
 			}
 		});
+	}
+
+	/**
+	 * ITOS系统日志清理任务
+	 */
+	public void housekeep() {
+		final BusinessResult br = new BusinessResult();
+		SC.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.读系统清理任务
+				Supplier<Future<List<CommonTask>>> loadf = () -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "select * from itos_task where status = 'CHECKIN' " + //
+						"and category = 'SYSTEM' and invalid = 'N'";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								try {
+									CommonTask ct = new CommonTask();
+									List<CommonTask> list = r.result().getRows().stream().map(item -> {
+										return ct.from(item);
+									}).filter(item -> {
+										JsonObject jo = new JsonObject(item.getContent());
+										if ("HOUSEKEEP".equals(jo.getString("header"))) {
+											return item.getPlanDt().isBefore(LocalDateTime.now());
+										} else {
+											return false;
+										}
+									}).collect(Collectors.toList());
+									promise.complete(list);
+								} catch (Exception e) {
+									e.printStackTrace();
+									promise.fail(e.getMessage());
+								}
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.执行清理
+				Function<List<CommonTask>, Future<List<CommonTask>>> cf = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						JsonArray params = new JsonArray();
+						JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+						conn.callWithParams("p_housekeep", params, outputs, qr -> {
+							if (qr.succeeded()) {
+								JsonArray j = qr.result().getOutput();
+								Boolean flag = "0".equals(j.getString(1));
+								String errMsg = j.getString(2);
+								if (flag) {
+									promise.complete(tasks);
+								} else {
+									promise.fail(errMsg);
+								}
+							} else {
+								promise.fail("访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.更新状态为DONE
+				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "比对任务更新状态出错。");
+				// 4.日志
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, br);
+				// 5.执行
+				loadf.get().compose(r -> {
+					return cf.apply(r);
+				}).compose(r -> {
+					return uf.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
+				}).onComplete(r -> {
+					if (r.failed())
+						log.error("HOUSEKEEP-01::", r.cause());
+					conn.close();
+				});
+			}
+		});
+
 	}
 
 }

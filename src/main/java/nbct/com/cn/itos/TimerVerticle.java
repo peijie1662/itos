@@ -309,6 +309,7 @@ public class TimerVerticle extends AbstractVerticle {
 							return new JsonArray()//
 									.add(UUID.randomUUID().toString())//
 									.add(task.getTaskId())//
+									.add(task.getCategory().getValue())//
 									.add(task.getModelId())//
 									.add(task.getStatus().getValue())//
 									.add("任务超期，系统将任务状态置为" + task.getCallback().getValue())//
@@ -318,8 +319,8 @@ public class TimerVerticle extends AbstractVerticle {
 									.add("SYS")//
 									.add(DateUtil.localToUtcStr(LocalDateTime.now()));
 						}).collect(Collectors.toList());
-						String sql = "insert into itos_tasklog(logId,taskId,modelId,status,statusdesc,"//
-								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?)";
+						String sql = "insert into itos_tasklog(logId,taskId,category,modelId,status,statusdesc,"//
+								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
 						conn.batchWithParams(sql, params, r -> {
 							if (r.succeeded()) {
 								promise.complete(tasks);
@@ -392,21 +393,29 @@ public class TimerVerticle extends AbstractVerticle {
 	/**
 	 * 循环任务
 	 */
-	private void mainLoop() {
-		SystemTaskHandler systemTaskHandler = new SystemTaskHandler(vertx);
+	private void mainLoop(SystemTaskHandler handler) {
+		//1.检查任务过期
 		expired();
+		//2.按模版生成任务
 		task();
+		//3.注册本服务
 		registe();
-		systemTaskHandler.timerTask();
-		systemTaskHandler.announceTask();
-		systemTaskHandler.compareTask();
+		//4.执行定时任务
+		handler.timerTask();
+		//5.执行公告任务
+		handler.announceTask();
+		//6.执行比对任务
+		handler.compareTask();
+		//7.执行清理任务
+		handler.housekeep();
 	}
 
 	@Override
 	public void start() throws Exception {
+		SystemTaskHandler systemTaskHandler = new SystemTaskHandler(vertx);
 		vertx.setPeriodic(5000, timerId -> {
 			vertx.executeBlocking(future -> {
-				mainLoop();
+				mainLoop(systemTaskHandler);
 				future.complete();
 			}, false, null);
 		});
