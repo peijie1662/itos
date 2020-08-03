@@ -90,6 +90,7 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return uf;
+
 	}
 
 	/**
@@ -130,6 +131,7 @@ public class SystemTaskHandler {
 			return f;
 		};
 		return logf;
+
 	}
 
 	/**
@@ -471,6 +473,7 @@ public class SystemTaskHandler {
 				});
 			}
 		});
+
 	}
 
 	/**
@@ -506,7 +509,7 @@ public class SystemTaskHandler {
 									promise.fail(e.getMessage());
 								}
 							} else {
-								promise.fail("访问数据库出错");
+								promise.fail("读系统清理任务，访问数据库出错");
 							}
 						});
 					});
@@ -515,9 +518,16 @@ public class SystemTaskHandler {
 				// 2.执行清理
 				Function<List<CommonTask>, Future<List<CommonTask>>> cf = (tasks) -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
+						// 2.1没有清理任务
+						if (tasks.size() == 0) {
+							promise.complete(tasks);
+							return;
+						}
+						// 2.2清理
+						String func = "{call itos.p_housekeep(?,?,?,?)}";
 						JsonArray params = new JsonArray();
 						JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
-						conn.callWithParams("p_housekeep", params, outputs, qr -> {
+						conn.callWithParams(func, params, outputs, qr -> {
 							if (qr.succeeded()) {
 								JsonArray j = qr.result().getOutput();
 								Boolean flag = "0".equals(j.getString(1));
@@ -528,7 +538,7 @@ public class SystemTaskHandler {
 									promise.fail(errMsg);
 								}
 							} else {
-								promise.fail("访问数据库出错");
+								promise.fail("执行清理，访问数据库出错");
 							}
 						});
 					});
