@@ -315,6 +315,10 @@ public class CommonTaskHandler {
 	 * 传入参数:modelId,planDt,userId
 	 */
 	public void saveOnceTask(RoutingContext ctx) {
+		
+		
+		System.out.println("11111111111");
+		
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
@@ -336,6 +340,7 @@ public class CommonTaskHandler {
 												DateUtil.utcToLocalEx(rp.getString("planDt")));
 										promise.complete(tasks);
 									} catch (Exception e) {
+										e.printStackTrace();
 										promise.fail(e.getMessage());
 									}
 								} else {
@@ -432,6 +437,7 @@ public class CommonTaskHandler {
 						});
 						res.end(OK());
 					} else {
+						r.cause().printStackTrace();
 						res.end(Err(r.cause().getMessage()));
 					}
 					conn.close();

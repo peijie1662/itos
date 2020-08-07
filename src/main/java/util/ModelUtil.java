@@ -38,7 +38,7 @@ public class ModelUtil {
 			valid = valid || (mc == CycleEnum.PERMONTH && cm > rm);
 			// 2.4扫描循环任务，当前时间-间隔时间(秒)>=标记时间，就需要生成新任务。
 			valid = valid || (mc == CycleEnum.CIRCULAR
-					&& mt.isBefore(at.minusSeconds(Integer.parseInt(model.getPlanDates()) - 1)));
+					&& mt.isBefore(at.minusSeconds(Integer.parseInt(model.getPlanDates()))));
 		}
 		// 3.循环任务不能超过开始时间
 		if (valid && model.getCycle() == CycleEnum.CIRCULAR) {

@@ -40,6 +40,8 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	private boolean invalid;
 	
+	private boolean compensate;
+	
 	private LocalDateTime startDate;
 
 	private LocalDateTime scanDate;
@@ -69,6 +71,7 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 			t.setAbs(j.getString("ABSTRACT"));
 			t.setComments(j.getString("COMMENTS"));
 			t.setInvalid("Y".equals(j.getString("INVALID")));
+			t.setCompensate("Y".equals(j.getString("COMPENSATE")));
 			t.setPlanDates(j.getString("PLANDATES"));
 			t.setStartDate(DateUtil.utcToLocalDT(j.getString("STARTDATE")));
 			t.setScanDate(DateUtil.utcToLocalDT(j.getString("SCANDATE")));
@@ -241,6 +244,14 @@ public class TimerTaskModel implements RowMapper<TimerTaskModel> {
 
 	public void setServiceDomain(String serviceDomain) {
 		this.serviceDomain = serviceDomain;
+	}
+
+	public boolean isCompensate() {
+		return compensate;
+	}
+
+	public void setCompensate(boolean compensate) {
+		this.compensate = compensate;
 	}
 
 }

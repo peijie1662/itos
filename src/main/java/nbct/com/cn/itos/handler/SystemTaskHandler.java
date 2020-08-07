@@ -481,6 +481,8 @@ public class SystemTaskHandler {
 	 */
 	public void housekeep() {
 		final BusinessResult br = new BusinessResult();
+		br.flag = true;
+		br.sucMsg = "清理完成";
 		SC.getConnection(cr -> {
 			if (cr.succeeded()) {
 				SQLConnection conn = cr.result();
@@ -538,6 +540,8 @@ public class SystemTaskHandler {
 									promise.fail(errMsg);
 								}
 							} else {
+								br.flag = false;
+								br.errMsg = "调用存储过程出错";
 								promise.fail("执行清理，访问数据库出错");
 							}
 						});

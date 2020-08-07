@@ -97,11 +97,7 @@ public class PdfHandler {
 				row_cells[5] = new PdfPCell(new Paragraph(task.getString("status"), font));
 				rows.add(table_row);
 			});
-			// 5.表格尾部  
-			//TODO 表格尾部
-			
-			
-			
+			// 5.表格尾部  //TODO
 			doc.add(table);
 			doc.close();
 			writer.close();
@@ -110,6 +106,13 @@ public class PdfHandler {
 			e.printStackTrace();
 			res.end(Err(e.getMessage()));
 		}
+	}
+	
+	/**
+	 * 每日简报
+	 */
+	public void createDailyPdf() {
+		
 	}
 
 }

@@ -18,8 +18,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import nbct.com.cn.itos.TimerVerticle;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.ExpiredCallbackEnum;
 import nbct.com.cn.itos.config.NotifyEnum;
@@ -28,6 +32,7 @@ import nbct.com.cn.itos.jdbc.RowMapper;
 import util.CommonUtil;
 import util.ConvertUtil;
 import util.DateUtil;
+import util.ModelUtil;
 
 /**
  * 通用任务
@@ -36,6 +41,8 @@ import util.DateUtil;
  * @version 创建时间：2019年12月25日 上午10:44:30
  */
 public class CommonTask implements RowMapper<CommonTask> {
+
+	public static Logger log = LogManager.getLogger(CommonTask.class);
 
 	private String taskId;
 
@@ -113,7 +120,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setExecutedNotify(ConvertUtil.strToBool(j.getString("EXECUTEDNOTIFY")));
 			return task;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("FROM-01::", e);
 			throw new RuntimeException("后台数据转换成任务时发生错误。");
 		}
 	}
@@ -171,7 +178,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 			task.setCategory(model.getCategory());
 			task.setStatus(TaskStatusEnum.CHECKIN);
 			task.setAbs(model.getAbs());
-			task.setContent(con.replace(" ", ""));
+			task.setContent(con);
 			task.setCustomer("SYS");
 			task.setModelId(model.getModelId());
 			task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
@@ -192,6 +199,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 	public static List<CommonTask> fromAt(TimerTaskModel model, LocalDateTime appointedTime) {
 		if (model.isInvalid())
 			throw new RuntimeException("模版处于无效状态，不能生成任务。");
+		model.setScanDate(appointedTime);
 		// 1.初始化
 		Supplier<List<CommonTask>> createTask = () -> {
 			List<CommonTask> tasks = new ArrayList<CommonTask>();
@@ -241,7 +249,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 				task.setCategory(model.getCategory());
 				task.setStatus(TaskStatusEnum.CHECKIN);
 				task.setAbs(model.getAbs());
-				task.setContent(con.replace(" ", ""));
+				task.setContent(con);
 				task.setCustomer("SYS");
 				task.setModelId(model.getModelId());
 				task.setTaskIcon("AUTO");// c机器人，代表系统生成任务
@@ -256,9 +264,6 @@ public class CommonTask implements RowMapper<CommonTask> {
 		// 2.创建
 		List<CommonTask> tasks = new ArrayList<CommonTask>();
 		if (CommonUtil.isEmpty(model.getPlanDates())) {
-			// TODO
-			System.out.println("ERROR: " + model.getAbs());
-			System.out.println("ERROR: " + model.getModelId());
 			throw new RuntimeException("未发现计划时间，无法生成计划任务。");
 		}
 		String[] dts = model.getPlanDates().split(",");
@@ -333,8 +338,28 @@ public class CommonTask implements RowMapper<CommonTask> {
 			});
 			break;
 		default:
-			System.out.println("find some strange cycle.");
-			break;
+			throw new RuntimeException("错误的时间周期格式。");
+		}
+		return tasks;
+	}
+
+	/**
+	 * 补偿模式生成任务，即从扫描点开始到当前时间的任务，按照模版规则都予以生成。
+	 */
+	public static List<CommonTask> fromCompensate(TimerTaskModel model, LocalDateTime cur) {
+		List<CommonTask> tasks = new ArrayList<CommonTask>();
+		if (model.getScanDate() != null) {
+			// 1.时间流逝
+			LocalDateTime at = LocalDateTime.from(model.getScanDate());
+			while (DateUtil.getSecond(at) <= DateUtil.getSecond(cur)) {
+				if (ModelUtil.couldCreateTask(model, at)) {
+					tasks.addAll(CommonTask.fromAt(model, at.minusSeconds(1)));
+				}
+				at = at.plusSeconds(1);
+			}
+		} else {
+			// 2.初始状态
+			tasks.addAll(CommonTask.fromAt(model, cur));
 		}
 		return tasks;
 	}
@@ -360,6 +385,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 	}
 
 	public void setContent(String content) {
+		content = content != null ? content.replace(" ", "") : "";
 		this.content = content;
 	}
 

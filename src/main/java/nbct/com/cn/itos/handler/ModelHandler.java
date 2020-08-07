@@ -40,7 +40,8 @@ public class ModelHandler {
 	 * 非组合任务模版列表
 	 */
 	public void getNotComposeModelList(RoutingContext ctx) {
-		String sql = "select aa.*,bb.serviceName,bb.description as serviceDescription,bb.domain as serviceDomain from " + //
+		String sql = "select aa.*,bb.serviceName,bb.description as serviceDescription,bb.domain as serviceDomain from "
+				+ //
 				" (select * from itos_taskmodel where invalid = 'N' " + //
 				" and category not in ('COMPOSE', 'BROADCAST'))  aa, " + //
 				" (select a.modelId, b.serviceName, b.description, b.domain from (select * " + //
@@ -74,18 +75,21 @@ public class ModelHandler {
 	 */
 	public void updateTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String sql = "update itos_taskmodel set comments = ?,planDates = ?,expired = ?, " + //
-				" expiredCallback = ?,expiredNotify = ?,startDate = ? where modelId = ? ";
-		JsonArray params = new JsonArray();
-		params.add(rp.getString("comments").replace(" ", ""));
-		params.add(rp.getString("planDates"));
-		params.add(ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
-		params.add(rp.getString("callback"));
-		params.add(ConvertUtil.arrToString(rp.getJsonArray("notify")));
-		params.add(rp.getString("startDate"));
-		params.add(rp.getString("modelId"));
-		JdbcHelper.update(ctx, sql, params);
-		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被修改。";
+		JsonObject param = new JsonObject();
+		param.put("modelId", rp.getString("modelId"));
+		param.put("comments", rp.getString("comments").replace(" ", ""));
+		param.put("planDates", rp.getString("planDates"));
+		param.put("expired", ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
+		param.put("expiredCallback", rp.getString("callback"));
+		param.put("expiredNotify", ConvertUtil.arrToString(rp.getJsonArray("notify")));
+		param.put("startDate", DateUtil.toDateTimeStr(rp.getString("startDate")));
+		param.put("compensate", ConvertUtil.boolToStr(rp.getBoolean("compensate")));
+		String func = "{call itos.p_model_upd(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(param.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(ctx, func, params, outputs);
+		// 1.消息
+		String msg = String.format("%s::模版%s已修改", DateUtil.curDtStr(), rp.getString("abs"));
 		MsgUtil.sysLog(ctx, msg);
 	}
 
@@ -138,8 +142,8 @@ public class ModelHandler {
 			}
 		}
 		String sql = "insert into itos_taskmodel(modelId,category,cycle,comments,planDates,oper,opdate," + //
-				" invalid,abstract,expired,expiredCallback,expiredNotify,startDate) " + //
-				" values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				" invalid,abstract,expired,expiredCallback,expiredNotify,startDate,compensate) " + //
+				" values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		params.add(category);
@@ -154,6 +158,7 @@ public class ModelHandler {
 		params.add(rp.getString("callback"));
 		params.add(ConvertUtil.arrToString(rp.getJsonArray("notify")));
 		params.add(rp.getString("startDate"));
+		params.add(ConvertUtil.boolToStr(rp.getBoolean("compensate")));
 		JdbcHelper.update(ctx, sql, params);
 		String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
 		MsgUtil.sysLog(ctx, msg);

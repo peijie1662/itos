@@ -17,6 +17,13 @@ import java.util.TimeZone;
  * @version 创建时间：2019年12月24日 下午4:05:31 类说明
  */
 public class DateUtil {
+	
+	/**
+	 *返回秒数 
+	 */
+	public static long getSecond(LocalDateTime dt) {
+		return dt.toEpochSecond(ZoneOffset.of("+8"));
+	}
 
 	/**
 	 * 字符串转LocalDateTime
@@ -128,6 +135,21 @@ public class DateUtil {
 	 */
 	public static String curDtStr() {
 		return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	}
+	
+	/**
+	 *LocalDateTime转常用日期字符串 
+	 */
+	public static String toDateTimeStr(LocalDateTime dt) {
+		return dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	}
+	
+	/**
+	 * 将UTC字符串转常用日期字符串
+	 */
+	public static String toDateTimeStr(String utc) {
+		LocalDateTime dt = utcToLocalExNoExp(utc);
+		return dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 	}
 
 	/**
