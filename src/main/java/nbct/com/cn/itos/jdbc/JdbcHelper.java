@@ -367,6 +367,42 @@ public class JdbcHelper {
 	}
 
 	/**
+	 * 调用存储过程
+	 */
+	public static Future<CallResult<String>> call(String func, JsonArray params, JsonArray outputs) {
+		Future<CallResult<String>> f = Future.future(promise -> {
+			SC.getConnection(cr -> {
+				if (cr.succeeded()) {
+					SQLConnection connection = cr.result();
+					if (connection != null) {
+						connection.callWithParams(func, params, outputs, qr -> {
+							if (qr.succeeded()) {
+								JsonArray j = qr.result().getOutput();
+								Boolean flag = "0".equals(j.getString(1));
+								String errMsg = j.getString(2);
+								String outMsg = j.getString(3);
+								if (flag) {
+									promise.complete(new CallResult<String>().ok(outMsg));
+								} else {
+									promise.fail(errMsg);
+								}
+							} else {
+								promise.fail(qr.cause().getMessage());
+							}
+							connection.close();
+						});
+					} else {
+						promise.fail("使用数据库连接出错");
+					}
+				} else {
+					promise.fail("无法获得数据库连接");
+				}
+			});
+		});
+		return f;
+	}
+
+	/**
 	 * 转换日期字符串
 	 */
 	public static String toDbDate(Date dt) {

@@ -104,7 +104,7 @@ public class DispatchClientHandler {
 	 */
 	public void addClient(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
-		String func = "{call itos.p_addclient(?,?,?,?)}";
+		String func = "{call itos.p_client_add(?,?,?,?)}";
 		JsonArray params = new JsonArray().add(rp.getString("serviceName") + //
 				"^" + rp.getString("modelKeyStr") + //
 				"^" + rp.getString("description") + //

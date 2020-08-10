@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import nbct.com.cn.itos.TimerVerticle;
 import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.ExpiredCallbackEnum;
 import nbct.com.cn.itos.config.NotifyEnum;
@@ -385,8 +384,11 @@ public class CommonTask implements RowMapper<CommonTask> {
 	}
 
 	public void setContent(String content) {
-		content = content != null ? content.replace(" ", "") : "";
-		this.content = content;
+		if (this.category != CategoryEnum.COMMON) {
+			this.content = content != null ? content.replace(" ", "") : "";
+		} else {
+			this.content = content != null ? content : "";
+		}
 	}
 
 	public String getCustomer() {

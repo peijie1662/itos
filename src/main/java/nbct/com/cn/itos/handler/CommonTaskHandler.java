@@ -19,7 +19,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.CategoryEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.CommonTask;
@@ -167,158 +166,30 @@ public class CommonTaskHandler {
 	 * 参数 {taskId:"...",status:"...",oper:"...",remark:"..."}
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
-		// TODO 改成存储过程。
 		HttpServerResponse res = ctx.response();
-		res.putHeader("content-type", "application/json");
-		JsonObject rp;
-		try {
-			rp = ctx.getBodyAsJson();
-		} catch (Exception e) {
-			res.end(Err("传入参数Json格式错误"));
-			return;
-		}
-		SC.getConnection(cr -> {
-			if (cr.succeeded()) {
-				SQLConnection conn = cr.result();
-				// 1.找到对应Task
-				Supplier<Future<CommonTask>> getf = () -> {
-					Future<CommonTask> f = Future.future(promise -> {
-						JsonArray params = new JsonArray().add(rp.getString("taskId"));
-						String sql = "select * from itos_task where taskId = ?";
-						conn.queryWithParams(sql, params, r -> {
-							if (r.succeeded()) {
-								List<JsonObject> rs = r.result().getRows();
-								if (rs.size() > 0) {
-									CommonTask task = new CommonTask().from(rs.get(0));
-									if (CategoryEnum.BROADCAST == task.getCategory()) {
-										promise.fail("广播任务不能改变状态");
-									} else {
-										promise.complete(task);
-									}
-								} else {
-									promise.fail("任务表中找不到这个TaskId");
-								}
-							} else {
-								promise.fail("访问数据库出错");
-							}
-						});
-					});
-					return f;
-				};
-				// 2.更新状态
-				Function<CommonTask, Future<CommonTask>> savef = (task) -> {
-					Future<CommonTask> f = Future.future(promise -> {
-						String status = rp.getString("status");
-						JsonArray params = new JsonArray()//
-								.add(status)//
-								.add(rp.getString("taskId"));
-						if (!task.getCategory().eq("COMMON") && task.getStatus().isAfterOrParalleling(status)) {
-							promise.fail("非普通任务的状态更新必须遵循顺序。");
-						} else {
-							String sql = "update itos_task set status = ? where taskId = ?";
-							conn.updateWithParams(sql, params, r -> {
-								if (r.succeeded()) {
-									task.setStatus(TaskStatusEnum.from(rp.getString("status")).get());
-									promise.complete(task);
-								} else {
-									promise.fail("更新任务状态失败");
-								}
-							});
-						}
-					});
-					return f;
-				};
-				// 3.保存日志
-				Function<CommonTask, Future<CommonTask>> logf = (task) -> {
-					Future<CommonTask> f = Future.future(promise -> {
-						JsonArray params = new JsonArray()//
-								.add(UUID.randomUUID().toString())//
-								.add(task.getTaskId())//
-								.add(task.getCategory().getValue())//
-								.add(task.getModelId())//
-								.add(task.getStatus().getValue())//
-								.add("用户" + rp.getString("oper") + "将任务状态置为" + rp.getString("status"))//
-								.add(ConvertUtil.listToStr(task.getHandler()))//
-								.add(task.getAbs())//
-								.add(rp.getString("remark"))//
-								.add(rp.getString("oper"))//
-								.add(DateUtil.localToUtcStr(LocalDateTime.now()));
-						String sql = "insert into itos_tasklog(logId,taskId,category,modelId,status,statusdesc,"//
-								+ "handler,abstract,remark,oper,opDate) values(?,?,?,?,?,?,?,?,?,?,?)";
-						conn.updateWithParams(sql, params, r -> {
-							if (r.succeeded()) {
-								promise.complete(task);
-							} else {
-								r.cause().printStackTrace();
-								promise.fail("保存更新任务的日志出错。");
-							}
-						});
-					});
-					return f;
-				};
-				// 4.组合任务
-				Function<CommonTask, Future<CommonTask>> composef = (task) -> {
-					Future<CommonTask> f = Future.future(promise -> {
-						if (task.getComposeId() == null) {
-							promise.complete(task);// 非组合任务路过
-						} else {
-							JsonArray params = new JsonArray().add(task.getTaskId() + "^" + "SYS");// 传入参数
-							JsonArray outputs = new JsonArray()//
-									.addNull()// 传入
-									.add("VARCHAR")// flag
-									.add("VARCHAR")// errMsg
-									.add("VARCHAR");// outMsg
-							conn.callWithParams("{call itos.p_compose_task_next(?,?,?,?)}", params, outputs, r -> {
-								if (r.succeeded()) {
-									JsonArray j = r.result().getOutput();
-									Boolean flag = "0".equals(j.getString(1));// flag
-									String newTask = j.getString(3);// c新建下阶段任务数量
-									MsgUtil.mixLC(ctx, Integer.parseInt(newTask), task.getComposeId());
-									if (flag) {
-										promise.complete(task);
-									} else {
-										promise.fail("组合任务过程内部出错:" + j.getString(2));
-									}
-								} else {
-									r.cause().printStackTrace();
-									promise.fail("调用组合任务的出错。");
-								}
-							});
-						}
-					});
-					return f;
-				};
-				// 5.EXECUTE
-				getf.get().compose(r -> {
-					return savef.apply(r);
-				}).compose(r -> {
-					return logf.apply(r);
-				}).compose(r -> {
-					return composef.apply(r);
-				}).onComplete(r -> {
-					if (r.succeeded()) {
-						String msg = DateUtil.curDtStr() + " " + "更新任务'" + r.result().getAbs() + "'的状态为"
-								+ rp.getString("status");
-						MsgUtil.mixLC(ctx, msg, r.result().getComposeId());
-						res.end(OK());
-					} else {
-						res.end(Err(r.cause().getMessage()));
-					}
-					conn.close();
-				});
-			}
+		JsonObject rp = ctx.getBodyAsJson();
+		rp.put("logId", UUID.randomUUID().toString());
+		String func = "{call itos.p_task_status_upd(?,?,?,?)}";
+		JsonArray params = new JsonArray().add(rp.encodePrettily());
+		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
+		JdbcHelper.call(func, params, outputs).onSuccess(r -> {
+			String[] outArr = r.getData().split(",");
+			String abs = outArr[0];
+			String composeId = outArr[1];
+			String status = outArr[2];
+			String msg = String.format("%s::更新任务%s的状态为%s", abs,composeId,status);
+			MsgUtil.mixLC(ctx, msg, composeId);
+			res.end(OK());
+		}).onFailure(e -> {
+			res.end(Err(e.getMessage()));
 		});
-	}
+	}	
 
 	/**
 	 * 临时从模版触发任务(ONCE)<br>
 	 * 传入参数:modelId,planDt,userId
 	 */
 	public void saveOnceTask(RoutingContext ctx) {
-		
-		
-		System.out.println("11111111111");
-		
 		JsonObject rp = ctx.getBodyAsJson();
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");

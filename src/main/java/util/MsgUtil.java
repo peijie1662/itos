@@ -3,6 +3,7 @@ package util;
 import java.util.List;
 import java.util.Objects;
 
+import io.netty.util.internal.StringUtil;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import nbct.com.cn.itos.config.SceneEnum;
@@ -80,7 +81,7 @@ public class MsgUtil {
 	 */
 	public static <T> void mixLC(RoutingContext ctx, T msg, String composeId) {
 		MsgUtil.sysLog(ctx,msg);
-		if (Objects.nonNull(composeId)) {
+		if (!StringUtil.isNullOrEmpty(composeId)) {
 			MsgUtil.controlCenter(ctx, msg);
 		}
 	}
