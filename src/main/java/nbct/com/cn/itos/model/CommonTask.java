@@ -343,7 +343,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 	}
 
 	/**
-	 * 补偿模式生成任务，即从扫描点开始到当前时间的任务，按照模版规则都予以生成。
+	 * 补偿模式，即从扫描点开始到当前时间的任务，按照模版规则都予以生成。
 	 */
 	public static List<CommonTask> fromCompensate(TimerTaskModel model, LocalDateTime cur) {
 		List<CommonTask> tasks = new ArrayList<CommonTask>();
@@ -362,7 +362,28 @@ public class CommonTask implements RowMapper<CommonTask> {
 		}
 		return tasks;
 	}
-
+	
+	/**
+	 * 非补偿模式，即从扫描点开始到当前时间的任务，按照模版规则都予以生成，只保留最后那个。
+	 */
+	public static List<CommonTask> fromNoCompensate(TimerTaskModel model, LocalDateTime cur) {
+		List<CommonTask> tasks = new ArrayList<CommonTask>();
+		if (model.getScanDate() != null) {
+			// 1.时间流逝
+			LocalDateTime at = LocalDateTime.from(model.getScanDate());
+			while (DateUtil.getSecond(at) <= DateUtil.getSecond(cur)) {
+				if (ModelUtil.couldCreateTask(model, at)) {
+					tasks = CommonTask.fromAt(model, at.minusSeconds(1));
+				}
+				at = at.plusSeconds(1);
+			}
+		} else {
+			// 2.初始状态
+			tasks.addAll(CommonTask.fromAt(model, cur));
+		}
+		return tasks;
+	}
+	
 	public String getTaskId() {
 		return taskId;
 	}
@@ -384,7 +405,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 	}
 
 	public void setContent(String content) {
-		if (this.category != CategoryEnum.COMMON) {
+		if (this.category == CategoryEnum.APPSERVER) {
 			this.content = content != null ? content.replace(" ", "") : "";
 		} else {
 			this.content = content != null ? content : "";

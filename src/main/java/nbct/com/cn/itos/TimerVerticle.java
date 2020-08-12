@@ -108,7 +108,7 @@ public class TimerVerticle extends AbstractVerticle {
 							if (model.isCompensate()) {
 								tr.tasks.addAll(CommonTask.fromCompensate(model, curDt));
 							} else {
-								tr.tasks.addAll(CommonTask.fromAt(model, curDt));
+								tr.tasks.addAll(CommonTask.fromNoCompensate(model, curDt));
 							}
 						});
 						tr.tasks.forEach(task -> {

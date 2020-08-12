@@ -51,7 +51,7 @@ public class CommonTaskHandler {
 	public void getTaskLog(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		String sql = "select * from (select a.*,decode(status,'CHECKIN',1,'PROCESSING',2,3) as seq " + //
-				"from itos_tasklog a where taskId = ? ) order by seq,opdate";
+				"from itos_tasklog a where taskId = ? ) order by opdate,seq";
 		JsonArray params = new JsonArray().add(rp.getString("taskId"));
 		JdbcHelper.rows(ctx, sql, params, new CommonTaskLog());
 	}
@@ -161,9 +161,7 @@ public class CommonTaskHandler {
 	}
 
 	/**
-	 *
-	 * 任务操作(PROCESSING,DONE,CANCEL,FAIL)<br>
-	 * 参数 {taskId:"...",status:"...",oper:"...",remark:"..."}
+	 * 更新任务状态
 	 */
 	public void updateTaskStatus(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
@@ -177,13 +175,13 @@ public class CommonTaskHandler {
 			String abs = outArr[0];
 			String composeId = outArr[1];
 			String status = outArr[2];
-			String msg = String.format("%s::更新任务%s的状态为%s", abs,composeId,status);
+			String msg = String.format("%s %s更新任务%s的状态为%s", DateUtil.curDtStr(), rp.getString("oper"), abs, status);
 			MsgUtil.mixLC(ctx, msg, composeId);
 			res.end(OK());
 		}).onFailure(e -> {
 			res.end(Err(e.getMessage()));
 		});
-	}	
+	}
 
 	/**
 	 * 临时从模版触发任务(ONCE)<br>
