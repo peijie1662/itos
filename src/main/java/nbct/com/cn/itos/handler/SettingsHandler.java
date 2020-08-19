@@ -20,7 +20,7 @@ public class SettingsHandler {
 	 * 智能提示列表
 	 */
 	public void getSmartTipsList(RoutingContext ctx) {
-		String sql = "select * from itos_smart_tips";
+		String sql = "select * from itos_smart_tips ";
 		JdbcHelper.rows(ctx, sql, new SmartTips());
 	}
 

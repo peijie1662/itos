@@ -1,11 +1,9 @@
 package nbct.com.cn.itos.model;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import nbct.com.cn.itos.config.CategoryEnum;
+import nbct.com.cn.itos.config.CycleEnum;
 import nbct.com.cn.itos.config.ExpiredCallbackEnum;
 import nbct.com.cn.itos.config.NotifyEnum;
 import nbct.com.cn.itos.config.TaskStatusEnum;
@@ -303,18 +302,16 @@ public class CommonTask implements RowMapper<CommonTask> {
 			});
 			break;
 		case PERMONTH:
-			if (dts.length % 3 != 0) {
+			if (dts.length % 2 != 0) {
 				throw new RuntimeException("月计划的计划时间格式出错，无法生成计划任务。");
 			}
-			IntStream.range(0, dts.length / 3).forEach(i -> {
+			IntStream.range(0, dts.length / 2).forEach(i -> {
 				// 1.日期
-				int week = Integer.parseInt(dts[i * 3]);// c每月第几周
-				int day = Integer.parseInt(dts[i * 3 + 1]);// c周几
-				LocalDate pd = LocalDate.from(appointedTime)
-						.with(TemporalAdjusters.dayOfWeekInMonth(week, DayOfWeek.of(day)));
+				int day = Integer.parseInt(dts[i * 2]);
+				LocalDate pd = LocalDate.from(appointedTime).withDayOfMonth(day);
 				// 2.时间
-				int hour = Integer.parseInt(dts[i * 3 + 2].substring(0, 2));
-				int min = Integer.parseInt(dts[i * 3 + 2].substring(2));
+				int hour = Integer.parseInt(dts[i * 2 + 1].substring(0, 2));
+				int min = Integer.parseInt(dts[i * 2 + 1].substring(2));
 				LocalTime pt = LocalTime.of(hour, min);
 				// 3.组合
 				List<CommonTask> ts = createTask.get();
@@ -352,7 +349,11 @@ public class CommonTask implements RowMapper<CommonTask> {
 			LocalDateTime at = LocalDateTime.from(model.getScanDate());
 			while (DateUtil.getSecond(at) <= DateUtil.getSecond(cur)) {
 				if (ModelUtil.couldCreateTask(model, at)) {
-					tasks.addAll(CommonTask.fromAt(model, at.minusSeconds(1)));
+					if (model.getCycle() == CycleEnum.CIRCULAR) {
+						tasks.addAll(CommonTask.fromAt(model, at.minusSeconds(1)));
+					} else {
+						tasks.addAll(CommonTask.fromAt(model, at));
+					}
 				}
 				at = at.plusSeconds(1);
 			}
@@ -362,7 +363,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 		}
 		return tasks;
 	}
-	
+
 	/**
 	 * 非补偿模式，即从扫描点开始到当前时间的任务，按照模版规则都予以生成，只保留最后那个。
 	 */
@@ -373,7 +374,11 @@ public class CommonTask implements RowMapper<CommonTask> {
 			LocalDateTime at = LocalDateTime.from(model.getScanDate());
 			while (DateUtil.getSecond(at) <= DateUtil.getSecond(cur)) {
 				if (ModelUtil.couldCreateTask(model, at)) {
-					tasks = CommonTask.fromAt(model, at.minusSeconds(1));
+					if (model.getCycle() == CycleEnum.CIRCULAR) {
+						tasks = CommonTask.fromAt(model, at.minusSeconds(1));
+					} else {
+						tasks = CommonTask.fromAt(model, at);
+					}
 				}
 				at = at.plusSeconds(1);
 			}
@@ -383,7 +388,7 @@ public class CommonTask implements RowMapper<CommonTask> {
 		}
 		return tasks;
 	}
-	
+
 	public String getTaskId() {
 		return taskId;
 	}
