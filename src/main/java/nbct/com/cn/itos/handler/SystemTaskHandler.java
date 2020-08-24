@@ -569,4 +569,48 @@ public class SystemTaskHandler {
 
 	}
 
+	/**
+	 * EDI任务监控
+	 */
+	public void ediProgress() {
+		/**
+		SC.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.寻找未执行的最早的EDI任务(WRITE)
+				Supplier<Future<Boolean>> loadf = () -> {
+					Future<Boolean> f = Future.future(promise -> {
+						String sql = "select * from itos_task where status = 'CHECKIN' " + //
+						"and category = 'SYSTEM' and invalid = 'N'";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								try {
+									CommonTask ct = new CommonTask();
+									List<CommonTask> list = r.result().getRows().stream().map(item -> {
+										return ct.from(item);
+									}).filter(item -> {
+										JsonObject jo = new JsonObject(item.getContent());
+										if ("HOUSEKEEP".equals(jo.getString("header"))) {
+											return item.getPlanDt().isBefore(LocalDateTime.now());
+										} else {
+											return false;
+										}
+									}).collect(Collectors.toList());
+									promise.complete(list);
+								} catch (Exception e) {
+									e.printStackTrace();
+									promise.fail(e.getMessage());
+								}
+							} else {
+								promise.fail("读系统清理任务，访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+			}
+		});
+		**/
+	}
+
 }

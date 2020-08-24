@@ -2,7 +2,7 @@ package util;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
+import java.time.temporal.WeekFields;
 import java.util.Objects;
 
 import nbct.com.cn.itos.config.CycleEnum;
@@ -29,9 +29,10 @@ public class ModelUtil {
 			// 2.1扫描每日任务,当前日期>标记时间的日期，就需要生成新任务。
 			valid = valid || (mc == CycleEnum.PERDAY && md.isBefore(cd));
 			// 2.2扫描每周任务，当前日期的年+第几周>标记时间的年+第几周，就需要生成新任务。
-			int cw = cd.getYear() + cd.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-			int rw = md.getYear() + md.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-			valid = valid || (mc == CycleEnum.PERWEEK && cw > rw);
+			WeekFields weekFields = WeekFields.ISO;
+			int cw = cd.getYear() + cd.get(weekFields.weekOfWeekBasedYear());
+			int rw = md.getYear() + md.get(weekFields.weekOfWeekBasedYear());
+			valid = valid || (mc == CycleEnum.PERWEEK && cw > rw);			
 			// 2.3扫描每月任务，当前日期的年+第几月>标记时间的年+第几月，就需要生成新任务。
 			int cm = cd.getYear() + cd.getMonthValue();
 			int rm = md.getYear() + md.getMonthValue();

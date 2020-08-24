@@ -3,7 +3,7 @@ package nbct.com.cn.itos.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoField;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -283,11 +283,12 @@ public class CommonTask implements RowMapper<CommonTask> {
 			if (dts.length % 2 != 0) {
 				throw new RuntimeException("周计划的计划时间格式出错，无法生成计划任务。");
 			}
+			WeekFields weekFields = WeekFields.ISO;
 			IntStream.range(0, dts.length / 2).forEach(i -> {
 				// 1.日期
 				int weekDay = Integer.parseInt(dts[i * 2]);// c每周第几天
 				LocalDate pd = DateUtil.getDateByYearAndWeekNumAndDayOfWeek(appointedTime.getYear(),
-						appointedTime.get(ChronoField.ALIGNED_WEEK_OF_YEAR), weekDay);
+						appointedTime.get(weekFields.weekOfWeekBasedYear()), weekDay);
 				// 2.时间
 				int hour = Integer.parseInt(dts[i * 2 + 1].substring(0, 2));
 				int min = Integer.parseInt(dts[i * 2 + 1].substring(2));

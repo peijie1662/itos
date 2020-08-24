@@ -145,6 +145,13 @@ public class DateUtil {
 	}
 	
 	/**
+	 *LocalDate转常用日期字符串 
+	 */
+	public static String toDateStr(LocalDate dt) {
+		return dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	}
+	
+	/**
 	 * 将UTC字符串转常用日期字符串
 	 */
 	public static String toDateTimeStr(String utc) {
