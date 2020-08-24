@@ -313,7 +313,8 @@ public class DispatchClientHandler {
 		String sql = "select * from itos_task where status = 'CHECKIN' and invalid = 'N'" + //
 				" and ((instr((select modelKey from itos_service where servicename= ? ),modelId ) > 0) " + //
 				" or (category = 'BROADCAST' and executedcallback = 'N'))" + //
-				" and (sysdate - " + dt + ")*24*60*60 <= ?";
+				" and (sysdate - " + dt + ")*24*60*60 <= ? " + //
+				" and (sysdate - " + dt + ")*24*60*60 >= -300";
 		JsonArray params = new JsonArray();
 		params.add(serviceName);
 		params.add(period);
