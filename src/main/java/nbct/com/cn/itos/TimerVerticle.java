@@ -443,6 +443,8 @@ public class TimerVerticle extends AbstractVerticle {
 		handler.compareTask();
 		// 6.执行清理任务
 		handler.housekeep();
+		// 7.EDI进度检查任务
+		handler.ediProgress();
 	}
 
 	@Override

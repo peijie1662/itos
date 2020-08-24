@@ -85,7 +85,11 @@ public class NotifyVerticle extends AbstractVerticle {
 			if ("COMPARE".equals(category)) {
 				content = msg.body().getString("msg");
 			}
-			// 4.发短信
+			// 4.EDI
+			if ("EDIPROGRESS".equals(category)) {
+				content = msg.body().getString("msg");
+			}
+			// 5.发短信
 			final String c = content;
 			if (content != null) {
 				List<TSmsQueue> sqs = users.stream().map(user -> {

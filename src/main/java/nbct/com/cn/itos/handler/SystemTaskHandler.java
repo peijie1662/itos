@@ -66,6 +66,11 @@ public class SystemTaskHandler {
 	}
 
 	/**
+	 * EDI短信初始状态
+	 */
+	private static String EDIPROGRESS_SMS = "NONE";
+
+	/**
 	 * 更新task的任务状态为DONE
 	 * 
 	 * @param conn
@@ -318,6 +323,107 @@ public class SystemTaskHandler {
 	}
 
 	/**
+	 * EDI任务进度监控
+	 */
+	public void ediProgress() {
+		final BusinessResult br = new BusinessResult();
+		SC.getConnection(cr -> {
+			if (cr.succeeded()) {
+				SQLConnection conn = cr.result();
+				// 1.读系统EDI监控任务
+				Supplier<Future<List<CommonTask>>> loadf = () -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						String sql = "select * from itos_task where status = 'CHECKIN' " + //
+						"and category = 'SYSTEM' and invalid = 'N'";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								try {
+									CommonTask ct = new CommonTask();
+									List<CommonTask> list = r.result().getRows().stream().map(item -> {
+										return ct.from(item);
+									}).filter(item -> {
+										JsonObject jo = new JsonObject(item.getContent());
+										if ("EDIPROGRESS".equals(jo.getString("header"))) {
+											return item.getPlanDt().isBefore(LocalDateTime.now());
+										} else {
+											return false;
+										}
+									}).collect(Collectors.toList());
+									promise.complete(list);
+								} catch (Exception e) {
+									e.printStackTrace();
+									promise.fail(e.getMessage());
+								}
+							} else {
+								promise.fail("读EDI进度任务，访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 2.读最早未执行EDI任务时间
+				Function<List<CommonTask>, Future<List<CommonTask>>> cf = (tasks) -> {
+					Future<List<CommonTask>> f = Future.future(promise -> {
+						// 2.1没有任务
+						if (tasks.size() == 0) {
+							promise.complete(tasks);
+							return;
+						}
+						// 2.2读最早时间
+						String sql = " select count(1) as tasknum from itos_task where " + //
+						" abstract in ('RECEIVE_EDI','WRITELINKIN') and status = 'CHECKIN' " + //
+						" and  plandt < sysdate - 1/24/60*5";
+						conn.query(sql, r -> {
+							if (r.succeeded()) {
+								JsonObject row = r.result().getRows().get(0);
+								if (row.getInteger("TASKNUM") > 0) {
+									if ("NONE".equals(EDIPROGRESS_SMS)) {
+										DeliveryOptions options = new DeliveryOptions();
+										options.addHeader("CATEGORY", "EDIPROGRESS");
+										vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
+												.put("msg", "EDI任务进度滞后请检查" + DateUtil.curDtStr()), options);
+										br.flag = false;
+										br.errMsg = "EDI任务超时请检查";
+										EDIPROGRESS_SMS = "SEND";
+									}
+								} else {
+									if ("SEND".equals(EDIPROGRESS_SMS)) {
+										DeliveryOptions options = new DeliveryOptions();
+										options.addHeader("CATEGORY", "EDIPROGRESS");
+										vertx.eventBus().send(SceneEnum.SMS.addr(), new JsonObject()//
+												.put("msg", "EDI任务进度恢复正常" + DateUtil.curDtStr()), options);
+										EDIPROGRESS_SMS = "NONE";
+									}
+								}
+								promise.complete(tasks);
+							} else {
+								promise.fail("读EDI进度任务，访问数据库出错");
+							}
+						});
+					});
+					return f;
+				};
+				// 3.更新状态为DONE
+				Function<List<CommonTask>, Future<List<CommonTask>>> uf = taskDoneFunction(conn, "EDI检查任务更新状态出错。");
+				// 5.日志
+				Function<List<CommonTask>, Future<List<CommonTask>>> logf = taskLogFunction(conn, br);
+				// 6.执行
+				loadf.get().compose(r -> {
+					return cf.apply(r);
+				}).compose(r -> {
+					return uf.apply(r);
+				}).compose(r -> {
+					return logf.apply(r);
+				}).onComplete(r -> {
+					if (r.failed())
+						log.error("EDIPROGRESS-01::", r.cause());
+					conn.close();
+				});
+			}
+		});
+	}
+
+	/**
 	 * 执行系统延时任务
 	 */
 	public void timerTask() {
@@ -567,50 +673,6 @@ public class SystemTaskHandler {
 			}
 		});
 
-	}
-
-	/**
-	 * EDI任务监控
-	 */
-	public void ediProgress() {
-		/**
-		SC.getConnection(cr -> {
-			if (cr.succeeded()) {
-				SQLConnection conn = cr.result();
-				// 1.寻找未执行的最早的EDI任务(WRITE)
-				Supplier<Future<Boolean>> loadf = () -> {
-					Future<Boolean> f = Future.future(promise -> {
-						String sql = "select * from itos_task where status = 'CHECKIN' " + //
-						"and category = 'SYSTEM' and invalid = 'N'";
-						conn.query(sql, r -> {
-							if (r.succeeded()) {
-								try {
-									CommonTask ct = new CommonTask();
-									List<CommonTask> list = r.result().getRows().stream().map(item -> {
-										return ct.from(item);
-									}).filter(item -> {
-										JsonObject jo = new JsonObject(item.getContent());
-										if ("HOUSEKEEP".equals(jo.getString("header"))) {
-											return item.getPlanDt().isBefore(LocalDateTime.now());
-										} else {
-											return false;
-										}
-									}).collect(Collectors.toList());
-									promise.complete(list);
-								} catch (Exception e) {
-									e.printStackTrace();
-									promise.fail(e.getMessage());
-								}
-							} else {
-								promise.fail("读系统清理任务，访问数据库出错");
-							}
-						});
-					});
-					return f;
-				};
-			}
-		});
-		**/
 	}
 
 }
