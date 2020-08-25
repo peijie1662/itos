@@ -27,16 +27,22 @@ public class ModelUtil {
 			LocalDate md = mt.toLocalDate();
 			CycleEnum mc = model.getCycle();
 			// 2.1扫描每日任务,当前日期>标记时间的日期，就需要生成新任务。
-			valid = valid || (mc == CycleEnum.PERDAY && md.isBefore(cd));
+			if (mc == CycleEnum.PERDAY) {
+				valid = valid || md.isBefore(cd);
+			}
 			// 2.2扫描每周任务，当前日期的年+第几周>标记时间的年+第几周，就需要生成新任务。
-			WeekFields weekFields = WeekFields.ISO;
-			int cw = cd.getYear() + cd.get(weekFields.weekOfWeekBasedYear());
-			int rw = md.getYear() + md.get(weekFields.weekOfWeekBasedYear());
-			valid = valid || (mc == CycleEnum.PERWEEK && cw > rw);			
+			if (mc == CycleEnum.PERWEEK) {
+				WeekFields weekFields = WeekFields.ISO;
+				int cw = cd.getYear() + cd.get(weekFields.weekOfWeekBasedYear());
+				int rw = md.getYear() + md.get(weekFields.weekOfWeekBasedYear());
+				valid = valid || cw > rw;
+			}
 			// 2.3扫描每月任务，当前日期的年+第几月>标记时间的年+第几月，就需要生成新任务。
-			int cm = cd.getYear() + cd.getMonthValue();
-			int rm = md.getYear() + md.getMonthValue();
-			valid = valid || (mc == CycleEnum.PERMONTH && cm > rm);
+			if (mc == CycleEnum.PERMONTH) {
+				int cm = cd.getYear() + cd.getMonthValue();
+				int rm = md.getYear() + md.getMonthValue();
+				valid = valid || cm > rm;
+			}
 			// 2.4扫描循环任务，当前时间-间隔时间(秒)>=标记时间，就需要生成新任务。
 			valid = valid || (mc == CycleEnum.CIRCULAR
 					&& mt.isBefore(at.minusSeconds(Integer.parseInt(model.getPlanDates()))));

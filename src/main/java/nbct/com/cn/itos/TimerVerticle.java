@@ -72,8 +72,7 @@ public class TimerVerticle extends AbstractVerticle {
 				// 1.读数据
 				Supplier<Future<ScanTempResult>> loadf = () -> {
 					Future<ScanTempResult> f = Future.future(promise -> {
-						String sql = "select * from itos_taskmodel where invalid = 'N' and category <> 'COMPOSE' "//
-								+ "order by category,opdate";
+						String sql = "select * from itos_taskmodel where invalid = 'N' and category <> 'COMPOSE'";
 						conn.query(sql, r -> {
 							if (r.succeeded()) {
 								ScanTempResult tr = new ScanTempResult();
@@ -209,9 +208,9 @@ public class TimerVerticle extends AbstractVerticle {
 				};
 				// 5.执行
 				loadf.get().compose(r -> {
-					return taskf.apply(r);
-				}).compose(r -> {
 					return updatef.apply(r);
+				}).compose(r -> {
+					return taskf.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
 				}).onComplete(r -> {

@@ -372,7 +372,7 @@ public class SystemTaskHandler {
 						// 2.2读最早时间
 						String sql = " select count(1) as tasknum from itos_task where " + //
 						" abstract in ('RECEIVE_EDI','WRITELINKIN') and status = 'CHECKIN' " + //
-						" and  plandt < sysdate - 1/24/60*5";
+						" and plandt < sysdate - 1/24/60*5";
 						conn.query(sql, r -> {
 							if (r.succeeded()) {
 								JsonObject row = r.result().getRows().get(0);
