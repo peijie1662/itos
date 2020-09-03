@@ -76,8 +76,8 @@ public class ModelHandler {
 	public void updateTimerTaskModel(RoutingContext ctx) {
 		JsonObject rp = ctx.getBodyAsJson();
 		JsonObject param = new JsonObject();
-		param.put("modelId", rp.getString("modelId"));
-		param.put("comments", rp.getString("comments").replace(" ", ""));
+		param.put("modelId", rp.getString("modelId"));		
+		param.put("comments", rp.getString("comments"));
 		param.put("planDates", rp.getString("planDates"));
 		param.put("expired", ConvertUtil.getInteger(rp.getInteger("expired"), 24 * 60 * 60));
 		param.put("expiredCallback", rp.getString("callback"));

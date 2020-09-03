@@ -208,9 +208,9 @@ public class TimerVerticle extends AbstractVerticle {
 				};
 				// 5.执行
 				loadf.get().compose(r -> {
-					return updatef.apply(r);
-				}).compose(r -> {
 					return taskf.apply(r);
+				}).compose(r -> {
+					return updatef.apply(r);
 				}).compose(r -> {
 					return logf.apply(r);
 				}).onComplete(r -> {
