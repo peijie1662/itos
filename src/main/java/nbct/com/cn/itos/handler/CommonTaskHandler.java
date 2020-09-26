@@ -27,7 +27,6 @@ import nbct.com.cn.itos.model.TimerTaskModel;
 import util.ConvertUtil;
 import util.DateUtil;
 import util.ModelUtil;
-import util.MsgUtil;
 
 /**
  * @author PJ
@@ -147,8 +146,8 @@ public class CommonTaskHandler {
 					return logf.apply(r);
 				}).onComplete(r -> {
 					if (r.succeeded()) {
-						String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的内容";
-						MsgUtil.sysLog(ctx, msg);
+						//String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的内容";
+						//MsgUtil.sysLog(ctx, msg);
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -171,12 +170,12 @@ public class CommonTaskHandler {
 		JsonArray params = new JsonArray().add(rp.encodePrettily());
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(func, params, outputs).onSuccess(r -> {
-			String[] outArr = r.getData().split(",");
-			String abs = outArr[0];
-			String composeId = outArr[1];
-			String status = outArr[2];
-			String msg = String.format("%s %s更新任务%s的状态为%s", DateUtil.curDtStr(), rp.getString("oper"), abs, status);
-			MsgUtil.mixLC(ctx, msg, composeId);
+			//String[] outArr = r.getData().split(",");
+			//String abs = outArr[0];
+			//String composeId = outArr[1];
+			//String status = outArr[2];
+			//String msg = String.format("%s %s更新任务%s的状态为%s", DateUtil.curDtStr(), rp.getString("oper"), abs, status);
+			//MsgUtil.mixLC(ctx, msg, composeId);
 			res.end(OK());
 		}).onFailure(e -> {
 			res.end(Err(e.getMessage()));
@@ -300,9 +299,9 @@ public class CommonTaskHandler {
 				}).onComplete(r -> {
 					if (r.succeeded()) {
 						r.result().forEach(task -> {
-							String msg = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
-									+ task.getAbs() + "'";
-							MsgUtil.mixLC(ctx, msg, task.getComposeId());
+							//String msg = DateUtil.curDtStr() + "用户" + rp.getString("userId") + "临时从模版生成新任务'"
+							//		+ task.getAbs() + "'";
+							//MsgUtil.mixLC(ctx, msg, task.getComposeId());
 						});
 						res.end(OK());
 					} else {

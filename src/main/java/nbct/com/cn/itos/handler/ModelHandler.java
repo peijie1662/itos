@@ -19,7 +19,6 @@ import nbct.com.cn.itos.model.TimerTaskModel;
 import nbct.com.cn.itos.model.TimerTaskModelGroup;
 import util.ConvertUtil;
 import util.DateUtil;
-import util.MsgUtil;
 
 /**
  * @author PJ
@@ -89,8 +88,8 @@ public class ModelHandler {
 		JsonArray outputs = new JsonArray().addNull().add("VARCHAR").add("VARCHAR").add("VARCHAR");
 		JdbcHelper.call(ctx, func, params, outputs);
 		// 1.消息
-		String msg = String.format("%s::模版%s已修改", DateUtil.curDtStr(), rp.getString("abs"));
-		MsgUtil.sysLog(ctx, msg);
+		//String msg = String.format("%s::模版%s已修改", DateUtil.curDtStr(), rp.getString("abs"));
+		//MsgUtil.sysLog(ctx, msg);
 	}
 
 	/**
@@ -102,8 +101,8 @@ public class ModelHandler {
 		JsonArray params = new JsonArray();
 		params.add(rp.getString("modelId"));
 		JdbcHelper.update(ctx, sql, params);
-		String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被刪除。";
-		MsgUtil.sysLog(ctx, msg);
+		//String msg = DateUtil.curDtStr() + " " + "模版'" + rp.getString("abs") + "'已被刪除。";
+		//MsgUtil.sysLog(ctx, msg);
 	}
 
 	/**
@@ -115,7 +114,7 @@ public class ModelHandler {
 		res.putHeader("content-type", "application/json");
 		String category = rp.getString("category");
 		String abs = rp.getString("abs");
-		String comments = rp.getString("comments").replace(" ", "");
+		String comments = rp.getString("comments");
 		String cycle = rp.getString("cycle");
 		String planDates = rp.getString("planDates");
 		if (category == null) {
@@ -160,8 +159,8 @@ public class ModelHandler {
 		params.add(rp.getString("startDate"));
 		params.add(ConvertUtil.boolToStr(rp.getBoolean("compensate")));
 		JdbcHelper.update(ctx, sql, params);
-		String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
-		MsgUtil.sysLog(ctx, msg);
+		//String msg = DateUtil.curDtStr() + " " + "新增模版'" + rp.getString("abs") + "'";
+		//MsgUtil.sysLog(ctx, msg);
 	}
 
 	/**

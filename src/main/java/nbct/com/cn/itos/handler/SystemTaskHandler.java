@@ -3,6 +3,7 @@ package nbct.com.cn.itos.handler;
 import static nbct.com.cn.itos.ConfigVerticle.CONFIG;
 import static nbct.com.cn.itos.ConfigVerticle.SC;
 import static nbct.com.cn.itos.handler.CompareHandler.CUR_COMPARES;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,6 @@ import nbct.com.cn.itos.model.CommonTask;
 import nbct.com.cn.itos.model.CompareFile;
 import util.ConvertUtil;
 import util.DateUtil;
-import util.MsgUtil;
 
 /**
  * @author PJ
@@ -165,9 +165,9 @@ public class SystemTaskHandler {
 						if (r.succeeded()) {
 							JsonArray j = r.result().getOutput();
 							Boolean flag = "0".equals(j.getString(1));// flag
-							String newTask = j.getString(3);// c新建下阶段任务数量
+							//String newTask = j.getString(3);// c新建下阶段任务数量
 							if (flag) {
-								MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
+								//MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
 								promise.complete();
 							} else {
 								promise.fail("组合任务过程内部出错:" + j.getString(2));

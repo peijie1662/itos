@@ -25,7 +25,6 @@ import nbct.com.cn.itos.model.DeliverRepair;
 import util.CommonUtil;
 import util.ConvertUtil;
 import util.DateUtil;
-import util.MsgUtil;
 
 /**
  * @author PJ
@@ -182,8 +181,8 @@ public class ManualTaskHandler {
 					return logf.apply(r);
 				}).onComplete(r -> {
 					if (r.succeeded()) {
-						String msg = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
-						MsgUtil.sysLog(ctx, msg);
+						//String msg = DateUtil.curDtStr() + " " + "登记任务'" + rp.getString("abstract") + "'";
+						//MsgUtil.sysLog(ctx, msg);
 						res.end(OK(r.result()));
 					} else {
 						res.end(Err(r.cause().getMessage()));
@@ -284,8 +283,8 @@ public class ManualTaskHandler {
 					return logf.apply(r);
 				}).onComplete(r -> {
 					if (r.succeeded()) {
-						String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
-						MsgUtil.sysLog(ctx, msg);
+						//String msg = DateUtil.curDtStr() + " " + "修改了任务'" + r.result().getAbs() + "'的处理人员";
+						//MsgUtil.sysLog(ctx, msg);
 						res.end(OK());
 					} else {
 						res.end(Err(r.cause().getMessage()));

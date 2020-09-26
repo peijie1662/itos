@@ -33,7 +33,6 @@ import nbct.com.cn.itos.model.TimerTaskModel;
 import util.ConvertUtil;
 import util.DateUtil;
 import util.ModelUtil;
-import util.MsgUtil;
 
 /**
  * 自动任务
@@ -171,11 +170,11 @@ public class TimerVerticle extends AbstractVerticle {
 				Function<ScanTempResult, Future<ScanTempResult>> logf = (tr) -> {
 					Future<ScanTempResult> f = Future.future(promise -> {
 						tr.tasks.forEach(task -> {
-							String msg = String.format("%s 系统按照任务模版%s生成任务，执行时间是%s", //
-									DateUtil.curDtStr(), //
-									task.getAbs(), //
-									task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-							MsgUtil.sysLog(vertx, msg);
+							//String msg = String.format("%s 系统按照任务模版%s生成任务，执行时间是%s", //
+							//		DateUtil.curDtStr(), //
+							//		task.getAbs(), //
+							//		task.getPlanDt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+							//MsgUtil.sysLog(vertx, msg);
 						});
 						List<JsonArray> params = new ArrayList<JsonArray>();
 						tr.tasks.forEach(task -> {
@@ -329,9 +328,9 @@ public class TimerVerticle extends AbstractVerticle {
 				Function<List<CommonTask>, Future<List<CommonTask>>> logf = tasks -> {
 					Future<List<CommonTask>> f = Future.future(promise -> {
 						tasks.forEach(task -> {
-							String msg = DateUtil.curDtStr() + " 系统检测到任务'" + task.getAbs() + "超期," + //
-							"任务状态自动转为'" + task.getCallback().getValue();
-							MsgUtil.mixLC(vertx, msg, task.getComposeId());
+							//String msg = DateUtil.curDtStr() + " 系统检测到任务'" + task.getAbs() + "超期," + //
+							//"任务状态自动转为'" + task.getCallback().getValue();
+							//MsgUtil.mixLC(vertx, msg, task.getComposeId());
 						});
 						List<JsonArray> params = tasks.stream().map(task -> {
 							return new JsonArray()//
@@ -380,9 +379,9 @@ public class TimerVerticle extends AbstractVerticle {
 								if (r.succeeded()) {
 									JsonArray j = r.result().getOutput();
 									Boolean flag = "0".equals(j.getString(1));// flag
-									String newTask = j.getString(3);// c新建下阶段任务数量
+									//String newTask = j.getString(3);// c新建下阶段任务数量
 									if (flag) {
-										MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
+										//MsgUtil.mixLC(vertx, newTask, "SOMEID");// c这时的值是批量值，没什么意义。
 										promise.complete(tasks);
 									} else {
 										promise.fail("组合任务过程内部出错:" + j.getString(2));
