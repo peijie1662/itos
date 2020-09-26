@@ -17,7 +17,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.RoutingContext;
-import nbct.com.cn.itos.config.SceneEnum;
 import nbct.com.cn.itos.jdbc.JdbcHelper;
 import nbct.com.cn.itos.model.ItosUser;
 
@@ -35,6 +34,7 @@ public class UserHandler {
 	public void onlineUsers(RoutingContext ctx) {
 		HttpServerResponse res = ctx.response();
 		res.putHeader("content-type", "application/json");
+		/**
 		ctx.vertx().eventBus().request(SceneEnum.ONLINEUSER.addr(), null, reply -> {
 			if (reply.succeeded()) {
 				res.end(OK(reply.result().body()));
@@ -42,6 +42,8 @@ public class UserHandler {
 				res.end(Err(reply.cause().getMessage()));
 			}
 		});
+		**/
+		res.end(OK());
 	}
 
 	/**

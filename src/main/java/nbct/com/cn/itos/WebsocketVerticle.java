@@ -39,7 +39,7 @@ public class WebsocketVerticle extends AbstractVerticle {
 		// 1.系统日志场景
 		es.consumer(SceneEnum.SYSLOG.addr(), this::pushSysLog);
 		// 2.控制中心场景
-		es.consumer(SceneEnum.CONTROLCENTER.addr(), this::pushControlCenter);
+	    es.consumer(SceneEnum.CONTROLCENTER.addr(), this::pushControlCenter);
 		// 3.在线用户请求
 		es.consumer(SceneEnum.ONLINEUSER.addr(), this::onlineUsers);
 		// 4.消息推送
@@ -102,7 +102,8 @@ public class WebsocketVerticle extends AbstractVerticle {
 		server.webSocketHandler(webSocket -> {
 			String id = webSocket.binaryHandlerID();
 			if (!onlineUsers.containsKey(id)) {
-				onlineUsers.put(id, new ItosUser().setWs(webSocket));
+				//1.暂时不用这功能，先在其它新项目做测试
+				//onlineUsers.put(id, new ItosUser().setWs(webSocket));
 			}
 			webSocket.frameHandler(handler -> {
 				String[] clientMsg = handler.textData().split("\\^");
