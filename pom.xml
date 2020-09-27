@@ -86,6 +86,11 @@
 			<artifactId>itext-asian</artifactId>
 			<version>5.2.0</version>
 		</dependency>
+		<dependency>
+			<groupId>cn.easyproject</groupId>
+			<artifactId>orai18n</artifactId>
+			<version>12.1.0.2.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
